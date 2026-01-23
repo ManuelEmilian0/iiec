@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redes Productivas - PAPIIT IN305022</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="title-bar">
+        <div class="logo-container">
+            <a href="https://www.unam.mx/" target="_blank">
+                <img src="logo_unam.png" alt="UNAM Logo" class="logo">
+            </a>
+            <a href="https://economicas.unam.mx/" target="_blank">
+                <img src="logo_iiec.png" alt="IIEc Logo" class="logo">
+            </a>
+        </div>
+        <div class="title-text">
+            Redes productivas y núcleos industriales dinámicos a escala global y nacional como marco de una política industrial en México
+        </div>
+        <div class="logo-spacer"></div>
+    </div>
+
+    <div id="nav-bar">
+        <div class="nav-buttons-container">
+            <button class="nav-button active" onclick="showSection('inicio')">INICIO</button>
+            <button class="nav-button" onclick="showSection('marco')">Marco Teórico</button>
+            <button class="nav-button" onclick="showSection('metodologia')">Metodología</button>
+            <button class="nav-button" onclick="showSection('contacto')">Contacto</button>
+        </div>
+    </div>
+
+    <div id="main-container">
+
+        <div id="inicio" class="main-content-panel active-panel">
+            
+            <div id="dashboard-overlay">
+                <h3>Control de Escalas</h3>
+                <p>Seleccione el nivel de análisis:</p>
+                <button onclick="loadLayer('mundial')" class="dash-btn">🌎 Escala Mundial</button>
+                <button onclick="loadLayer('nacional')" class="dash-btn">🇲🇽 Escala Nacional</button>
+                <button onclick="loadLayer('estatal')" class="dash-btn">📍 Escala Estatal (DENUE)</button>
+                <hr style="border-color: #555;">
+                <p id="layer-status" style="font-size: 12px; color: #aaa;">Esperando selección...</p>
+            </div>
+
+            <div id="map"></div>
+        </div>
+        
+        <div id="marco" class="main-content-panel">
+            <div class="panel-inner-content">
+                <h2>Marco Teórico</h2>
+
+                <h3>1. El Resurgimiento de la Política Industrial</h3>
+                <p>El debate sobre la política industrial ha resurgido a nivel global, alejándose de la noción de proteccionismo o de "elegir ganadores", para centrarse en una colaboración estratégica público-privada (Mazzucato, 2013). En el siglo XXI, una política industrial efectiva se entiende como un conjunto de intervenciones gubernamentales diseñadas para resolver fallos de coordinación, alinear incentivos y fomentar el descubrimiento de nuevas capacidades productivas (Rodrik, 2004).</p>
+                
+                <h3>2. Redes Globales de Producción (GPNs) y Cadenas Globales de Valor (CGVs)</h3>
+                <p>La producción mundial contemporánea se caracteriza por la fragmentación. Las Cadenas Globales de Valor (CGV) describen la secuencia completa de actividades (diseño, producción, logística, marketing, etc.) necesarias para llevar un producto o servicio desde su concepción hasta el consumidor final.</p>
+
+                <h3>3. Núcleos Industriales Dinámicos (Clústeres)</h3>
+                <p>Las redes globales no operan en el vacío; se anclan en territorios específicos, formando lo que se conoce como núcleos industriales dinámicos o clústeres. Michael Porter (1998) definió un clúster como una "concentración geográfica de empresas interconectadas, proveedores especializados e instituciones asociadas".</p>
+
+                <h3>4. Definiciones Sectoriales Clave</h3>
+                <p><b>Industria Eléctrica:</b> Generación, transmisión y manufactura de equipo pesado.</p>
+                <p><b>Industria Electrónica:</b> Diseño y fabricación de dispositivos de bajo voltaje y semiconductores.</p>
+                <p><b>SEIT:</b> Servicios intangibles, software y consultoría TI.</p>
+
+                <h3>Referencias</h3>
+                <p>Ordoñez, S. (2021). Nuevo ciclo industrial, núcleo dinámico y vías de desarrollo en el mundo actual: la originalidad de México, IIEc-UNAM.</p> 
+                <p>Baldwin, R. (2016). The Great Convergence.</p>
+            </div>
+        </div>
+        
+        <div id="metodologia" class="main-content-panel">
+            <div class="panel-inner-content">
+                <h2>Metodología</h2>
+                
+                <p>El proyecto se desarrolló bajo una metodología de carácter documental y empírico. En la primera etapa, se efectuó una revisión exhaustiva de literatura bibliográfica y hemerográfica especializada en economía del conocimiento.</p>
+                
+                <p>En la segunda etapa, se llevó a cabo el procesamiento empírico utilizando bases de datos internacionales como <b>ICIOT</b> y <b>WIOT</b>. El tratamiento de estas fuentes se apoyó en herramientas estadísticas y sistemas de información geográfica (SIG).</p>
+                
+                <p>Nuestra participación específica consistió en el manejo de una base mediante un script en <b>Python</b>, que permitió filtrar y organizar registros, generando archivos para su integración cartográfica.</p>
+
+                <h3>Metodología del Visualizador Web</h3>
+                <p>Este mapa interactivo utiliza <b>HTML, CSS y Leaflet.js</b>. Los datos fueron procesados desde fuentes originales a formato GeoJSON para permitir su visualización dinámica en tres escalas: Mundial, Nacional y Estatal.</p>
+            </div>
+        </div>
+
+        <div id="contacto" class="main-content-panel">
+            <div class="panel-inner-content">
+                <h2>Contacto</h2>
+                <div class="credits-content">
+                    <h3>Universidad Nacional Autónoma de México (UNAM)</h3>
+                    <h3>Instituto de Investigaciones Económicas (IIEc)</h3>
+                    <h3>Licenciatura en Urbanismo</h3>
+                    <br>
+                    <p><strong>Dr. Ordóñez Gutiérrez Sergio Adrián</strong></p>
+                    <p><strong>Dr. Bouchain Galicia Rafael César</strong></p>
+                    <br>
+                    <p><strong>Elaborado por:</strong></p>
+                    <p>
+                        <strong>Manuel Emiliano Moreno Pérez</strong><br>
+                        tel: (+52) 55 3982 1974<br>
+                        emisliano974@gmail.com
+                    </p>
+                    <p>
+                        <strong>Ismael Kaleet Luna Aguilar</strong><br>
+                        tel: (+52) 55 7495 5883<br>
+                        ia309745@gmail.com
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
