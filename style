@@ -1,0 +1,143 @@
+body { 
+    margin: 0; padding: 0; 
+    font-family: 'Noto Sans', sans-serif;
+    background-color: #333;
+    color: #eee;
+    overflow: hidden;
+}
+
+/* --- 1. Barra de Título Superior --- */
+#title-bar {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 60px;
+    background: rgba(0, 51, 102, 0.95);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 2001;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; box-sizing: border-box;
+}
+
+.title-text {
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* --- 2. Barra de Navegación --- */
+#nav-bar {
+    position: fixed; top: 60px; left: 0;
+    width: 100%; height: 40px;
+    background: #003366;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: flex; align-items: center;
+    padding: 0 10px; box-sizing: border-box;
+}
+
+.logo {
+    height: 40px;
+    width: auto;
+    margin-right: 20px;
+}
+
+.logo-container {
+    display: flex; align-items: center;
+}
+
+.logo-spacer { width: 60px; }
+
+.nav-buttons-container {
+    display: flex; align-items: center;
+    overflow-x: auto;
+}
+
+.nav-button {
+    background: none; border: none;
+    padding: 0 15px; height: 40px;
+    line-height: 40px; color: #ccc;
+    cursor: pointer;
+    font-weight: 700; font-family: 'Noto Sans', sans-serif;
+    font-size: 14px; text-transform: uppercase;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+.nav-button:hover { color: #fff; border-bottom-color: #555; }
+.nav-button.active { color: #fff; border-bottom-color: #a50f15; }
+
+/* --- 3. Contenedor Principal --- */
+#main-container {
+    padding-top: 100px;
+    height: 100vh;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.main-content-panel {
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: #333;
+}
+.active-panel { display: block; }
+
+/* --- MAPA Y DASHBOARD --- */
+#map { 
+    height: 100%; width: 100%; 
+    background-color: #222;
+}
+
+#dashboard-overlay {
+    position: absolute;
+    top: 20px; right: 20px; /* Posicionado a la derecha sobre el mapa */
+    width: 220px;
+    background: rgba(30, 30, 30, 0.9);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    z-index: 1000;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+#dashboard-overlay h3 {
+    margin: 0 0 10px 0;
+    color: #fcae91;
+    font-size: 16px; border-bottom: 1px solid #555; padding-bottom: 5px;
+}
+
+#dashboard-overlay p { font-size: 12px; color: #ddd; margin-bottom: 10px; }
+
+.dash-btn {
+    display: block; width: 100%;
+    margin-bottom: 8px; padding: 8px;
+    background: #444; color: white;
+    border: none; border-radius: 4px;
+    cursor: pointer; font-weight: bold;
+    text-align: left; transition: background 0.2s;
+}
+.dash-btn:hover { background: #a50f15; }
+
+/* --- TEXTOS --- */
+.panel-inner-content {
+    max-width: 900px; margin: 40px auto;
+    padding: 0 20px 60px 20px;
+    line-height: 1.7; font-size: 16px;
+}
+.panel-inner-content h2 {
+    font-size: 28px; font-weight: 700; color: #fff;
+    border-bottom: 2px solid #a50f15; padding-bottom: 10px;
+}
+.panel-inner-content h3 {
+    font-size: 20px; font-weight: 700; color: #fcae91; margin-top: 30px;
+}
+.panel-inner-content p { text-align: justify; color: #ddd; }
+.panel-inner-content b, strong { color: #fff; }
+
+.credits-content p { margin-bottom: 15px; }
+
+/* Leaflet Custom */
+.leaflet-popup-content-wrapper { background: #333; color: #eee; }
+.leaflet-popup-tip { background: #333; }

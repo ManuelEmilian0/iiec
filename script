@@ -1,0 +1,131 @@
+// Variables globales
+var map;
+var currentGeoJSONLayer = null;
+
+window.onload = function() {
+    initMap();
+};
+
+function initMap() {
+    // 1. Inicializar mapa base
+    map = L.map('map', {
+        minZoom: 2, maxZoom: 18, zoomControl: false
+    }).setView([20, 0], 2);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // 2. Capa Oscura (CartoDB DarkMatter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
+
+    // Cargar capa por defecto (Mundial)
+    loadLayer('mundial');
+}
+
+// Función para cambiar de pestañas (Inicio, Marco, etc)
+function showSection(sectionId) {
+    // Ocultar todos los paneles
+    var panels = document.getElementsByClassName('main-content-panel');
+    for (var i = 0; i < panels.length; i++) {
+        panels[i].classList.remove('active-panel');
+    }
+    // Desactivar botones nav
+    var navs = document.getElementsByClassName('nav-button');
+    for (var i = 0; i < navs.length; i++) {
+        navs[i].classList.remove('active');
+    }
+
+    // Mostrar panel seleccionado
+    document.getElementById(sectionId).classList.add('active-panel');
+    
+    // Activar botón correspondiente (Lógica simple)
+    var btnIndex = 0;
+    if(sectionId === 'marco') btnIndex = 1;
+    if(sectionId === 'metodologia') btnIndex = 2;
+    if(sectionId === 'contacto') btnIndex = 3;
+    navs[btnIndex].classList.add('active');
+
+    // Si es mapa, invalidar tamaño para evitar errores de renderizado
+    if (sectionId === 'inicio' && map) {
+        setTimeout(function(){ map.invalidateSize(); }, 200);
+    }
+}
+
+// Función para Cargar Capas GeoJSON
+function loadLayer(scaleType) {
+    var statusText = document.getElementById('layer-status');
+    var filename = "";
+    var zoomCoords = [];
+    var zoomLevel = 2;
+    var layerColor = "#fcae91";
+
+    // Configuración según botón presionado
+    if (scaleType === 'mundial') {
+        filename = "data/mundial.geojson";
+        zoomCoords = [20, 0];
+        zoomLevel = 2;
+        layerColor = "#5dade2"; // Azul para mundial
+    } else if (scaleType === 'nacional') {
+        filename = "data/nacional.geojson";
+        zoomCoords = [23.6345, -102.5528];
+        zoomLevel = 5;
+        layerColor = "#a50f15"; // Rojo para nacional
+    } else if (scaleType === 'estatal') {
+        filename = "data/denue.geojson";
+        zoomCoords = [21.0, -101.0]; // Bajío aprox
+        zoomLevel = 7;
+        layerColor = "#f1c40f"; // Amarillo para puntos denue
+    }
+
+    statusText.innerHTML = "Cargando " + filename + "...";
+
+    // Limpiar capa anterior si existe
+    if (currentGeoJSONLayer) {
+        map.removeLayer(currentGeoJSONLayer);
+    }
+
+    // Cargar datos usando Fetch API
+    fetch(filename)
+        .then(response => {
+            if (!response.ok) throw new Error("HTTP error " + response.status);
+            return response.json();
+        })
+        .then(data => {
+            // Estilo básico
+            var geojsonStyle = {
+                color: layerColor,
+                weight: (scaleType === 'estatal') ? 1 : 1.5,
+                opacity: 0.8,
+                radius: 4, // Para puntos
+                fillColor: layerColor,
+                fillOpacity: 0.6
+            };
+
+            // Crear capa GeoJSON
+            currentGeoJSONLayer = L.geoJSON(data, {
+                style: geojsonStyle,
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, geojsonStyle);
+                },
+                onEachFeature: function (feature, layer) {
+                    // Popup genérico con propiedades
+                    var popupContent = "<b>Datos:</b><br>";
+                    for (var key in feature.properties) {
+                        popupContent += key + ": " + feature.properties[key] + "<br>";
+                    }
+                    layer.bindPopup(popupContent);
+                }
+            }).addTo(map);
+
+            // Mover cámara
+            map.flyTo(zoomCoords, zoomLevel, { duration: 1.5 });
+            statusText.innerHTML = "Capa cargada: " + scaleType.toUpperCase();
+        })
+        .catch(error => {
+            console.error('Error cargando el GeoJSON:', error);
+            statusText.innerHTML = "Error al cargar datos. Ver consola.";
+        });
+}

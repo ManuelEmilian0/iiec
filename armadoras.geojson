@@ -1,0 +1,27 @@
+{
+"type": "FeatureCollection",
+"name": "Ubicación de armadoras automotrices",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "NOMBRE": "1 NISSAN", "X": -102.27, "Y": 21.74, "Estado": "Aguascalientes", "Municipio": "Aguascalientes" }, "geometry": { "type": "Point", "coordinates": [ -102.272753934861527, 21.738793552255661 ] } },
+{ "type": "Feature", "properties": { "id": 2, "NOMBRE": "2 MERCEDES BENZ", "X": -102.29, "Y": 21.74, "Estado": "Aguascalientes", "Municipio": "Aguascalientes" }, "geometry": { "type": "Point", "coordinates": [ -102.286552333811585, 21.737957653003836 ] } },
+{ "type": "Feature", "properties": { "id": 3, "NOMBRE": "3 NISSAN", "X": -102.28, "Y": 21.81, "Estado": "Aguascalientes", "Municipio": "Aguascalientes" }, "geometry": { "type": "Point", "coordinates": [ -102.279753122734775, 21.809363042757983 ] } },
+{ "type": "Feature", "properties": { "id": 4, "NOMBRE": "4 FORD", "X": -99.2, "Y": 19.66, "Estado": "Estado de México", "Municipio": "Cuautitlán Izcalli" }, "geometry": { "type": "Point", "coordinates": [ -99.20062289906005, 19.66084414353287 ] } },
+{ "type": "Feature", "properties": { "id": 5, "NOMBRE": "5 NISSAN", "X": -99.17, "Y": 18.91, "Estado": "Morelos", "Municipio": "Jiutepec" }, "geometry": { "type": "Point", "coordinates": [ -99.171876234580779, 18.90785466845141 ] } },
+{ "type": "Feature", "properties": { "id": 6, "NOMBRE": "6 HONDA", "X": -103.25, "Y": 20.54, "Estado": "Jalisco", "Municipio": "El Salto" }, "geometry": { "type": "Point", "coordinates": [ -103.253052689258453, 20.536585165306416 ] } },
+{ "type": "Feature", "properties": { "id": 7, "NOMBRE": "7 FORD", "X": -110.92, "Y": 29.02, "Estado": "Sonora", "Municipio": "Hermosillo" }, "geometry": { "type": "Point", "coordinates": [ -110.917263398836567, 29.015095579030241 ] } },
+{ "type": "Feature", "properties": { "id": 8, "NOMBRE": "8 VOLSWAGEN", "X": -101.47, "Y": 21.01, "Estado": "Guanajuato", "Municipio": "Silao de la Victoria" }, "geometry": { "type": "Point", "coordinates": [ -101.474959004265074, 21.009354592055768 ] } },
+{ "type": "Feature", "properties": { "id": 9, "NOMBRE": "9 GENERAL MOTORS", "X": -101.38, "Y": 20.95, "Estado": "Guanajuato", "Municipio": "Silao de la Victoria" }, "geometry": { "type": "Point", "coordinates": [ -101.380419973777464, 20.948110104069187 ] } },
+{ "type": "Feature", "properties": { "id": 10, "NOMBRE": "10 GRECH MOTORS", "X": -115.43, "Y": 32.58, "Estado": "Baja California", "Municipio": "Mexicali" }, "geometry": { "type": "Point", "coordinates": [ -115.42546530507947, 32.584546579376195 ] } },
+{ "type": "Feature", "properties": { "id": 11, "NOMBRE": "11 KIA", "X": -99.98, "Y": 25.74, "Estado": "Nuevo León", "Municipio": "Pesquería" }, "geometry": { "type": "Point", "coordinates": [ -99.984956891553665, 25.74402007358324 ] } },
+{ "type": "Feature", "properties": { "id": 12, "NOMBRE": "12 VOLKSWAGEN", "X": -98.25, "Y": 19.12, "Estado": "Puebla", "Municipio": "Cuautlancingo" }, "geometry": { "type": "Point", "coordinates": [ -98.251258055356161, 19.121521687693352 ] } },
+{ "type": "Feature", "properties": { "id": 13, "NOMBRE": "13 AUDI", "X": -97.75, "Y": 19.22, "Estado": "Puebla", "Municipio": "San Jose Chiapa" }, "geometry": { "type": "Point", "coordinates": [ -97.754615681551854, 19.220403842415866 ] } },
+{ "type": "Feature", "properties": { "id": 14, "NOMBRE": "14 MAZDA", "X": -101.24, "Y": 20.61, "Estado": "Guanajuato", "Municipio": "Salamanca" }, "geometry": { "type": "Point", "coordinates": [ -101.236661654281562, 20.610935850278533 ] } },
+{ "type": "Feature", "properties": { "id": 15, "NOMBRE": "15 STELLANTIS", "X": -101.11, "Y": 25.27, "Estado": "Coahuila", "Municipio": "Saltillo" }, "geometry": { "type": "Point", "coordinates": [ -101.110876249359961, 25.266857086682432 ] } },
+{ "type": "Feature", "properties": { "id": 16, "NOMBRE": "16 BMW", "X": -100.85, "Y": 21.97, "Estado": "San Luis Potosí", "Municipio": "Villa de Reyes" }, "geometry": { "type": "Point", "coordinates": [ -100.847706785326736, 21.968585114239737 ] } },
+{ "type": "Feature", "properties": { "id": 17, "NOMBRE": "17 GENERAL MOTORS", "X": -100.89, "Y": 22.06, "Estado": "San Luis Potosí", "Municipio": "San Luis Potosí" }, "geometry": { "type": "Point", "coordinates": [ -100.893126515204003, 22.06288146875535 ] } },
+{ "type": "Feature", "properties": { "id": 18, "NOMBRE": "18 TOYOTA", "X": -116.72, "Y": 32.5, "Estado": "Baja California", "Municipio": "Tijuana" }, "geometry": { "type": "Point", "coordinates": [ -116.720690018119342, 32.500320261656128 ] } },
+{ "type": "Feature", "properties": { "id": 19, "NOMBRE": "19 NISSAN", "X": -99.56, "Y": 19.29, "Estado": "Estado de México", "Municipio": "San mateo Atenco" }, "geometry": { "type": "Point", "coordinates": [ -99.563967281512134, 19.29168797935122 ] } },
+{ "type": "Feature", "properties": { "id": 20, "NOMBRE": "20 STELLANTIS", "X": -99.61, "Y": 19.3, "Estado": "Estado de México", "Municipio": "Toluca" }, "geometry": { "type": "Point", "coordinates": [ -99.614342385204807, 19.302253524001522 ] } }
+]
+}
