@@ -1,57 +1,49 @@
+/* =========================================
+   1. RESET Y ESTILOS GENERALES
+   ========================================= */
 body { 
     margin: 0; padding: 0; 
     font-family: 'Noto Sans', sans-serif;
     background-color: #333;
     color: #eee;
-    overflow: hidden;
+    overflow: hidden; /* Evita scroll doble */
 }
 
-/* --- 1. Barra de Título Superior --- */
+/* =========================================
+   2. ENCABEZADO (TÍTULO Y NAV)
+   ========================================= */
+/* Barra Superior (Logos y Título) */
 #title-bar {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 60px;
     background: rgba(0, 51, 102, 0.95);
     box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    z-index: 2001;
+    z-index: 2001; /* Encima de todo */
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px; box-sizing: border-box;
 }
 
 .title-text {
-    font-size: 14px;
-    font-weight: 900;
-    color: #fff;
-    text-align: center;
-    line-height: 1.2;
+    font-size: 14px; font-weight: 900; color: #fff;
+    text-align: center; line-height: 1.2;
 }
 
-/* --- 2. Barra de Navegación --- */
+.logo-container { display: flex; align-items: center; }
+.logo { height: 40px; width: auto; margin-right: 20px; }
+.logo-spacer { width: 60px; }
+
+/* Barra de Navegación (Menú) */
 #nav-bar {
     position: fixed; top: 60px; left: 0;
     width: 100%; height: 40px;
     background: #003366;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     z-index: 2000;
     display: flex; align-items: center;
     padding: 0 10px; box-sizing: border-box;
 }
 
-.logo {
-    height: 40px;
-    width: auto;
-    margin-right: 20px;
-}
-
-.logo-container {
-    display: flex; align-items: center;
-}
-
-.logo-spacer { width: 60px; }
-
-.nav-buttons-container {
-    display: flex; align-items: center;
-    overflow-x: auto;
-}
+.nav-buttons-container { display: flex; align-items: center; overflow-x: auto; }
 
 .nav-button {
     background: none; border: none;
@@ -61,40 +53,43 @@ body {
     font-weight: 700; font-family: 'Noto Sans', sans-serif;
     font-size: 14px; text-transform: uppercase;
     border-bottom: 3px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
+    transition: all 0.2s;
     flex-shrink: 0;
 }
 .nav-button:hover { color: #fff; border-bottom-color: #555; }
 .nav-button.active { color: #fff; border-bottom-color: #a50f15; }
 
-/* --- 3. Contenedor Principal --- */
+/* =========================================
+   3. CONTENEDOR PRINCIPAL
+   ========================================= */
 #main-container {
-    padding-top: 100px;
+    padding-top: 100px; /* 60px título + 40px nav */
     height: 100vh;
     box-sizing: border-box;
     position: relative;
-}
-
-.main-content-panel {
-    display: none;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    background-color: #333;
-}
-.active-panel { display: block; }
-
-/* --- MAPA Y DASHBOARD --- */
-#map { 
-    height: 100%; width: 100%; 
     background-color: #222;
 }
 
+.main-content-panel {
+    display: none; /* Se activa con JS */
+    width: 100%; height: 100%;
+    position: relative;
+    overflow-y: auto; 
+}
+.active-panel { display: block; }
+
+/* =========================================
+   4. MAPA Y PANELES FLOTANTES
+   ========================================= */
+#map { height: 100%; width: 100%; background: #222; }
+
+/* --- PANEL DERECHO: DASHBOARD (Escalas) --- */
 #dashboard-overlay {
     position: absolute;
-    top: 20px; right: 20px; /* Posicionado a la derecha sobre el mapa */
+    top: 20px; /* Relativo al contenedor (ya tiene padding 100px) */
+    right: 20px;
     width: 220px;
-    background: rgba(30, 30, 30, 0.9);
+    background: rgba(30, 30, 30, 0.95);
     padding: 15px;
     border-radius: 8px;
     border: 1px solid #555;
@@ -103,28 +98,94 @@ body {
 }
 
 #dashboard-overlay h3 {
-    margin: 0 0 10px 0;
-    color: #fcae91;
+    margin: 0 0 10px 0; color: #fcae91;
     font-size: 16px; border-bottom: 1px solid #555; padding-bottom: 5px;
 }
 
-#dashboard-overlay p { font-size: 12px; color: #ddd; margin-bottom: 10px; }
-
 .dash-btn {
     display: block; width: 100%;
-    margin-bottom: 8px; padding: 8px;
+    margin-bottom: 8px; padding: 10px;
     background: #444; color: white;
     border: none; border-radius: 4px;
     cursor: pointer; font-weight: bold;
     text-align: left; transition: background 0.2s;
+    font-size: 13px;
 }
 .dash-btn:hover { background: #a50f15; }
 
-/* --- TEXTOS --- */
+/* --- PANEL IZQUIERDO: FILTROS --- */
+.filter-panel {
+    position: absolute;
+    top: 20px; left: 20px;
+    width: 240px;
+    max-height: calc(100vh - 160px); /* Evita que se salga por abajo */
+    overflow-y: auto;
+    background: rgba(30, 30, 30, 0.95);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    z-index: 1000;
+    display: none; /* Controlado por JS */
+    flex-direction: column;
+}
+
+.filter-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #555; margin-bottom: 10px; padding-bottom: 5px;
+}
+#filter-title { margin: 0; color: #fcae91; font-size: 14px; font-weight: bold; }
+
+.close-btn {
+    background: none; border: none; color: #aaa; 
+    font-size: 20px; cursor: pointer;
+}
+.close-btn:hover { color: #fff; }
+
+/* Botones generados por JS */
+.dynamic-filter-btn {
+    display: block; width: 100%;
+    margin: 4px 0; padding: 8px;
+    background: #333; color: #eee;
+    border: 1px solid #555; border-radius: 4px;
+    cursor: pointer; text-align: left; font-size: 12px;
+}
+.dynamic-filter-btn:hover { background: #555; }
+.dynamic-filter-btn.active { background: #a50f15; border-color: #fff; font-weight: bold; }
+
+.back-btn {
+    width: 100%; padding: 6px; margin-bottom: 10px;
+    background: #666; color: white;
+    border: none; border-radius: 4px;
+    cursor: pointer; font-size: 11px; text-transform: uppercase;
+}
+.back-btn:hover { background: #888; }
+
+/* =========================================
+   5. LEYENDA (Esquina Inferior Izquierda)
+   ========================================= */
+.info.legend {
+    background: rgba(30, 30, 30, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    color: #eee;
+    font-size: 12px;
+    line-height: 18px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    min-width: 160px;
+    margin-bottom: 20px; margin-left: 20px;
+}
+.info.legend h4 { margin: 0 0 8px; color: #fcae91; font-size: 13px; }
+.legend-item { display: flex; align-items: center; margin-bottom: 4px; font-size: 11px; }
+.legend-color { display: inline-block; margin-right: 8px; opacity: 0.9; }
+
+/* =========================================
+   6. CONTENIDO DE TEXTO (Marco, Metodología, etc)
+   ========================================= */
 .panel-inner-content {
     max-width: 900px; margin: 40px auto;
     padding: 0 20px 60px 20px;
-    line-height: 1.7; font-size: 16px;
+    line-height: 1.7; font-size: 16px; color: #ddd;
 }
 .panel-inner-content h2 {
     font-size: 28px; font-weight: 700; color: #fff;
@@ -133,11 +194,13 @@ body {
 .panel-inner-content h3 {
     font-size: 20px; font-weight: 700; color: #fcae91; margin-top: 30px;
 }
-.panel-inner-content p { text-align: justify; color: #ddd; }
+.panel-inner-content p { text-align: justify; margin-bottom: 15px; }
 .panel-inner-content b, strong { color: #fff; }
 
-.credits-content p { margin-bottom: 15px; }
+.credits-content p { margin-bottom: 5px; }
+.credits-content h3 { color: #ddd; font-size: 16px; margin: 5px 0; }
 
-/* Leaflet Custom */
-.leaflet-popup-content-wrapper { background: #333; color: #eee; }
+/* Ajustes de Leaflet Popup */
+.leaflet-popup-content-wrapper { background: #333; color: #eee; border-radius: 4px; }
 .leaflet-popup-tip { background: #333; }
+.leaflet-container { font-family: 'Noto Sans', sans-serif; }

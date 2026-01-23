@@ -42,16 +42,24 @@
 
     <div id="main-container">
 
+        <div id="filter-panel" class="filter-panel" style="display:none;">
+            <div class="filter-header">
+                <h4 id="filter-title">Filtros Disponibles</h4>
+                <button onclick="closeFilters()" class="close-btn">×</button>
+            </div>
+            <div id="filter-buttons-container" class="filter-scroll"></div>
+        </div>
+
         <div id="inicio" class="main-content-panel active-panel">
             
             <div id="dashboard-overlay">
-                <h3>Control de Escalas</h3>
-                <p>Seleccione el nivel de análisis:</p>
+                <h3>Escalas de Análisis</h3>
                 <button onclick="loadLayer('mundial')" class="dash-btn">🌎 Escala Mundial</button>
                 <button onclick="loadLayer('nacional')" class="dash-btn">🇲🇽 Escala Nacional</button>
-                <button onclick="loadLayer('estatal')" class="dash-btn">📍 Escala Estatal (DENUE)</button>
+                <button onclick="loadLayer('estatal')" class="dash-btn">🏭 Estatal</button>
+                
                 <hr style="border-color: #555;">
-                <p id="layer-status" style="font-size: 12px; color: #aaa;">Esperando selección...</p>
+                <p id="layer-status" style="font-size: 12px; color: #aaa;">Seleccione una escala</p>
             </div>
 
             <div id="map"></div>
