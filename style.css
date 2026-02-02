@@ -83,37 +83,68 @@ body {
    ========================================= */
 #map { height: 100%; width: 100%; background: #222; }
 
-/* --- PANEL DERECHO: DASHBOARD (Escalas) --- */
-#dashboard-overlay {
+/* =========================================
+   PANELES FLOTANTES DERECHOS (CONTENEDOR)
+   ========================================= */
+
+/* 1. Contenedor Maestro Invisible (agrupa todo a la derecha) */
+#right-sidebar-container {
     position: absolute;
-    /* IMPORTANTE: 110px para bajarlo debajo de la barra de navegación */
-    top: 110px; 
-    right: 20px;
-    width: 220px;
-    background: rgba(30, 30, 30, 0.95);
+    top: 110px;        /* Debajo del header */
+    right: 20px;       /* Margen derecho */
+    width: 240px;      /* Ancho fijo para ambos paneles */
+    z-index: 2000;     /* Muy por encima del mapa */
+    display: flex;
+    flex-direction: column; /* IMPORTANTE: Apila uno debajo del otro */
+    gap: 15px;         /* Espacio entre Escalas y Simbología */
+    pointer-events: none; /* Deja pasar clicks al mapa en los huecos */
+}
+
+/* 2. Estilo Común para las Cajas (Dashboard y Leyenda) */
+#dashboard-overlay, 
+#legend-overlay {
+    position: relative; /* Ya no son absolutos, fluyen dentro del contenedor */
+    display: block !important; /* Forzar visibilidad */
+    width: 100%;
+    background: rgba(30, 30, 30, 0.95); /* Fondo oscuro casi sólido */
+    color: #fff;
     padding: 15px;
     border-radius: 8px;
     border: 1px solid #555;
-    z-index: 1000;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    pointer-events: auto; /* Reactivar clicks dentro de las cajas */
+    box-sizing: border-box;
 }
 
-#dashboard-overlay h3 {
-    margin: 0 0 10px 0; color: #fcae91;
-    font-size: 16px; border-bottom: 1px solid #555; padding-bottom: 5px;
+/* 3. Ajustes específicos de textos */
+#dashboard-overlay h3, 
+#legend-overlay h4 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    color: #fcae91; /* Color salmón para títulos */
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.dash-btn {
-    display: block; width: 100%;
-    margin-bottom: 8px; padding: 10px;
-    background: #444; color: white;
-    border: none; border-radius: 4px;
-    cursor: pointer; font-weight: bold;
-    text-align: left; transition: background 0.2s;
+/* 4. Contenido de la Leyenda */
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
     font-size: 13px;
+    color: #eee;
 }
-.dash-btn:hover { background: #a50f15; }
-
+.legend-color {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    border-radius: 4px;
+    border: 1px solid #777;
+    display: inline-block;
+}
 /* --- PANEL IZQUIERDO: FILTROS --- */
 /* Corregido ID de sidebar-controls a filter-panel para coincidir con JS */
 #filter-panel {

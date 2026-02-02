@@ -11,14 +11,6 @@ var currentScaleType = '';
 const RampaRojos = ['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15'];
 const Grosores = [1, 2, 4, 6, 8];
 
-// Definición de Leyenda
-var legend = L.control({position: 'bottomleft'});
-legend.onAdd = function (map) {
-    var div = L.DomUtil.create('div', 'info legend');
-    div.innerHTML = '<h4>Simbología</h4><div id="legend-content"><small>Seleccione una escala y aplique filtros</small></div>';
-    return div;
-};
-
 // ==========================================
 // 2. INICIALIZACIÓN
 // ==========================================
@@ -27,22 +19,48 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initMap() {
+    // 1. Configurar Mapa
     map = L.map('map', {
         minZoom: 2, maxZoom: 18, zoomControl: false
     }).setView([23.6345, -102.5528], 5);
 
+    // Zoom abajo a la derecha
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+    // Mapa base oscuro
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 19
     }).addTo(map);
 
-    legend.addTo(map);
+    // 2. CONFIGURAR PANELES (Mover a la derecha)
+    setupRightPanel();
     
-    // Cargar capa de contexto PERMANENTE
+    // 3. CARGAR CAPA DE CONTEXTO (Esta es la función que faltaba)
     cargarArmadorasContexto();
+}
+
+// Función para reestructurar el HTML y crear el panel derecho unificado
+function setupRightPanel() {
+    // Crear el contenedor principal a la derecha si no existe
+    if (!document.getElementById('right-sidebar-container')) {
+        var rightContainer = document.createElement('div');
+        rightContainer.id = 'right-sidebar-container';
+        document.body.appendChild(rightContainer);
+
+        // Mover el Dashboard existente (Escalas) dentro del contenedor
+        var dashboard = document.getElementById('dashboard-overlay');
+        if (dashboard) {
+            rightContainer.appendChild(dashboard);
+        }
+
+        // Crear la Leyenda (Simbología) debajo del dashboard
+        var legendDiv = document.createElement('div');
+        legendDiv.id = 'legend-overlay';
+        legendDiv.innerHTML = '<h4>Simbología</h4><div id="legend-content"><small style="color:#aaa">Seleccione una escala</small></div>';
+        rightContainer.appendChild(legendDiv);
+    }
 }
 
 // Carga Armadoras como fondo fijo (Puntos blancos tenues)
@@ -58,7 +76,7 @@ function cargarArmadorasContexto() {
                 }
             }).addTo(map);
         })
-        .catch(e => console.log("Fondo armadoras no encontrado"));
+        .catch(e => console.log("Fondo armadoras no encontrado (revisa el nombre del archivo .geojson)"));
 }
 
 // ==========================================
@@ -71,16 +89,20 @@ function loadLayer(scaleType) {
     
     // Resetear UI
     if(filterContainer) filterContainer.innerHTML = ""; 
+    
     // Limpiar capa activa anterior (pero NO la de armadorasLayer)
     if (currentGeoJSONLayer) { map.removeLayer(currentGeoJSONLayer); }
-    document.getElementById('legend-content').innerHTML = "<small>Use el panel lateral para filtrar datos</small>";
+    
+    // Resetear leyenda
+    var legendContent = document.getElementById('legend-content');
+    if(legendContent) legendContent.innerHTML = "<small style='color:#aaa'>Use el panel lateral para filtrar datos</small>";
 
     currentScaleType = scaleType;
     var filename = "";
     var zoomCoords = [];
     var zoomLevel = 5;
 
-    // Configuración
+    // Configuración según botón presionado
     if (scaleType === 'mundial') {
         filename = "mundial.geojson";
         zoomCoords = [20, 0]; zoomLevel = 2;
@@ -92,9 +114,9 @@ function loadLayer(scaleType) {
         if(filterPanel) filterPanel.style.display = 'flex';
         
     } else if (scaleType === 'estatal') {
-        filename = "denue.geojson"; // Filtraremos este archivo
+        filename = "denue.geojson"; 
         zoomCoords = [21.0, -101.0]; zoomLevel = 7;
-        if(filterPanel) filterPanel.style.display = 'flex'; // En estatal AHORA SÍ mostramos filtro
+        if(filterPanel) filterPanel.style.display = 'flex'; 
     }
 
     if(statusText) statusText.innerHTML = "Cargando datos...";
@@ -133,14 +155,13 @@ function iniciarFiltroMundial_Paso1(data) {
 function iniciarFiltroMundial_Paso2(data, industriaSel) {
     document.getElementById('filter-title').innerText = "2. Seleccione Origen";
     
-    // Filtrar datos previos
     var datosFiltrados = data.features.filter(f => f.properties.Industria === industriaSel);
     var origenes = [...new Set(datosFiltrados.map(f => f.properties.Pais_Orige))].sort();
 
     crearBotones(origenes, (origenSel) => {
         var finalData = datosFiltrados.filter(f => f.properties.Pais_Orige === origenSel);
         renderizarMapaFlujos(finalData, 'Valor', 'MDD', 'Pais_Desti');
-    }, () => iniciarFiltroMundial_Paso1(data)); // Callback para botón "Volver"
+    }, () => iniciarFiltroMundial_Paso1(data)); 
 }
 
 // ==========================================
@@ -148,7 +169,6 @@ function iniciarFiltroMundial_Paso2(data, industriaSel) {
 // ==========================================
 function iniciarFiltroNacional_Paso1(data) {
     document.getElementById('filter-title').innerText = "1. Seleccione Subsector";
-    // Usamos SUBSECTO_3 o SUBSECTO_2
     var opciones = [...new Set(data.features.map(f => f.properties.SUBSECTO_3 || f.properties.SUBSECTO_2))].sort();
     
     crearBotones(opciones, (subsectorSel) => {
@@ -173,7 +193,6 @@ function iniciarFiltroNacional_Paso2(data, subsectorSel) {
 // ==========================================
 function iniciarFiltroEstatal_Paso1(data) {
     document.getElementById('filter-title').innerText = "1. Seleccione Ensambladora";
-    // Filtramos valores nulos
     var opciones = [...new Set(data.features.map(f => f.properties.Ensamblado).filter(x => x))].sort();
     
     crearBotones(opciones, (ensambladoSel) => {
@@ -193,7 +212,6 @@ function iniciarFiltroEstatal_Paso2(data, ensambladoSel) {
     }, () => iniciarFiltroEstatal_Paso1(data));
 }
 
-
 // ==========================================
 // 7. RENDERIZADO DE MAPAS
 // ==========================================
@@ -202,7 +220,6 @@ function iniciarFiltroEstatal_Paso2(data, ensambladoSel) {
 function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino) {
     if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
 
-    // Calcular Breaks
     var valores = features.map(f => f.properties[campoValor]).sort((a,b) => a - b);
     var breaks = calcularBreaks(valores);
 
@@ -231,7 +248,7 @@ function renderizarMapaPuntos(features) {
         pointToLayer: function(feature, latlng) {
             return L.circleMarker(latlng, {
                 radius: 6,
-                fillColor: "#ffff00", // Amarillo para destacar sobre el fondo blanco
+                fillColor: "#ffff00", 
                 color: "#333",
                 weight: 1,
                 opacity: 1,
@@ -247,12 +264,14 @@ function renderizarMapaPuntos(features) {
         }
     }).addTo(map);
     
-    // Leyenda simple para puntos
-    document.getElementById('legend-content').innerHTML = 
-        `<div class="legend-item"><span class="legend-color" style="background:#ffff00; border-radius:50%"></span>Proveedores DENUE</div>
-         <div class="legend-item"><span class="legend-color" style="background:#ffffff; border-radius:50%"></span>Todas las Armadoras</div>`;
+    // Leyenda simple para puntos (apuntando al nuevo panel)
+    var legendDiv = document.getElementById('legend-content');
+    if(legendDiv) {
+        legendDiv.innerHTML = 
+            `<div class="legend-item"><span class="legend-color" style="background:#ffff00; border-radius:50%"></span>Proveedores DENUE</div>
+             <div class="legend-item"><span class="legend-color" style="background:#ffffff; border-radius:50%"></span>Todas las Armadoras</div>`;
+    }
 }
-
 
 // ==========================================
 // 8. UTILIDADES
@@ -262,11 +281,10 @@ function crearBotones(lista, callback, backCallback) {
     var container = document.getElementById('filter-buttons-container');
     container.innerHTML = "";
 
-    // Botón Volver (si existe callback)
     if(backCallback) {
         var btnBack = document.createElement("button");
         btnBack.innerText = "⬅ Volver / Cambiar Filtro";
-        btnBack.className = "back-btn"; // Clase CSS nueva
+        btnBack.className = "back-btn"; 
         btnBack.onclick = backCallback;
         container.appendChild(btnBack);
     }
@@ -281,7 +299,6 @@ function crearBotones(lista, callback, backCallback) {
         btn.innerText = item;
         btn.className = "dynamic-filter-btn";
         btn.onclick = function() {
-             // Visual active state
              var siblings = container.querySelectorAll('.dynamic-filter-btn');
              siblings.forEach(s => s.classList.remove('active'));
              this.classList.add('active');
@@ -308,14 +325,16 @@ function getClase(valor, breaks) {
 
 function actualizarLeyenda(breaks, moneda) {
     var div = document.getElementById('legend-content');
+    if(!div) return;
+
     var f = (n) => n.toLocaleString('es-MX', {maximumFractionDigits: 0});
     
-    var html = `<strong>Valor (${moneda})</strong><br>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[0]}; height:${Grosores[0]}px; margin-top:8px;"></span> &le; $${f(breaks[0])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[1]}; height:${Grosores[1]}px; margin-top:6px;"></span> $${f(breaks[0])} - $${f(breaks[1])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[2]}; height:${Grosores[2]}px; margin-top:4px;"></span> $${f(breaks[1])} - $${f(breaks[2])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[3]}; height:${Grosores[3]}px; margin-top:2px;"></span> $${f(breaks[2])} - $${f(breaks[3])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[4]}; height:${Grosores[4]}px;"></span> &gt; $${f(breaks[3])}</div>`;
+    var html = `<div style="margin-bottom:8px; font-weight:bold; color:#ddd">Valor (${moneda})</div>`;
+    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[0]};"></span> &le; $${f(breaks[0])}</div>`;
+    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[1]};"></span> $${f(breaks[0])} - $${f(breaks[1])}</div>`;
+    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[2]};"></span> $${f(breaks[1])} - $${f(breaks[2])}</div>`;
+    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[3]};"></span> $${f(breaks[2])} - $${f(breaks[3])}</div>`;
+    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[4]};"></span> &gt; $${f(breaks[3])}</div>`;
     
     div.innerHTML = html;
 }
@@ -330,9 +349,62 @@ function showSection(id) {
         if(id === 'inicio' && map) setTimeout(() => map.invalidateSize(), 200);
     }
     
-    // Actualizar botones nav
+    // Actualizar botones nav (lógica simple)
     var navs = document.querySelectorAll('.nav-button');
     navs.forEach(n => n.classList.remove('active'));
-    // Lógica simple para activar nav
-    // (Asumiendo que agregaste onclick="showSection(...)" en HTML)
+    // Aquí podrías agregar lógica para activar el botón correspondiente si tienen IDs
+}
+
+// ==========================================
+// FIX: FUNCIONES DE INTERFAZ Y ERRORES
+// ==========================================
+
+// 1. Corrige el error "closeFilters is not defined"
+function closeFilters() {
+    var panel = document.getElementById('filter-panel');
+    if (panel) {
+        panel.style.display = 'none';
+        
+        // Opcional: Limpiar el mapa al cerrar filtros si lo deseas
+        // if(currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+        // document.getElementById('legend-content').innerHTML = '<small>Filtros cerrados</small>';
+    }
+}
+
+// 2. Asegurar que el panel derecho existe y tiene la leyenda
+// (Esta función se llama en initMap, pero la reforzamos aquí por si acaso)
+function setupRightPanel() {
+    var containerId = 'right-sidebar-container';
+    var container = document.getElementById(containerId);
+
+    // Si no existe el contenedor principal, créalo
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        document.body.appendChild(container);
+    }
+
+    // Mover el Dashboard (Escalas) adentro
+    var dashboard = document.getElementById('dashboard-overlay');
+    if (dashboard && dashboard.parentNode !== container) {
+        container.appendChild(dashboard);
+    }
+
+    // Crear o Mover la Leyenda (Simbología)
+    var legend = document.getElementById('legend-overlay');
+    if (!legend) {
+        legend = document.createElement('div');
+        legend.id = 'legend-overlay';
+        // Contenido por defecto para que se vea algo aunque no haya datos
+        legend.innerHTML = `
+            <h4>Simbología</h4>
+            <div id="legend-content">
+                <small style="color:#aaa; font-style:italic;">
+                    Seleccione una escala<br>para ver datos.
+                </small>
+            </div>`;
+        container.appendChild(legend);
+    } else if (legend.parentNode !== container) {
+        container.appendChild(legend);
+    }
 }
