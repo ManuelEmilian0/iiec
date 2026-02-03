@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -42,26 +46,7 @@
 
     <div id="main-container">
 
-        <div id="filter-panel" class="filter-panel" style="display:none;">
-            <div class="filter-header">
-                <h4 id="filter-title">Filtros Disponibles</h4>
-                <button onclick="closeFilters()" class="close-btn">×</button>
-            </div>
-            <div id="filter-buttons-container" class="filter-scroll"></div>
-        </div>
-
         <div id="inicio" class="main-content-panel active-panel">
-            
-            <div id="dashboard-overlay">
-                <h3>Escalas de Análisis</h3>
-                <button onclick="loadLayer('mundial')" class="dash-btn">🌎 Escala Mundial</button>
-                <button onclick="loadLayer('nacional')" class="dash-btn">🇲🇽 Escala Nacional</button>
-                <button onclick="loadLayer('estatal')" class="dash-btn">🏭 Estatal</button>
-                
-                <hr style="border-color: #555;">
-                <p id="layer-status" style="font-size: 12px; color: #aaa;">Seleccione una escala</p>
-            </div>
-
             <div id="map"></div>
         </div>
         
@@ -130,8 +115,6 @@
             </div>
         </div>
 
-    </div>
-
-    <script src="script.js"></script>
+    </div> <script src="script.js"></script>
 </body>
 </html>
