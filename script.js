@@ -251,235 +251,297 @@ function iniciarFiltroNacional_Paso2(data, subsectorSel) {
 }
 
 // ==========================================
-// 6. LÓGICA ESTATAL (CLÚSTERES + RADIO 20KM + COLORES DINÁMICOS)
+// 6. LÓGICA ESTATAL (CORREGIDA Y BLINDADA)
 // ==========================================
 
-// 1. DEFINIR PALETA DE COLORES COMPARTIDA (Mapa <-> Gráfica)
-// Esto asegura que si "Automotriz" es rojo en el mapa, sea rojo en la gráfica
-function getColorConjunto(conjunto) {
-    // Normalizamos a minúsculas para evitar errores de texto
-    const c = (conjunto || '').toString().trim();
-    
-    // Puedes agregar más categorías aquí según tus datos exactos
-    if (c.includes('Automo')) return '#FF6384';   // Rojo/Rosa (Automotriz)
-    if (c.includes('Electrónica')) return '#36A2EB'; // Azul (Electrónica)
-    if (c.includes('Eléctrica')) return '#FFCE56';   // Amarillo (Eléctrica)
-    if (c.includes('Aero')) return '#4BC0C0';        // Turquesa (Aeroespacial)
-    if (c.includes('Logística')) return '#9966FF';   // Morado (Logística)
-    if (c.includes('Metal')) return '#FF9F40';       // Naranja (Metalmecánica)
-    
-    return '#888888'; // Color Gris para "Otros" o desconocidos
-}
+var armadorasRawData = null; 
 
 function iniciarLogicaEstatal() {
-    // Limpieza previa
+    // 1. Limpieza de capas previas
     if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
     if (armadorasLayer) map.removeLayer(armadorasLayer);
     if (circleLayer) map.removeLayer(circleLayer);
     
-    // Cargar DENUE (Ahora con colores y más visibilidad)
-    fetch('denue.geojson')
-        .then(r => r.json())
-        .then(denueData => {
-            denueRawData = denueData;
+    // Ocultar gráfica anterior
+    var statsDiv = document.getElementById('stats-overlay');
+    if(statsDiv) statsDiv.style.display = 'none';
 
-            currentGeoJSONLayer = L.geoJSON(denueData, {
-                pointToLayer: function (feature, latlng) {
-                    // Obtenemos el color según su Conjunto
-                    var colorPunto = getColorConjunto(feature.properties.Conjunto);
-                    
-                    return L.circleMarker(latlng, {
-                        radius: 4,           // MÁS GRANDE (antes era 2)
-                        fillColor: colorPunto, // COLOR DINÁMICO
-                        color: "#222",       // Borde oscuro para contraste
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8     // MÁS VISIBLE (antes era 0.4)
-                    });
-                },
-                onEachFeature: function(feature, layer) {
-                    var tipo = feature.properties.Conjunto || 'Sin clasificación';
-                    var nombre = feature.properties.Empresa || 'Unidad Económica';
-                    // Popup con el color correspondiente
-                    layer.bindPopup(`
-                        <strong style="color:${getColorConjunto(tipo)}">${tipo}</strong><br>
-                        ${nombre}
-                    `);
-                }
-            }).addTo(map);
-
-            // Cargar ARMADORAS encima
-            cargarArmadorasInteractivas();
-            
-            // Actualizar la Leyenda para que explique los colores
-            actualizarLeyendaEstatal();
-        })
-        .catch(e => console.error("Error cargando DENUE: ", e));
+    // 2. Cargar Datos
+    Promise.all([
+        fetch('denue.geojson').then(r => r.json()),
+        fetch('armadoras.geojson').then(r => r.json())
+    ]).then(([denueData, armadorasData]) => {
         
-    map.flyTo([21.0, -100.0], 7, { duration: 1.5 });
+        denueRawData = denueData;
+        armadorasRawData = armadorasData;
+
+        // 3. Generar Menú
+        generarMenuEstados(denueData);
+
+        // Mensaje inicial
+        var legendContent = document.getElementById('legend-content');
+        if(legendContent) legendContent.innerHTML = "<small>Seleccione un Estado de la lista</small>";
+        
+        // Vista general
+        map.flyTo([23.6345, -102.5528], 5);
+    })
+    .catch(err => console.error("Error cargando datos estatales:", err));
+}
+
+function generarMenuEstados(data) {
+    var container = document.getElementById('filter-buttons-container');
+    var title = document.getElementById('filter-title');
+    
+    if (container) container.innerHTML = "";
+    if (title) title.innerText = "Seleccione Estado";
+
+    // Extraer nombres únicos
+    var estados = [...new Set(data.features.map(f => f.properties.NOMGEO || "Desconocido"))].sort();
+
+    estados.forEach(estado => {
+        if(!estado) return; 
+        var btn = document.createElement("button");
+        btn.className = "dynamic-filter-btn";
+        btn.innerHTML = `<b>${estado}</b>`;
+        btn.onclick = function() {
+            document.querySelectorAll('.dynamic-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            filtrarPorEstado(estado);
+        };
+        container.appendChild(btn);
+    });
+}
+
+// Función auxiliar local para evitar conflictos
+function limpiarTexto(texto) {
+    if (!texto) return "";
+    return texto.toString().toUpperCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
+
+function filtrarPorEstado(nombreEstado) {
+    console.log("Filtrando estado:", nombreEstado);
+    var estadoBusqueda = limpiarTexto(nombreEstado);
+
+    // 1. Filtrar DENUE
+    var denueEstado = denueRawData.features.filter(f => {
+        var p = f.properties;
+        var nom = p.NOMGEO || p.ENTIDAD || p.ESTADO || ""; 
+        return limpiarTexto(nom) === estadoBusqueda;
+    });
+
+    // 2. Filtrar ARMADORAS
+    var armadorasEstado = armadorasRawData.features.filter(f => {
+        var p = f.properties;
+        var estadoArmadora = limpiarTexto(p.Estado || p.ESTADO || p.NOMGEO);
+        return estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
+    });
+
+    console.log(`Encontrados -> Denue: ${denueEstado.length}, Armadoras: ${armadorasEstado.length}`);
+
+    // 3. Dibujar DENUE (Puntos de colores)
+    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+
+    if (denueEstado.length > 0) {
+        currentGeoJSONLayer = L.geoJSON(denueEstado, {
+            pointToLayer: function (feature, latlng) {
+                var sector = feature.properties.Conjunto || "Otros";
+                if(sector === "Actividades SEIT") sector = "Servicios SEIT";
+                
+                return L.circleMarker(latlng, {
+                    radius: 5, 
+                    fillColor: getColorConjunto(sector), 
+                    color: "#222", weight: 1, opacity: 1, fillOpacity: 0.9
+                });
+            },
+            onEachFeature: function(feature, layer) {
+                var empresa = feature.properties.Nombre || feature.properties.Empresa || "Empresa";
+                var sector = feature.properties.Conjunto;
+                layer.bindPopup(`<b>${empresa}</b><br><small>${sector}</small>`);
+            }
+        }).addTo(map);
+    } else {
+        alert("No se encontraron empresas para: " + nombreEstado);
+    }
+
+    // 4. Dibujar RED (Araña)
+    // Esto se llama DESPUÉS de dibujar el DENUE para que las líneas tengan a dónde conectarse
+    dibujarArmadorasConRadio(armadorasEstado);
+
+    // 5. Zoom Inteligente (Corregido)
+    try {
+        if (armadorasEstado.length > 0) {
+            // Prioridad: Zoom a las armadoras
+            var latlngs = [];
+            armadorasEstado.forEach(f => {
+                if(f.geometry && f.geometry.coordinates) {
+                    latlngs.push([f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+                }
+            });
+            if (latlngs.length > 0) {
+                map.flyToBounds(latlngs, { padding: [100, 100], duration: 1.5, maxZoom: 11 });
+            }
+        } else if (currentGeoJSONLayer && denueEstado.length > 0) {
+            // Si no hay armadoras, zoom a todo el estado (usando la capa ya dibujada)
+            map.flyToBounds(currentGeoJSONLayer.getBounds(), { padding: [50, 50], duration: 1.5 });
+        }
+    } catch (e) { console.error("Error zoom:", e); }
+
+    // 6. Actualizar Panel
+    actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado);
 }
 
 // ==========================================
-// FUNCIÓN AUXILIAR: DIBUJAR PUNTOS EN EL MAPA
+// FUNCIÓN DE RED DE ARAÑA (CON DIAGNÓSTICO)
 // ==========================================
-function dibujarArmadoras(features) {
-    // 1. Si ya existe una capa de armadoras, la borramos
-    if (armadorasLayer) map.removeLayer(armadorasLayer);
+function dibujarArmadorasConRadio(features) {
+    console.log("--- Iniciando Red Araña ---");
+    
+    // 1. Limpiar capas previas
+    if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+    if (circleLayer) { map.removeLayer(circleLayer); circleLayer = null; }
 
-    // 2. Creamos la capa nueva SOLO con los features que recibimos
+    // Validación inicial
+    if (!features || features.length === 0) {
+        console.log("No hay armadoras para dibujar.");
+        return;
+    }
+
+    var capasFondo = [];
+    var contadorLineas = 0;
+
+    // 2. Recorrer cada Armadora
+    features.forEach(f => {
+        // Aseguramos que sean números (parseFloat)
+        var lat = parseFloat(f.geometry.coordinates[1]);
+        var lng = parseFloat(f.geometry.coordinates[0]);
+        
+        // Si las coordenadas no sirven, saltamos
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        var coordsArmadora = [lat, lng];
+
+        // 3. Conectar con Proveedores (DENUE)
+        if (currentGeoJSONLayer) {
+            currentGeoJSONLayer.eachLayer(layerDenue => {
+                
+                // A) BLINDAJE: ¿Es un marcador válido?
+                if (typeof layerDenue.getLatLng !== 'function') {
+                    return; 
+                }
+
+                // B) Extracción segura de coordenadas del proveedor
+                var latD = parseFloat(layerDenue.getLatLng().lat);
+                var lngD = parseFloat(layerDenue.getLatLng().lng);
+
+                if (isNaN(latD) || isNaN(lngD)) return;
+
+                // C) Obtener color (Si falla, usa blanco visible para probar)
+                var colorLinea = '#888'; 
+                if(layerDenue.options && layerDenue.options.fillColor) {
+                    colorLinea = layerDenue.options.fillColor;
+                }
+
+                // D) Crear la línea
+                var linea = L.polyline([coordsArmadora, [latD, lngD]], {
+                    color: colorLinea,
+                    weight: 0.5,        // Fina
+                    opacity: 0.6,       // Visible
+                    className: 'sin-interaccion', 
+                    interactive: false
+                });
+                
+                capasFondo.push(linea);
+                contadorLineas++;
+            });
+        } else {
+            console.warn("No existe currentGeoJSONLayer (DENUE) para conectar.");
+        }
+    });
+
+    console.log(`Se generaron ${contadorLineas} líneas de conexión.`);
+
+    // 4. Agregar líneas al mapa (AL FONDO)
+    if (capasFondo.length > 0) {
+        circleLayer = L.layerGroup(capasFondo).addTo(map);
+        circleLayer.bringToBack(); 
+    }
+
+    // 5. Dibujar Armadoras (ENCIMA)
     armadorasLayer = L.geoJSON(features, {
         pointToLayer: function (feature, latlng) {
             return L.circleMarker(latlng, {
-                radius: 12,
-                fillColor: "#00e5ff",
-                color: "#fff",
-                weight: 3,
-                opacity: 1,
+                radius: 12, 
+                fillColor: "#00e5ff", 
+                color: "#fff", 
+                weight: 3, 
+                opacity: 1, 
                 fillOpacity: 1
             });
         },
         onEachFeature: function(feature, layer) {
-            var nombreArmadora = feature.properties.NOMBRE || "Armadora"; 
-
-            layer.bindTooltip(
-                `<b style="font-size:13px; color:#002B56">${nombreArmadora}</b>`, 
-                {direction: 'top', offset: [0, -12]}
-            );
-
-            layer.on('click', function(e) {
-                L.DomEvent.stopPropagation(e);
-                analizarRadio20km(feature, nombreArmadora);
+            var nombre = feature.properties.NOMBRE || feature.properties.Nombre || "Planta";
+            layer.bindTooltip(nombre, {
+                permanent: true, 
+                direction: 'top', 
+                className: 'etiqueta-armadora', 
+                offset: [0, -15]
             });
         }
     }).addTo(map);
 }
 
-function cargarArmadorasInteractivas() {
-    fetch('armadoras.geojson')
-        .then(r => r.json())
-        .then(data => {
-            // 1. Generar el menú lateral
-            generarMenuArmadoras(data);
-
-            // 2. Dibujar TODAS las armadoras al inicio
-            dibujarArmadoras(data.features);
-        });
-}
-
-function analizarRadio20km(centerFeature, nombreArmadora) {
-    if (!denueRawData) return;
-
-    // 1. Círculo Visual
-    if (circleLayer) map.removeLayer(circleLayer);
-    var centerCoords = [centerFeature.geometry.coordinates[1], centerFeature.geometry.coordinates[0]];
-    
-    circleLayer = L.circle(centerCoords, {
-        radius: 20000,
-        color: '#00e5ff',
-        weight: 2,
-        fillColor: '#00e5ff',
-        fillOpacity: 0.05,
-        dashArray: '10, 10'
-    }).addTo(map);
-
-    map.flyToBounds(circleLayer.getBounds(), { padding: [20, 20], duration: 1 });
-
-    // 2. Filtrar con Turf.js
-    var turfCenter = turf.point(centerFeature.geometry.coordinates);
-    var puntosEnRadio = denueRawData.features.filter(f => {
-        var turfPt = turf.point(f.geometry.coordinates);
-        return turf.distance(turfCenter, turfPt, {units: 'kilometers'}) <= 20;
-    });
-
-    // 3. Contar por Conjunto
-    var conteo = {};
-    puntosEnRadio.forEach(f => {
-        var tipo = f.properties.Conjunto || "Otros";
-        conteo[tipo] = (conteo[tipo] || 0) + 1;
-    });
-
-    // 4. Actualizar Gráfica
-    actualizarGraficaCluster(nombreArmadora, conteo);
-}
-
-// ==========================================
-// GRÁFICA DE BARRAS (Mundial/Nacional)
-// ==========================================
-function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) {
-    if (typeof Chart === 'undefined') return;
-
-    // 1. Mostrar Panel y BUSCAR EL TÍTULO
+function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
 
-    var titulo = statsDiv.querySelector('.panel-title'); // Buscamos la clase del título
-    
-    // 2. ACTUALIZAR TÍTULO SEGÚN LA ESCALA
-    if (titulo) {
-        if (currentScaleType === 'mundial') {
-            titulo.innerHTML = "Top 5 Intercambio Mundial<br><small style='color:#aaa; font-size:11px'>Millones de Dólares (MDD)</small>";
-        } else if (currentScaleType === 'nacional') {
-            titulo.innerHTML = "Top Intercambio por Estado<br><small style='color:#aaa; font-size:11px'>Millones de Pesos (MDP)</small>";
-        } else {
-            titulo.innerText = "Análisis de Datos";
-        }
+    var conteo = {};
+    denueEstado.forEach(f => {
+        var ramo = f.properties.Conjunto || "Otros";
+        if (ramo === "Actividades SEIT") ramo = "Servicios SEIT";
+        conteo[ramo] = (conteo[ramo] || 0) + 1;
+    });
+
+    var titulo = statsDiv.querySelector('.panel-title');
+    if(titulo) {
+        var subtitulo = armadorasEstado.length > 0 
+            ? `<span style="color:#00e5ff; font-size:12px">🏭 Red de Proveeduría Activa</span>`
+            : `<span style="color:#aaa; font-size:12px">Diagnóstico Estatal</span>`;
+
+        titulo.innerHTML = `
+            <span style="font-size:18px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br>
+            <span style="font-size:13px; color:#ddd">Total Empresas: <b>${denueEstado.length}</b></span><br>
+            ${subtitulo}
+        `;
     }
 
-    const canvas = document.getElementById('myChart');
+    var canvas = document.getElementById('myChart');
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
 
-    // 3. Procesar datos (Top 5)
-    let topData = [...features]
-        .sort((a, b) => b.properties[campoValor] - a.properties[campoValor])
-        .slice(0, 5);
+    var labels = Object.keys(conteo);
+    var dataValues = Object.values(conteo);
+    
+    // Validamos que exista la función de color, si no usamos gris
+    var colores = labels.map(l => (typeof getColorConjunto === 'function') ? getColorConjunto(l) : '#888');
 
-    let labels = topData.map(f => f.properties[campoEtiqueta]);
-    let dataValues = topData.map(f => f.properties[campoValor]);
-
-    // 4. Crear Gráfica
     if (mainChart) mainChart.destroy();
+    
+    if(dataValues.length === 0) return;
 
-    mainChart = new Chart(ctx, {
+    mainChart = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                label: `Valor`,
-                data: dataValues,
-                backgroundColor: 'rgba(222, 45, 38, 0.8)',
-                borderColor: '#a50f15',
-                borderWidth: 1
-            }]
+            datasets: [{ label: 'Empresas', data: dataValues, backgroundColor: colores, borderColor: '#333', borderWidth: 1 }]
         },
         options: {
             indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: {
-                x: { ticks: { color: '#aaa', font:{size:10} }, grid: { color:'#444' } },
-                y: { ticks: { color: '#fff', font:{size:11} }, grid: { display:false } }
-            }
+            scales: { x: { grid:{color:'#444'}, ticks:{color:'#aaa'} }, y: { ticks:{color:'#fff', font:{size:10}}, grid:{display:false} } }
         }
     });
-}
-
-function actualizarLeyendaEstatal() {
-    var div = document.getElementById('legend-content');
-    if(div) {
-        div.innerHTML = `
-            <div style="font-weight:bold; color:#00e5ff; margin-bottom:5px;">Elementos</div>
-            <div class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; box-shadow:0 0 4px cyan"></span> Armadora</div>
-            <div class="legend-item"><span style="display:inline-block; width:20px; border-top:2px dashed #00e5ff; margin-right:10px;"></span> Radio 20km</div>
-            
-            <div style="font-weight:bold; color:#ddd; margin:10px 0 5px 0;">Proveedores (DENUE)</div>
-            <div class="legend-item"><span class="legend-color" style="background:#FF6384; border-radius:50%"></span> Automotriz</div>
-            <div class="legend-item"><span class="legend-color" style="background:#36A2EB; border-radius:50%"></span> Electrónica</div>
-            <div class="legend-item"><span class="legend-color" style="background:#FFCE56; border-radius:50%"></span> Eléctrica</div>
-            <div class="legend-item"><span class="legend-color" style="background:#888; border-radius:50%"></span> Otros</div>
-        `;
-    }
 }
 
 // ==========================================
@@ -830,79 +892,6 @@ function setupUI() {
     }
 }
 
-function generarMenuArmadoras(data) {
-    var container = document.getElementById('filter-buttons-container');
-    var title = document.getElementById('filter-title');
-    
-    if (container) container.innerHTML = "";
-    if (title) title.innerText = "Seleccione Armadora";
-
-    // --- A) BOTÓN "VER TODAS" (Para resetear el mapa) ---
-    var btnTodas = document.createElement("button");
-    btnTodas.className = "dynamic-filter-btn";
-    btnTodas.innerHTML = "<b>👁️ Ver Todas</b>";
-    btnTodas.onclick = function() {
-        document.querySelectorAll('.dynamic-filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Restaurar mapa completo
-        dibujarArmadoras(data.features);
-        map.flyTo([21.0, -100.0], 7); // Zoom original
-        
-        // Limpiar análisis si hay uno
-        if (circleLayer) map.removeLayer(circleLayer);
-        var statsDiv = document.getElementById('stats-overlay');
-        if (statsDiv) statsDiv.style.display = 'none'; // Ocultar gráfica
-    };
-    container.appendChild(btnTodas);
-
-    // --- B) LISTA DE MARCAS ---
-    var nombresUnicos = [...new Set(data.features.map(f => f.properties.NOMBRE))].sort();
-
-    nombresUnicos.forEach(nombreMarca => {
-        if(!nombreMarca) return;
-
-        var btn = document.createElement("button");
-        btn.className = "dynamic-filter-btn";
-        btn.innerHTML = `<span style="font-weight:bold;">${nombreMarca}</span>`;
-        
-        btn.onclick = function() {
-            // 1. Activar botón visualmente
-            document.querySelectorAll('.dynamic-filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-
-            // 2. FILTRAR DATOS
-            var plantasFiltradas = data.features.filter(f => f.properties.NOMBRE === nombreMarca);
-
-            // 3. ¡AQUÍ ESTÁ EL CAMBIO!: REDIBUJAR EL MAPA SOLO CON LAS FILTRADAS
-            dibujarArmadoras(plantasFiltradas);
-
-            // 4. Lógica de Zoom (Igual que antes)
-            if (plantasFiltradas.length === 1) {
-                // Si es una sola, analizamos directo
-                var feature = plantasFiltradas[0];
-                var coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-                map.flyTo(coords, 10, { duration: 1.5 });
-                analizarRadio20km(feature, nombreMarca);
-            } else {
-                // Si son varias, encuadramos todas
-                var latlngs = plantasFiltradas.map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
-                var bounds = L.latLngBounds(latlngs);
-                map.flyToBounds(bounds, { padding: [100, 100], duration: 1.5 });
-
-                // Limpiar análisis anterior para no confundir
-                if (circleLayer) map.removeLayer(circleLayer);
-                var statsDiv = document.getElementById('stats-overlay');
-                if (statsDiv) {
-                    statsDiv.querySelector('h4').innerHTML = `Plantas de <span style="color:#00e5ff">${nombreMarca}</span>`;
-                    if(mainChart) mainChart.destroy();
-                }
-            }
-        };
-        container.appendChild(btn);
-    });
-}
-
 // ==========================================
 // FUNCIÓN DE DESCARGA INTELIGENTE
 // ==========================================
@@ -1001,13 +990,13 @@ function actualizarGraficaCluster(nombreArmadora, conteoObj) {
 // ==========================================
 function getColorConjunto(conjunto) {
     const c = (conjunto || '').toString().trim();
-    if (c.includes('Automo')) return '#FF6384';   // Rojo/Rosa
-    if (c.includes('Electrónica')) return '#36A2EB'; // Azul
-    if (c.includes('Eléctrica')) return '#FFCE56';   // Amarillo
-    if (c.includes('Aero')) return '#4BC0C0';        // Turquesa
-    if (c.includes('Logística')) return '#9966FF';   // Morado
-    if (c.includes('Metal')) return '#FF9F40';       // Naranja
-    return '#888888'; // Gris
+    if (c.includes('Automo')) return '#FF6384';
+    if (c.includes('Electrónica')) return '#36A2EB';
+    if (c.includes('Eléctrica')) return '#FFCE56';
+    // Agregar el nuevo nombre
+    if (c.includes('SEIT') || c.includes('Servicios')) return '#4BC0C0'; 
+    // ... resto de colores
+    return '#888888';
 }
 
 // ==========================================
@@ -1042,4 +1031,14 @@ function capturarImagen() {
         if(navBar) navBar.style.display = 'flex'; // Restaurar si falla
         alert("Hubo un error al generar la imagen. Revisa la consola.");
     });
+}
+
+// ==========================================
+// AUXILIAR: FORMATEAR NÚMEROS (Ej: 1,200)
+// ==========================================
+function formatearNumero(valor) {
+    if (valor === undefined || valor === null) return "0";
+    return new Intl.NumberFormat('es-MX', { 
+        maximumFractionDigits: 0 
+    }).format(valor);
 }

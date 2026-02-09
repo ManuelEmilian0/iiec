@@ -271,3 +271,43 @@ body {
     transition: background 0.2s;
 }
 .screenshot-btn:hover { background: #01579b; }
+
+/* Estilo limpio para nombres de Armadoras */
+.etiqueta-armadora {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #00e5ff; /* Cyan neón */
+    font-weight: 900;
+    font-size: 14px; /* Un poco más grande */
+    text-shadow: 2px 2px 3px #000; /* Sombra para leerse sobre el mapa oscuro */
+    font-family: sans-serif;
+}
+
+/* Ocultar la flecha pequeña del tooltip por defecto */
+.leaflet-tooltip-top:before {
+    display: none;
+}
+
+/* Elimina la flechita del tooltip de Leaflet */
+.leaflet-tooltip-top:before {
+    display: none;
+}
+
+/* CLASE MÁGICA: Hace que los elementos sean "invisibles" al mouse */
+.sin-interaccion {
+    pointer-events: none !important;
+    cursor: default;
+}
+
+/* Estilo de la etiqueta de la Armadora */
+.etiqueta-armadora {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #00e5ff;
+    font-weight: 900;
+    font-size: 14px;
+    text-shadow: 0px 0px 4px #000;
+}
+.leaflet-tooltip-top:before { display: none; }
