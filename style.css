@@ -139,6 +139,33 @@ body {
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0; /* Evita que se aplasten */
+
+    /* --- AJUSTES NUEVOS (SCROLL) --- */
+    max-height: 40vh; /* O usa 350px. Limita la altura para que no se salga de la pantalla */
+    overflow-y: auto; /* Si el contenido es mayor a la altura, activa el scroll */
+}
+
+/* --- ESTILO ELEGANTE PARA EL SCROLL (Webkit) --- */
+.dashboard-box::-webkit-scrollbar, 
+.control-box::-webkit-scrollbar {
+    width: 6px; /* Barra fina */
+}
+
+.dashboard-box::-webkit-scrollbar-track, 
+.control-box::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2); /* Fondo del riel */
+    border-radius: 3px;
+}
+
+.dashboard-box::-webkit-scrollbar-thumb, 
+.control-box::-webkit-scrollbar-thumb {
+    background: #555; /* Color de la barra */
+    border-radius: 3px;
+}
+
+.dashboard-box::-webkit-scrollbar-thumb:hover, 
+.control-box::-webkit-scrollbar-thumb:hover {
+    background: #888; /* Color al pasar el mouse */
 }
 
 /* Títulos */

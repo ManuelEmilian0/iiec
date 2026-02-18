@@ -3,16 +3,19 @@
 // ==========================================
 var map;
 var currentGeoJSONLayer = null; // Capa dinámica (Mundial/Nacional/Estatal)
-var armadorasLayer = null;      // Capa de armadoras (Estatal)
-var circleLayer = null;         // Capa del radio de 20km
+var armadorasLayer = null;      // Capa de armadoras (Puntos)
+var isocronasLayer = null;      // Capa de isocronas
 var activeData = null;          // Almacena datos crudos
+
+// Variables de Datos Crudos
+var denueRawData = null;        
+var armadorasRawData = null;
+var isocronasRawData = null;
+
 var currentScaleType = '';      // 'mundial', 'nacional', 'estatal'
+var mainChart = null;           // Gráfica Chart.js
 
-// VARIABLES DE ANÁLISIS
-var mainChart = null;           // <--- ESTA ES LA QUE FALTABA
-var denueRawData = null;        // Datos del DENUE para Turf.js
-
-// Paleta de colores (Rojos) y Grosores
+// Paletas de Colores
 const RampaRojos = ['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15'];
 const Grosores = [1, 2, 4, 6, 8];
 
@@ -39,75 +42,22 @@ function initMap() {
         maxZoom: 19
     }).addTo(map);
 
-    // 2. CONFIGURAR PANELES (Interfaz de Usuario)
+    // 2. Configurar Interfaz
     setupUI();
     
-    // 3. CARGAR CAPA DE CONTEXTO (Puntos blancos tenues)
+    // 3. Cargar Capa de Contexto (Puntos blancos tenues)
     cargarArmadorasContexto();
 
-    // 4. INICIALIZAR VISIBILIDAD (¡IMPORTANTE!)
-    // Esto asegura que el mapa se vea y los paneles estén activos al cargar
+    // 4. Inicializar Visibilidad
     showSection('inicio');
 }
 
-// Función para reestructurar el HTML y crear el panel derecho unificado
-// --- script.js ---
-
-function setupRightPanel() {
-    var containerId = 'right-sidebar-container';
-    var container = document.getElementById(containerId);
-
-    // 1. Si no existe el contenedor derecho, LO CREAMOS
-    if (!container) {
-        container = document.createElement('div');
-        container.id = containerId;
-        document.body.appendChild(container); // <--- Aquí se corrige el error "null"
-    }
-
-    // 2. Mover el DASHBOARD (Escalas) al panel derecho
-    var dashboard = document.getElementById('dashboard-overlay');
-    if (dashboard) {
-        // Lo movemos dentro del contenedor derecho
-        container.appendChild(dashboard);
-        dashboard.style.display = 'block'; // Aseguramos que se vea
-    } else {
-        console.warn("Aviso: No se encontró el elemento dashboard-overlay en el HTML");
-    }
-
-    // 3. Crear/Mover el Panel de ESTADÍSTICAS (Gráfica)
-    var statsDiv = document.getElementById('stats-overlay');
-    if (!statsDiv) {
-        statsDiv = document.createElement('div');
-        statsDiv.id = 'stats-overlay';
-        statsDiv.style.display = 'none'; // Oculto al inicio hasta que haya datos
-        statsDiv.innerHTML = `
-            <h4 style="margin:0 0 10px 0; color:#fcae91; border-bottom:1px solid #555; font-size:14px;">Top 5 Destinos</h4>
-            <div style="height:160px; position:relative;">
-                <canvas id="myChart"></canvas>
-            </div>
-        `;
-        container.appendChild(statsDiv);
-    }
-
-    // 4. Mover la LEYENDA al final
-    var legend = document.getElementById('legend-overlay');
-    if (legend) {
-        container.appendChild(legend);
-    } else {
-        // Si no existe la creamos
-        legend = document.createElement('div');
-        legend.id = 'legend-overlay';
-        legend.innerHTML = '<h4>Simbología</h4><div id="legend-content"><small>Seleccione una escala</small></div>';
-        container.appendChild(legend);
-    }
-}
-
-// Carga Armadoras como fondo fijo (Puntos blancos tenues)
+// Carga Armadoras como fondo fijo
 function cargarArmadorasContexto() {
     fetch('armadoras.geojson')
         .then(r => r.json())
         .then(data => {
-            armadorasLayer = L.geoJSON(data, {
+            L.geoJSON(data, {
                 pointToLayer: function (feature, latlng) {
                     return L.circleMarker(latlng, {
                         radius: 2, fillColor: "#fff", color: "#fff", weight: 0, opacity: 0.3, fillOpacity: 0.3
@@ -115,7 +65,7 @@ function cargarArmadorasContexto() {
                 }
             }).addTo(map);
         })
-        .catch(e => console.log("Fondo armadoras no encontrado (revisa el nombre del archivo .geojson)"));
+        .catch(e => console.log("Fondo armadoras no encontrado."));
 }
 
 // ==========================================
@@ -127,20 +77,10 @@ function loadLayer(scaleType) {
     var activeBtn = document.getElementById('btn-' + scaleType);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // 2. LIMPIEZA PROFUNDA (¡ESTO ES LO NUEVO!)
-    // Antes de cargar nada, borramos TODAS las capas posibles para que no se encimen
-    if (currentGeoJSONLayer) { 
-        map.removeLayer(currentGeoJSONLayer); 
-        currentGeoJSONLayer = null; 
-    }
-    if (armadorasLayer) { 
-        map.removeLayer(armadorasLayer); 
-        armadorasLayer = null; // Importante resetear la variable
-    }
-    if (circleLayer) { 
-        map.removeLayer(circleLayer); 
-        circleLayer = null; 
-    }
+    // 2. LIMPIEZA PROFUNDA
+    if (currentGeoJSONLayer) { map.removeLayer(currentGeoJSONLayer); currentGeoJSONLayer = null; }
+    if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+    if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
     
     // Ocultar gráfica anterior
     var statsDiv = document.getElementById('stats-overlay');
@@ -155,44 +95,38 @@ function loadLayer(scaleType) {
     var zoomCoords = [];
     var zoomLevel = 5;
 
-    // 3. Configuración según la escala seleccionada
+    // 3. Configuración por escala
     var filterBox = document.getElementById('filter-container-box');
-    var statusText = document.getElementById('layer-status'); // Si tienes este elemento
     
-    // CASO A: ESTATAL (CLÚSTERES)
+    // CASO A: ESTATAL
     if (scaleType === 'estatal') {
-        // Mostramos el panel de filtros (Lista de Armadoras)
         if(filterBox) {
             filterBox.style.display = 'flex';
-            document.getElementById('filter-buttons-container').innerHTML = ""; // Limpiar lista anterior
+            document.getElementById('filter-buttons-container').innerHTML = "";
             document.getElementById('filter-title').innerText = "Cargando...";
         }
-        
-        // Iniciamos la lógica especial
         iniciarLogicaEstatal(); 
-        return; // Salimos aquí porque 'estatal' tiene su propio flujo de carga
+        return; 
     }
 
-    // CASO B: MUNDIAL O NACIONAL (FLUJOS)
+    // CASO B: MUNDIAL O NACIONAL
     if (scaleType === 'mundial') {
         filename = "mundial.geojson";
         zoomCoords = [20, 0]; zoomLevel = 2;
         if(filterBox) filterBox.style.display = 'flex';
-        
     } else if (scaleType === 'nacional') {
         filename = "nacional.geojson";
         zoomCoords = [23.6345, -102.5528]; zoomLevel = 5;
         if(filterBox) filterBox.style.display = 'flex';
     }
 
-    // Cargar datos (Fetch estándar)
+    // Cargar datos
     fetch(filename)
         .then(response => response.json())
         .then(data => {
             activeData = data; 
             map.flyTo(zoomCoords, zoomLevel, { duration: 1.5 });
 
-            // Iniciar filtros correspondientes
             if (scaleType === 'mundial') {
                 iniciarFiltroMundial_Paso1(data);
             } else if (scaleType === 'nacional') {
@@ -203,20 +137,16 @@ function loadLayer(scaleType) {
 }
 
 // ==========================================
-// 4. LÓGICA MUNDIAL (Industria -> Pais_Orige -> Mapa MDD)
+// 4. LÓGICA MUNDIAL & NACIONAL (FLUJOS)
 // ==========================================
 function iniciarFiltroMundial_Paso1(data) {
     document.getElementById('filter-title').innerText = "1. Seleccione Industria";
     var opciones = [...new Set(data.features.map(f => f.properties.Industria))].sort();
-    
-    crearBotones(opciones, (industriaSel) => {
-        iniciarFiltroMundial_Paso2(data, industriaSel);
-    });
+    crearBotones(opciones, (sel) => iniciarFiltroMundial_Paso2(data, sel));
 }
 
 function iniciarFiltroMundial_Paso2(data, industriaSel) {
     document.getElementById('filter-title').innerText = "2. Seleccione Origen";
-    
     var datosFiltrados = data.features.filter(f => f.properties.Industria === industriaSel);
     var origenes = [...new Set(datosFiltrados.map(f => f.properties.Pais_Orige))].sort();
 
@@ -226,21 +156,14 @@ function iniciarFiltroMundial_Paso2(data, industriaSel) {
     }, () => iniciarFiltroMundial_Paso1(data)); 
 }
 
-// ==========================================
-// 5. LÓGICA NACIONAL (Subsector -> Edo_V -> Mapa MDP)
-// ==========================================
 function iniciarFiltroNacional_Paso1(data) {
     document.getElementById('filter-title').innerText = "1. Seleccione Subsector";
     var opciones = [...new Set(data.features.map(f => f.properties.SUBSECTO_3 || f.properties.SUBSECTO_2))].sort();
-    
-    crearBotones(opciones, (subsectorSel) => {
-        iniciarFiltroNacional_Paso2(data, subsectorSel);
-    });
+    crearBotones(opciones, (sel) => iniciarFiltroNacional_Paso2(data, sel));
 }
 
 function iniciarFiltroNacional_Paso2(data, subsectorSel) {
     document.getElementById('filter-title').innerText = "2. Seleccione Estado Origen";
-    
     var datosFiltrados = data.features.filter(f => (f.properties.SUBSECTO_3 === subsectorSel || f.properties.SUBSECTO_2 === subsectorSel));
     var origenes = [...new Set(datosFiltrados.map(f => f.properties.Edo_V))].sort();
 
@@ -251,41 +174,39 @@ function iniciarFiltroNacional_Paso2(data, subsectorSel) {
 }
 
 // ==========================================
-// 6. LÓGICA ESTATAL (CORREGIDA Y BLINDADA)
+// 5. LÓGICA ESTATAL (CLÚSTERES + ISOCRONAS)
 // ==========================================
 
-var armadorasRawData = null; 
-
 function iniciarLogicaEstatal() {
-    // 1. Limpieza de capas previas
+    // 1. Limpieza
     if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
     if (armadorasLayer) map.removeLayer(armadorasLayer);
-    if (circleLayer) map.removeLayer(circleLayer);
+    if (isocronasLayer) map.removeLayer(isocronasLayer);
     
-    // Ocultar gráfica anterior
     var statsDiv = document.getElementById('stats-overlay');
     if(statsDiv) statsDiv.style.display = 'none';
 
-    // 2. Cargar Datos
+    // 2. Cargar 3 Archivos
     Promise.all([
         fetch('denue.geojson').then(r => r.json()),
-        fetch('armadoras.geojson').then(r => r.json())
-    ]).then(([denueData, armadorasData]) => {
+        fetch('armadoras.geojson').then(r => r.json()),
+        fetch('isocronas.geojson').then(r => r.json()) 
+    ]).then(([denueData, armadorasData, isocronasData]) => {
         
         denueRawData = denueData;
         armadorasRawData = armadorasData;
+        isocronasRawData = isocronasData;
 
         // 3. Generar Menú
         generarMenuEstados(denueData);
 
         // Mensaje inicial
         var legendContent = document.getElementById('legend-content');
-        if(legendContent) legendContent.innerHTML = "<small>Seleccione un Estado de la lista</small>";
+        if(legendContent) legendContent.innerHTML = "<small>Seleccione un Estado</small>";
         
-        // Vista general
         map.flyTo([23.6345, -102.5528], 5);
     })
-    .catch(err => console.error("Error cargando datos estatales:", err));
+    .catch(err => console.error("Error cargando datos:", err));
 }
 
 function generarMenuEstados(data) {
@@ -295,7 +216,6 @@ function generarMenuEstados(data) {
     if (container) container.innerHTML = "";
     if (title) title.innerText = "Seleccione Estado";
 
-    // Extraer nombres únicos
     var estados = [...new Set(data.features.map(f => f.properties.NOMGEO || "Desconocido"))].sort();
 
     estados.forEach(estado => {
@@ -312,8 +232,8 @@ function generarMenuEstados(data) {
     });
 }
 
-// Función auxiliar local para evitar conflictos
-function limpiarTexto(texto) {
+// --- FUNCIÓN UNIFICADA DE NORMALIZACIÓN ---
+function normalizarTexto(texto) {
     if (!texto) return "";
     return texto.toString().toUpperCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -322,27 +242,66 @@ function limpiarTexto(texto) {
 
 function filtrarPorEstado(nombreEstado) {
     console.log("Filtrando estado:", nombreEstado);
-    var estadoBusqueda = limpiarTexto(nombreEstado);
+    var estadoBusqueda = normalizarTexto(nombreEstado);
 
     // 1. Filtrar DENUE
     var denueEstado = denueRawData.features.filter(f => {
-        var p = f.properties;
-        var nom = p.NOMGEO || p.ENTIDAD || p.ESTADO || ""; 
-        return limpiarTexto(nom) === estadoBusqueda;
+        var nom = f.properties.NOMGEO || f.properties.ENTIDAD || f.properties.ESTADO || ""; 
+        return normalizarTexto(nom) === estadoBusqueda;
     });
 
     // 2. Filtrar ARMADORAS
     var armadorasEstado = armadorasRawData.features.filter(f => {
-        var p = f.properties;
-        var estadoArmadora = limpiarTexto(p.Estado || p.ESTADO || p.NOMGEO);
+        var estadoArmadora = normalizarTexto(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
         return estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
     });
 
-    console.log(`Encontrados -> Denue: ${denueEstado.length}, Armadoras: ${armadorasEstado.length}`);
+    // 3. Filtrar ISOCRONAS
+    var isocronasRawList = isocronasRawData.features.filter(f => {
+        var p = f.properties;
+        var est = p.NOMGEO || p.Estado || p.ESTADO || p.ENTIDAD || p.entidad || "";
+        return normalizarTexto(est) === estadoBusqueda;
+    });
 
-    // 3. Dibujar DENUE (Puntos de colores)
+    var isocronasEstado = procesarYUnirIsocronas(isocronasRawList);
+
+    // --- CORRECCIÓN CRÍTICA DE ORDENAMIENTO (EL PLATO GRANDE ABAJO) ---
+    isocronasEstado.sort((a, b) => {
+        return (b.properties.AA_MINS || 0) - (a.properties.AA_MINS || 0);
+    });
+
+    // --- A) DIBUJAR ISOCRONAS ---
+   if (isocronasLayer) map.removeLayer(isocronasLayer);
+
+    if (isocronasEstado.length > 0) {
+        isocronasLayer = L.geoJSON(isocronasEstado, {
+            style: function(feature) {
+                // Obtenemos los minutos
+                var mins = parseInt(feature.properties.AA_MINS || feature.properties.aa_mins || 0);
+                
+                // --- OPACIDAD DINÁMICA ---
+                // Cuanto más pequeño es el tiempo (más al centro), más sólido lo pintamos
+                // para que el color de abajo no lo "ensucie".
+                var opacidadRelleno = 0.1; // Default (60 min) - Sutil
+                if (mins <= 30) opacidadRelleno = 0.2; // Amarillo - Más visible
+                if (mins <= 15) opacidadRelleno = 0.6; // Verde - Casi sólido (Vibrante)
+
+                return {
+                    color: getColorIsocrona(mins),      // Color del borde
+                    fillColor: getColorIsocrona(mins),  // Color del relleno
+                    weight: 1,        
+                    opacity: 1,       // El borde siempre sólido
+                    fillOpacity: opacidadRelleno, // <--- AQUÍ ESTÁ EL TRUCO
+                    className: 'sin-interaccion'
+                };
+            }
+        }).addTo(map);
+        isocronasLayer.bringToBack();
+    }
+
+    // --- B) DIBUJAR DENUE ---
     if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
-
+    
     if (denueEstado.length > 0) {
         currentGeoJSONLayer = L.geoJSON(denueEstado, {
             pointToLayer: function (feature, latlng) {
@@ -352,123 +311,44 @@ function filtrarPorEstado(nombreEstado) {
                 return L.circleMarker(latlng, {
                     radius: 5, 
                     fillColor: getColorConjunto(sector), 
-                    color: "#222", weight: 1, opacity: 1, fillOpacity: 0.9
+                    color: "#ffffff", weight: 1, opacity: 1, fillOpacity: 1
                 });
             },
             onEachFeature: function(feature, layer) {
-                var empresa = feature.properties.Nombre || feature.properties.Empresa || "Empresa";
+                var empresa = feature.properties.Nombre || feature.properties.Empresa;
                 var sector = feature.properties.Conjunto;
                 layer.bindPopup(`<b>${empresa}</b><br><small>${sector}</small>`);
             }
         }).addTo(map);
-    } else {
-        alert("No se encontraron empresas para: " + nombreEstado);
     }
 
-    // 4. Dibujar RED (Araña)
-    // Esto se llama DESPUÉS de dibujar el DENUE para que las líneas tengan a dónde conectarse
-    dibujarArmadorasConRadio(armadorasEstado);
+    // --- C) DIBUJAR ARMADORAS (PUNTOS) ---
+    dibujarArmadorasPuntos(armadorasEstado);
 
-    // 5. Zoom Inteligente (Corregido)
+    // --- D) ZOOM ---
     try {
         if (armadorasEstado.length > 0) {
-            // Prioridad: Zoom a las armadoras
-            var latlngs = [];
-            armadorasEstado.forEach(f => {
-                if(f.geometry && f.geometry.coordinates) {
-                    latlngs.push([f.geometry.coordinates[1], f.geometry.coordinates[0]]);
-                }
-            });
-            if (latlngs.length > 0) {
-                map.flyToBounds(latlngs, { padding: [100, 100], duration: 1.5, maxZoom: 11 });
-            }
+            var latlngs = armadorasEstado.map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+            map.flyToBounds(latlngs, { padding: [100, 100], duration: 1.5, maxZoom: 11 });
+        } else if (isocronasEstado.length > 0) {
+            map.flyToBounds(isocronasLayer.getBounds(), { padding: [50, 50] });
         } else if (currentGeoJSONLayer && denueEstado.length > 0) {
-            // Si no hay armadoras, zoom a todo el estado (usando la capa ya dibujada)
-            map.flyToBounds(currentGeoJSONLayer.getBounds(), { padding: [50, 50], duration: 1.5 });
+            map.flyToBounds(currentGeoJSONLayer.getBounds(), { padding: [50, 50] });
         }
     } catch (e) { console.error("Error zoom:", e); }
 
-    // 6. Actualizar Panel
     actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado);
+    actualizarLeyendaIsocronas(); 
 }
 
 // ==========================================
-// FUNCIÓN DE RED DE ARAÑA (CON DIAGNÓSTICO)
+// FUNCIÓN SOLO PUNTOS (LIGERA Y SIN ERRORES)
 // ==========================================
-function dibujarArmadorasConRadio(features) {
-    console.log("--- Iniciando Red Araña ---");
-    
-    // 1. Limpiar capas previas
+function dibujarArmadorasPuntos(features) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
-    if (circleLayer) { map.removeLayer(circleLayer); circleLayer = null; }
+    
+    if (!features || features.length === 0) return;
 
-    // Validación inicial
-    if (!features || features.length === 0) {
-        console.log("No hay armadoras para dibujar.");
-        return;
-    }
-
-    var capasFondo = [];
-    var contadorLineas = 0;
-
-    // 2. Recorrer cada Armadora
-    features.forEach(f => {
-        // Aseguramos que sean números (parseFloat)
-        var lat = parseFloat(f.geometry.coordinates[1]);
-        var lng = parseFloat(f.geometry.coordinates[0]);
-        
-        // Si las coordenadas no sirven, saltamos
-        if (isNaN(lat) || isNaN(lng)) return;
-
-        var coordsArmadora = [lat, lng];
-
-        // 3. Conectar con Proveedores (DENUE)
-        if (currentGeoJSONLayer) {
-            currentGeoJSONLayer.eachLayer(layerDenue => {
-                
-                // A) BLINDAJE: ¿Es un marcador válido?
-                if (typeof layerDenue.getLatLng !== 'function') {
-                    return; 
-                }
-
-                // B) Extracción segura de coordenadas del proveedor
-                var latD = parseFloat(layerDenue.getLatLng().lat);
-                var lngD = parseFloat(layerDenue.getLatLng().lng);
-
-                if (isNaN(latD) || isNaN(lngD)) return;
-
-                // C) Obtener color (Si falla, usa blanco visible para probar)
-                var colorLinea = '#888'; 
-                if(layerDenue.options && layerDenue.options.fillColor) {
-                    colorLinea = layerDenue.options.fillColor;
-                }
-
-                // D) Crear la línea
-                var linea = L.polyline([coordsArmadora, [latD, lngD]], {
-                    color: colorLinea,
-                    weight: 0.5,        // Fina
-                    opacity: 0.6,       // Visible
-                    className: 'sin-interaccion', 
-                    interactive: false
-                });
-                
-                capasFondo.push(linea);
-                contadorLineas++;
-            });
-        } else {
-            console.warn("No existe currentGeoJSONLayer (DENUE) para conectar.");
-        }
-    });
-
-    console.log(`Se generaron ${contadorLineas} líneas de conexión.`);
-
-    // 4. Agregar líneas al mapa (AL FONDO)
-    if (capasFondo.length > 0) {
-        circleLayer = L.layerGroup(capasFondo).addTo(map);
-        circleLayer.bringToBack(); 
-    }
-
-    // 5. Dibujar Armadoras (ENCIMA)
     armadorasLayer = L.geoJSON(features, {
         pointToLayer: function (feature, latlng) {
             return L.circleMarker(latlng, {
@@ -492,6 +372,9 @@ function dibujarArmadorasConRadio(features) {
     }).addTo(map);
 }
 
+// ==========================================
+// PANELES Y GRÁFICAS ESTATALES
+// ==========================================
 function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
@@ -506,8 +389,8 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
     var titulo = statsDiv.querySelector('.panel-title');
     if(titulo) {
         var subtitulo = armadorasEstado.length > 0 
-            ? `<span style="color:#00e5ff; font-size:12px">🏭 Red de Proveeduría Activa</span>`
-            : `<span style="color:#aaa; font-size:12px">Diagnóstico Estatal</span>`;
+            ? `<span style="color:#00e5ff; font-size:12px">🏭 Plantas Armadoras Presentes</span>`
+            : `<span style="color:#aaa; font-size:12px">Sin planta armadora</span>`;
 
         titulo.innerHTML = `
             <span style="font-size:18px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br>
@@ -521,12 +404,9 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
 
     var labels = Object.keys(conteo);
     var dataValues = Object.values(conteo);
-    
-    // Validamos que exista la función de color, si no usamos gris
-    var colores = labels.map(l => (typeof getColorConjunto === 'function') ? getColorConjunto(l) : '#888');
+    var colores = labels.map(l => getColorConjunto(l));
 
     if (mainChart) mainChart.destroy();
-    
     if(dataValues.length === 0) return;
 
     mainChart = new Chart(canvas.getContext('2d'), {
@@ -544,57 +424,89 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
     });
 }
 
+function actualizarLeyendaIsocronas() {
+    var div = document.getElementById('legend-content');
+    if(div) {
+        div.innerHTML = `
+            <div style="margin-bottom:8px; font-weight:bold; color:#00e5ff">Accesibilidad (Tiempo)</div>
+            
+            <div class="legend-item">
+                <span class="legend-color" style="background:rgba(0, 255, 0, 0.5); border:2px solid #00ff00"></span> 
+                0 - 15 Minutos (Cerca)
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background:rgba(255, 255, 0, 0.5); border:2px solid #ffff00"></span> 
+                15 - 30 Minutos (Medio)
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background:rgba(255, 69, 0, 0.5); border:2px solid #ff4500"></span> 
+                30 - 60 Minutos (Lejos)
+            </div>
+
+            <div style="margin:10px 0 5px 0; font-weight:bold; color:#ddd">Proveedores</div>
+            
+            <div class="legend-item"><span class="legend-color" style="background:#ff3333; border:1px solid #fff; border-radius:50%"></span> Automotriz</div>
+            <div class="legend-item"><span class="legend-color" style="background:#2196f3; border:1px solid #fff; border-radius:50%"></span> Electrónica</div>
+            <div class="legend-item"><span class="legend-color" style="background:#9c27b0; border:1px solid #fff; border-radius:50%"></span> Servicios SEIT</div>
+            <div class="legend-item"><span class="legend-color" style="background:#ffc107; border:1px solid #fff; border-radius:50%"></span> Eléctrica</div>
+            
+            <div style="margin-top:8px" class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; border:2px solid white"></span> Planta Armadora</div>
+        `;
+    }
+}
+
+function getColorIsocrona(minutos) {
+    // Forzamos conversión a número entero
+    var m = parseInt(minutos);
+    
+    // 0-15 min: VERDE NEÓN (Para que resalte mucho al centro)
+    if (m <= 15) return '#00ff00'; 
+    
+    // 15-30 min: AMARILLO (Intermedio)
+    if (m <= 30) return '#ffff00'; 
+    
+    // 30-60 min: NARANJA ROJIZO (Lejos)
+    if (m <= 60) return '#ff4500'; 
+    
+    return '#808080'; // Gris si falla
+}
+
 // ==========================================
-// 7. RENDERIZADO DE MAPAS
+// RENDERIZADO DE MAPAS (MUNDIAL/NACIONAL)
 // ==========================================
 
 function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino) {
     if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
 
-    // --- NUEVO: Actualizar la gráfica con los datos que estamos viendo ---
     actualizarGrafica(features, campoDestino, campoValor, etiquetaMoneda);
 
-    var valores = features.map(f => f.properties[campoValor]).sort((a,b) => a - b);
+    // CORRECCIÓN DEL ERROR toLocaleString: Filtramos valores nulos o inválidos
+    var validFeatures = features.filter(f => f.properties[campoValor] != null && !isNaN(f.properties[campoValor]));
+    var valores = validFeatures.map(f => f.properties[campoValor]).sort((a,b) => a - b);
     var breaks = calcularBreaks(valores);
 
-    currentGeoJSONLayer = L.geoJSON(features, {
+    currentGeoJSONLayer = L.geoJSON(validFeatures, {
         style: function(feature) {
             var val = feature.properties[campoValor];
             var clase = getClase(val, breaks);
             return { 
-                color: RampaRojos[clase], 
-                weight: Grosores[clase], 
-                opacity: 0.9,
-                className: 'flujo-interactivo' // Clase para CSS si se necesita
+                color: RampaRojos[clase], weight: Grosores[clase], opacity: 0.9, className: 'flujo-interactivo'
             };
         },
         onEachFeature: function(feature, layer) {
             var p = feature.properties;
-            
-            // Popup mejorado con HTML más limpio
+            var valFormatted = (p[campoValor] || 0).toLocaleString(); // Protección extra
             var popupContent = `
                 <div style="font-family:'Noto Sans'; font-size:13px;">
                     <strong style="color:#de2d26; font-size:14px;">${p[campoDestino]}</strong><br>
                     <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
-                    Valor: <b style="color:#fff">$${p[campoValor].toLocaleString()}</b> <small>${etiquetaMoneda}</small>
+                    Valor: <b style="color:#fff">$${valFormatted}</b> <small>${etiquetaMoneda}</small>
                 </div>
             `;
             layer.bindPopup(popupContent);
-
-            // --- NUEVO: Efectos de Hover (Interacción) ---
             layer.on({
-                mouseover: function(e) {
-                    var l = e.target;
-                    l.setStyle({
-                        weight: 10,  // Se hace más grueso
-                        color: '#ffff00', // Se pone amarillo
-                        opacity: 1
-                    });
-                    l.bringToFront(); // Se trae al frente
-                },
-                mouseout: function(e) {
-                    currentGeoJSONLayer.resetStyle(e.target); // Vuelve a la normalidad
-                }
+                mouseover: function(e) { e.target.setStyle({ weight: 10, color: '#ffff00' }); e.target.bringToFront(); },
+                mouseout: function(e) { currentGeoJSONLayer.resetStyle(e.target); }
             });
         }
     }).addTo(map);
@@ -602,228 +514,8 @@ function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino
     actualizarLeyenda(breaks, etiquetaMoneda);
 }
 
-// Renderizado de Puntos (Estatal)
-function renderizarMapaPuntos(features) {
-    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
-
-    currentGeoJSONLayer = L.geoJSON(features, {
-        pointToLayer: function(feature, latlng) {
-            return L.circleMarker(latlng, {
-                radius: 6,
-                fillColor: "#ffff00", 
-                color: "#333",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.9
-            });
-        },
-        onEachFeature: function(feature, layer) {
-            var p = feature.properties;
-            var popup = `<b>Empresa:</b> ${p.Empresa}<br>
-                         <b>Conjunto:</b> ${p.Conjunto}<br>
-                         <b>Ensambla para:</b> ${p.Ensamblado}`;
-            layer.bindPopup(popup);
-        }
-    }).addTo(map);
-    
-    // Leyenda simple para puntos (apuntando al nuevo panel)
-    var legendDiv = document.getElementById('legend-content');
-    if(legendDiv) {
-        legendDiv.innerHTML = 
-            `<div class="legend-item"><span class="legend-color" style="background:#ffff00; border-radius:50%"></span>Proveedores DENUE</div>
-             <div class="legend-item"><span class="legend-color" style="background:#ffffff; border-radius:50%"></span>Todas las Armadoras</div>`;
-    }
-}
-
 // ==========================================
-// 8. UTILIDADES
-// ==========================================
-
-function crearBotones(lista, callback, backCallback) {
-    var container = document.getElementById('filter-buttons-container');
-    container.innerHTML = "";
-
-    if(backCallback) {
-        var btnBack = document.createElement("button");
-        btnBack.innerText = "⬅ Volver / Cambiar Filtro";
-        btnBack.className = "back-btn"; 
-        btnBack.onclick = backCallback;
-        container.appendChild(btnBack);
-    }
-
-    if(lista.length === 0) {
-        container.innerHTML += "<p style='padding:10px; color:#aaa'>No hay datos disponibles.</p>";
-        return;
-    }
-
-    lista.forEach(item => {
-        var btn = document.createElement("button");
-        btn.innerText = item;
-        btn.className = "dynamic-filter-btn";
-        btn.onclick = function() {
-             var siblings = container.querySelectorAll('.dynamic-filter-btn');
-             siblings.forEach(s => s.classList.remove('active'));
-             this.classList.add('active');
-             callback(item);
-        };
-        container.appendChild(btn);
-    });
-}
-
-function calcularBreaks(valores) {
-    if (!valores || valores.length === 0) return [0,0,0,0];
-    if (valores.length < 5) return [valores[0], valores[0], valores[0], valores[0]];
-    var step = Math.floor(valores.length / 5);
-    return [valores[step], valores[step*2], valores[step*3], valores[step*4]];
-}
-
-function getClase(valor, breaks) {
-    if (valor <= breaks[0]) return 0;
-    if (valor <= breaks[1]) return 1;
-    if (valor <= breaks[2]) return 2;
-    if (valor <= breaks[3]) return 3;
-    return 4;
-}
-
-function actualizarLeyenda(breaks, moneda) {
-    var div = document.getElementById('legend-content');
-    if(!div) return;
-
-    var f = (n) => n.toLocaleString('es-MX', {maximumFractionDigits: 0});
-    
-    var html = `<div style="margin-bottom:8px; font-weight:bold; color:#ddd">Valor (${moneda})</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[0]};"></span> &le; $${f(breaks[0])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[1]};"></span> $${f(breaks[0])} - $${f(breaks[1])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[2]};"></span> $${f(breaks[1])} - $${f(breaks[2])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[3]};"></span> $${f(breaks[2])} - $${f(breaks[3])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[4]};"></span> &gt; $${f(breaks[3])}</div>`;
-    
-    div.innerHTML = html;
-}
-
-// ==========================================
-// CONTROL DE SECCIONES (TABS)
-// ==========================================
-function showSection(id) {
-    // 1. Ocultar todos los paneles de contenido (Inicio, Marco, etc.)
-    var panels = document.querySelectorAll('.main-content-panel');
-    panels.forEach(p => p.style.display = 'none');
-    
-    // 2. Mostrar la sección seleccionada
-    var target = document.getElementById(id);
-    if(target) {
-        target.style.display = 'block';
-    }
-    
-    // 3. LÓGICA DE PANELES FLOTANTES (Solo visibles en 'inicio')
-    var leftSidebar = document.getElementById('left-sidebar-container');
-    var rightSidebar = document.getElementById('right-sidebar-container');
-    
-    if (id === 'inicio') {
-        // Si estamos en el mapa, mostramos los controles
-        if(leftSidebar) leftSidebar.style.display = 'flex';
-        if(rightSidebar) rightSidebar.style.display = 'flex';
-        
-        // Recalcular tamaño del mapa para evitar gris
-        if(map) setTimeout(() => map.invalidateSize(), 200);
-    } else {
-        // Si estamos en texto (Marco, Contacto), ocultamos los controles del mapa
-        if(leftSidebar) leftSidebar.style.display = 'none';
-        if(rightSidebar) rightSidebar.style.display = 'none';
-    }
-
-    // 4. Actualizar estado visual de los botones del menú superior
-    var navs = document.querySelectorAll('.nav-button');
-    navs.forEach(n => {
-        n.classList.remove('active');
-        // Si el botón llama a esta sección, lo activamos
-        if(n.getAttribute('onclick') && n.getAttribute('onclick').includes(id)) {
-            n.classList.add('active');
-        }
-    });
-}
-
-// ==========================================
-// FIX: FUNCIONES DE INTERFAZ Y ERRORES
-// ==========================================
-
-// 1. Corrige el error "closeFilters is not defined"
-function closeFilters() {
-    var panel = document.getElementById('filter-panel');
-    if (panel) {
-        panel.style.display = 'none';
-        
-        // Opcional: Limpiar el mapa al cerrar filtros si lo deseas
-        // if(currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
-        // document.getElementById('legend-content').innerHTML = '<small>Filtros cerrados</small>';
-    }
-}
-
-// ==========================================
-// GRÁFICA DE BARRAS (Mundial/Nacional)
-// ==========================================
-function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) {
-    if (typeof Chart === 'undefined') return;
-
-    // 1. Mostrar Panel y BUSCAR EL TÍTULO
-    var statsDiv = document.getElementById('stats-overlay');
-    if (statsDiv) statsDiv.style.display = 'block';
-
-    var titulo = statsDiv.querySelector('.panel-title'); // Buscamos la clase del título
-    
-    // 2. ACTUALIZAR TÍTULO SEGÚN LA ESCALA
-    if (titulo) {
-        if (currentScaleType === 'mundial') {
-            titulo.innerHTML = "Top 5 Intercambio Mundial<br><small style='color:#aaa; font-size:11px'>Millones de Dólares (MDD)</small>";
-        } else if (currentScaleType === 'nacional') {
-            titulo.innerHTML = "Top Intercambio por Estado<br><small style='color:#aaa; font-size:11px'>Millones de Pesos (MDP)</small>";
-        } else {
-            titulo.innerText = "Análisis de Datos";
-        }
-    }
-
-    const canvas = document.getElementById('myChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    // 3. Procesar datos (Top 5)
-    let topData = [...features]
-        .sort((a, b) => b.properties[campoValor] - a.properties[campoValor])
-        .slice(0, 5);
-
-    let labels = topData.map(f => f.properties[campoEtiqueta]);
-    let dataValues = topData.map(f => f.properties[campoValor]);
-
-    // 4. Crear Gráfica
-    if (mainChart) mainChart.destroy();
-
-    mainChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: `Valor`,
-                data: dataValues,
-                backgroundColor: 'rgba(222, 45, 38, 0.8)',
-                borderColor: '#a50f15',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { ticks: { color: '#aaa', font:{size:10} }, grid: { color:'#444' } },
-                y: { ticks: { color: '#fff', font:{size:11} }, grid: { display:false } }
-            }
-        }
-    });
-}
-
-// ==========================================
-// CONFIGURACIÓN DE LA INTERFAZ (UI) - VERSIÓN FINAL
+// CONFIGURACIÓN DE LA INTERFAZ (UI)
 // ==========================================
 function setupUI() {
     // --- 1. PANEL IZQUIERDO: CONTROLES ---
@@ -833,7 +525,6 @@ function setupUI() {
         leftContainer.id = 'left-sidebar-container';
         document.body.appendChild(leftContainer);
 
-        // A) SELECTOR DE ESCALAS
         var scaleBox = document.createElement('div');
         scaleBox.className = 'dashboard-box';
         scaleBox.innerHTML = `
@@ -844,14 +535,10 @@ function setupUI() {
         `;
         leftContainer.appendChild(scaleBox);
 
-        // B) FILTROS
         var filterBox = document.createElement('div');
         filterBox.id = 'filter-container-box';
         filterBox.className = 'dashboard-box';
-        filterBox.innerHTML = `
-            <h4 id="filter-title" class="panel-title">Filtros</h4>
-            <div id="filter-buttons-container"></div>
-        `;
+        filterBox.innerHTML = `<h4 id="filter-title" class="panel-title">Filtros</h4><div id="filter-buttons-container"></div>`;
         leftContainer.appendChild(filterBox);
     }
 
@@ -862,183 +549,209 @@ function setupUI() {
         rightContainer.id = 'right-sidebar-container';
         document.body.appendChild(rightContainer);
 
-        // A) GRÁFICA + DESCARGA + FOTO (Todo en una caja)
         var statsBox = document.createElement('div');
         statsBox.id = 'stats-overlay';
         statsBox.className = 'dashboard-box';
-        statsBox.style.display = 'none'; // Se oculta si no hay datos
+        statsBox.style.display = 'none';
         statsBox.innerHTML = `
             <h4 class="panel-title">Análisis de Datos</h4>
-            
-            <div style="height:180px; position:relative;">
-                <canvas id="myChart"></canvas>
-            </div>
-            
+            <div style="height:180px; position:relative;"><canvas id="myChart"></canvas></div>
             <button onclick="descargarDatos()" class="download-btn">⬇ Descargar CSV</button>
-            
             <button onclick="capturarImagen()" class="screenshot-btn">📸 Guardar Reporte (Img)</button>
         `;
         rightContainer.appendChild(statsBox);
 
-        // B) SIMBOLOGÍA (¡AQUÍ ESTÁ LA PARTE QUE FALTABA!)
         var legendBox = document.createElement('div');
         legendBox.id = 'legend-overlay';
         legendBox.className = 'dashboard-box';
-        legendBox.innerHTML = `
-             <h4 class="panel-title">Simbología</h4>
-             <div id="legend-content"><small style="color:#aaa">Seleccione una escala</small></div>
-        `;
+        legendBox.innerHTML = `<h4 class="panel-title">Simbología</h4><div id="legend-content"><small style="color:#aaa">Seleccione una escala</small></div>`;
         rightContainer.appendChild(legendBox);
     }
 }
 
 // ==========================================
-// FUNCIÓN DE DESCARGA INTELIGENTE
+// UTILIDADES Y GRÁFICAS GENERALES
 // ==========================================
-function descargarDatos() {
-    // Verificar si hay gráfica
-    if (!mainChart || !mainChart.data || mainChart.data.labels.length === 0) {
-        alert("No hay datos visibles para descargar.");
-        return;
+function crearBotones(lista, callback, backCallback) {
+    var container = document.getElementById('filter-buttons-container');
+    container.innerHTML = "";
+    if(backCallback) {
+        var btnBack = document.createElement("button");
+        btnBack.innerText = "⬅ Volver"; btnBack.className = "back-btn"; btnBack.onclick = backCallback;
+        container.appendChild(btnBack);
     }
-
-    let rows = [];
-    let filename = "datos.csv";
-
-    // CASO A: ESTATAL (Gráfica de Dona)
-    if (currentScaleType === 'estatal') {
-        filename = "Analisis_Cluster_20km.csv";
-        rows.push(["Sector Industrial", "Cantidad de Proveedores"]); 
-    } 
-    // CASO B: MUNDIAL/NACIONAL (Gráfica de Barras)
-    else {
-        filename = `Top5_${currentScaleType.toUpperCase()}.csv`;
-        rows.push(["Destino/Origen", "Valor Económico"]);
-    }
-
-    // Extraer datos de la gráfica actual
-    let labels = mainChart.data.labels;
-    let values = mainChart.data.datasets[0].data;
-
-    labels.forEach((label, i) => {
-        // Limpiamos comas para no romper el CSV
-        let cleanLabel = String(label).replace(/,/g, " "); 
-        rows.push([cleanLabel, values[i]]);
+    if(lista.length === 0) { container.innerHTML += "<p style='color:#aaa'>No hay datos.</p>"; return; }
+    lista.forEach(item => {
+        var btn = document.createElement("button");
+        btn.innerText = item; btn.className = "dynamic-filter-btn";
+        btn.onclick = function() {
+             container.querySelectorAll('.dynamic-filter-btn').forEach(s => s.classList.remove('active'));
+             this.classList.add('active'); callback(item);
+        };
+        container.appendChild(btn);
     });
-
-    // Generar link de descarga
-    let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-    let encodedUri = encodeURI(csvContent);
-    
-    let link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
 
-// ==========================================
-// GRÁFICA DE DONA (CLÚSTER ESTATAL)
-// ==========================================
-function actualizarGraficaCluster(nombreArmadora, conteoObj) {
+function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) {
+    if (typeof Chart === 'undefined') return;
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
 
-    // 1. ACTUALIZAR TÍTULO (Ahora dinámico)
-    var titulo = statsDiv.querySelector('.panel-title');
-    if(titulo) {
-        titulo.innerHTML = `Prov. a 20km de:<br><span style="color:#00e5ff">${nombreArmadora}</span>`;
+    var titulo = statsDiv.querySelector('.panel-title'); 
+    if (titulo) {
+        if (currentScaleType === 'mundial') titulo.innerHTML = "Top 5 Intercambio Mundial<br><small style='color:#aaa; font-size:11px'>Millones de Dólares (MDD)</small>";
+        else if (currentScaleType === 'nacional') titulo.innerHTML = "Top Intercambio por Estado<br><small style='color:#aaa; font-size:11px'>Millones de Pesos (MDP)</small>";
     }
 
-    var canvas = document.getElementById('myChart');
+    const canvas = document.getElementById('myChart');
     if (!canvas) return;
-
-    // 2. Procesar datos
-    var labels = Object.keys(conteoObj);
-    var data = Object.values(conteoObj);
+    const ctx = canvas.getContext('2d');
     
-    // Usamos la función de colores que definimos antes
-    var backgroundColors = labels.map(label => getColorConjunto(label));
+    // Filtrar nulos para la gráfica también
+    let validFeatures = features.filter(f => f.properties[campoValor] != null && !isNaN(f.properties[campoValor]));
+    let topData = [...validFeatures].sort((a, b) => b.properties[campoValor] - a.properties[campoValor]).slice(0, 5);
+    
+    let labels = topData.map(f => f.properties[campoEtiqueta]);
+    let dataValues = topData.map(f => f.properties[campoValor]);
 
-    // 3. Crear Gráfica de Dona
     if (mainChart) mainChart.destroy();
-
-    mainChart = new Chart(canvas.getContext('2d'), {
-        type: 'doughnut',
+    mainChart = new Chart(ctx, {
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                data: data,
-                backgroundColor: backgroundColors,
-                borderColor: '#222',
-                borderWidth: 2
+                label: `Valor`, data: dataValues, backgroundColor: 'rgba(222, 45, 38, 0.8)', borderColor: '#a50f15', borderWidth: 1
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right', labels: { color: '#ddd', boxWidth: 10, font: {size: 11} } }
-            }
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: '#aaa' }, grid: { color:'#444' } }, y: { ticks: { color: '#fff' }, grid: { display:false } } }
         }
     });
 }
 
-// ==========================================
-// AUXILIAR: COLORES POR SECTOR (Por si se borró también)
-// ==========================================
-function getColorConjunto(conjunto) {
-    const c = (conjunto || '').toString().trim();
-    if (c.includes('Automo')) return '#FF6384';
-    if (c.includes('Electrónica')) return '#36A2EB';
-    if (c.includes('Eléctrica')) return '#FFCE56';
-    // Agregar el nuevo nombre
-    if (c.includes('SEIT') || c.includes('Servicios')) return '#4BC0C0'; 
-    // ... resto de colores
-    return '#888888';
+function descargarDatos() {
+    if (!mainChart || !mainChart.data || mainChart.data.labels.length === 0) { alert("No hay datos visibles."); return; }
+    let rows = [], filename = "datos.csv";
+    if (currentScaleType === 'estatal') { filename = "Analisis_Cluster_20km.csv"; rows.push(["Sector Industrial", "Cantidad"]); } 
+    else { filename = `Top5_${currentScaleType.toUpperCase()}.csv`; rows.push(["Destino/Origen", "Valor"]); }
+    let labels = mainChart.data.labels;
+    let values = mainChart.data.datasets[0].data;
+    labels.forEach((label, i) => { rows.push([String(label).replace(/,/g, " "), values[i]]); });
+    let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    let link = document.createElement("a");
+    link.href = encodeURI(csvContent); link.download = filename;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
-// ==========================================
-// FUNCIÓN DE CAPTURA DE PANTALLA (FOTO)
-// ==========================================
 function capturarImagen() {
-    // 1. Ocultar elementos que no queremos en la foto (Opcional)
-    // Por ejemplo, ocultamos la barra de navegación para que se vea más "mapa"
     var navBar = document.getElementById('nav-bar');
     if(navBar) navBar.style.display = 'none';
-
-    // 2. Ejecutar la captura
-    // Capturamos el body entero para que salga todo lo visible
-    html2canvas(document.body, {
-        useCORS: true,       // VITAL: Permite capturar las imágenes del mapa (CartoDB)
-        allowTaint: true,    // Permite "manchar" el canvas con imágenes externas
-        scrollY: -window.scrollY // Corrige desplazamientos si los hay
-    }).then(canvas => {
-        // 3. Crear enlace de descarga
+    html2canvas(document.body, { useCORS: true, allowTaint: true, scrollY: -window.scrollY }).then(canvas => {
         var link = document.createElement('a');
-        // Nombre del archivo con fecha/hora para que no se repita
-        var timestamp = new Date().toISOString().slice(0,19).replace(/:/g,"-");
-        link.download = `Reporte_Industrial_${timestamp}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
+        link.download = `Reporte_${new Date().toISOString().slice(0,19)}.png`;
+        link.href = canvas.toDataURL("image/png"); link.click();
+        if(navBar) navBar.style.display = 'flex'; alert("¡Imagen guardada!");
+    });
+}
 
-        // 4. Restaurar la interfaz (Volver a mostrar lo que ocultamos)
-        if(navBar) navBar.style.display = 'flex';
-        alert("¡Reporte guardado como imagen!");
-    }).catch(err => {
-        console.error("Error al capturar:", err);
-        if(navBar) navBar.style.display = 'flex'; // Restaurar si falla
-        alert("Hubo un error al generar la imagen. Revisa la consola.");
+function getColorConjunto(conjunto) {
+    const c = (conjunto || '').toString().trim();
+    // Paleta VIBRANTE y DISTINTA
+    if (c.includes('Automo')) return '#ff3333'; // Rojo brillante
+    if (c.includes('Electrónica')) return '#2196f3'; // Azul vibrante
+    if (c.includes('Eléctrica')) return '#ffc107'; // Amarillo/Dorado
+    // Usamos Púrpura para SEIT para que se distinga bien del resto
+    if (c.includes('SEIT') || c.includes('Servicios')) return '#9c27b0'; 
+    return '#bbbbbb'; // Gris claro para otros
+}
+
+function calcularBreaks(valores) {
+    if (!valores || valores.length === 0) return [0,0,0,0];
+    if (valores.length < 5) return [valores[0], valores[0], valores[0], valores[0]];
+    var step = Math.floor(valores.length / 5);
+    return [valores[step], valores[step*2], valores[step*3], valores[step*4]];
+}
+
+function getClase(valor, breaks) {
+    if (valor <= breaks[0]) return 0; if (valor <= breaks[1]) return 1; if (valor <= breaks[2]) return 2; if (valor <= breaks[3]) return 3; return 4;
+}
+
+function actualizarLeyenda(breaks, moneda) {
+    var div = document.getElementById('legend-content'); if(!div) return;
+    var f = (n) => (n || 0).toLocaleString('es-MX', {maximumFractionDigits: 0}); // CORRECCIÓN AQUÍ TAMBIÉN
+    var html = `<div style="margin-bottom:8px; font-weight:bold; color:#ddd">Valor (${moneda})</div>`;
+    for(let i=0; i<4; i++) html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[i]};"></span> $${f(breaks[i])} - $${f(breaks[i+1])}</div>`;
+    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[4]};"></span> &gt; $${f(breaks[3])}</div>`;
+    div.innerHTML = html;
+}
+
+function showSection(id) {
+    document.querySelectorAll('.main-content-panel').forEach(p => p.style.display = 'none');
+    var target = document.getElementById(id); if(target) target.style.display = 'block';
+    var leftSidebar = document.getElementById('left-sidebar-container');
+    var rightSidebar = document.getElementById('right-sidebar-container');
+    if (id === 'inicio') {
+        if(leftSidebar) leftSidebar.style.display = 'flex';
+        if(rightSidebar) rightSidebar.style.display = 'flex';
+        if(map) setTimeout(() => map.invalidateSize(), 200);
+    } else {
+        if(leftSidebar) leftSidebar.style.display = 'none';
+        if(rightSidebar) rightSidebar.style.display = 'none';
+    }
+    document.querySelectorAll('.nav-button').forEach(n => {
+        n.classList.remove('active');
+        if(n.getAttribute('onclick') && n.getAttribute('onclick').includes(id)) n.classList.add('active');
     });
 }
 
 // ==========================================
-// AUXILIAR: FORMATEAR NÚMEROS (Ej: 1,200)
+// FUNCIÓN PARA FUNDIR (UNIR) ISOCRONAS
 // ==========================================
-function formatearNumero(valor) {
-    if (valor === undefined || valor === null) return "0";
-    return new Intl.NumberFormat('es-MX', { 
-        maximumFractionDigits: 0 
-    }).format(valor);
+function procesarYUnirIsocronas(features) {
+    if (typeof turf === 'undefined') {
+        console.error("Falta la librería Turf.js en el HTML");
+        return features; // Devuelve original si falla
+    }
+
+    // 1. Separar por niveles
+    var grupos = { 15: [], 30: [], 60: [] };
+
+    features.forEach(f => {
+        var m = parseInt(f.properties.AA_MINS || 0);
+        if (m <= 15) grupos[15].push(f);
+        else if (m <= 30) grupos[30].push(f);
+        else if (m <= 60) grupos[60].push(f);
+    });
+
+    var featuresUnidas = [];
+
+    // 2. Función auxiliar para unir un array de polígonos
+    const unirGrupo = (lista, minutos) => {
+        if (lista.length === 0) return;
+        
+        try {
+            // Empezamos con el primero
+            var unido = lista[0]; 
+            // Unimos el resto uno por uno
+            for (var i = 1; i < lista.length; i++) {
+                unido = turf.union(unido, lista[i]);
+            }
+            // Le volvemos a poner la propiedad de tiempo al resultado final
+            unido.properties = { AA_MINS: minutos };
+            featuresUnidas.push(unido);
+        } catch (e) {
+            console.warn("Error uniendo isocronas:", e);
+            // Si falla la unión, agregamos los originales para no perder datos
+            featuresUnidas.push(...lista);
+        }
+    };
+
+    // 3. Ejecutar la unión por grupo
+    unirGrupo(grupos[15], 15);
+    unirGrupo(grupos[30], 30);
+    unirGrupo(grupos[60], 60);
+
+    return featuresUnidas;
 }
