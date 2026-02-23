@@ -344,91 +344,150 @@ function dibujarArmadorasPuntos(features) {
 }
 
 // ==========================================
-// 6. NUEVO: LÓGICA MUNICIPIO (AGEB)
+// 6. LÓGICA MUNICIPIO (AGEB) - DOS PASOS
 // ==========================================
+
+// PASO 1: Menú para elegir Estado
 function iniciarLogicaMunicipio() {
-    fetch('ageb.geojson')
-        .then(r => r.json())
-        .then(data => {
-            agebRawData = data;
+    // Limpiamos capas previas si existían
+    if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
+    agebRawData = null; // Vaciamos memoria
+    
+    var container = document.getElementById('filter-buttons-container');
+    container.innerHTML = "";
+    document.getElementById('filter-title').innerText = "1. Seleccione Estado";
 
-            // Atributos disponibles en el JSON
-            var opcionesAgeb = [
-                { id: 'g_espacial', label: 'Vulnerabilidad en Hogar' },
-                { id: 'g_urbano', label: 'Deficiencias en Infraestructura' },
-                { id: 'g_socioeco', label: 'Sin Oportunidades' },
-                { id: 'G_INDICE', label: 'Índice de Vulnerabilidad Global' }
-            ];
+    // Crear botón para Baja California
+    var btnBC = document.createElement("button");
+    btnBC.className = "dynamic-filter-btn";
+    btnBC.innerHTML = `<b>Baja California</b>`;
+    btnBC.onclick = function() {
+        cargarAgebEstado("Baja California", "agebbc.geojson");
+    };
+    container.appendChild(btnBC);
 
-            var container = document.getElementById('filter-buttons-container');
-            container.innerHTML = "";
-            document.getElementById('filter-title').innerText = "Seleccione Índice (AGEB)";
-
-            opcionesAgeb.forEach((opc, index) => {
-                var btn = document.createElement("button");
-                // Selecciona el Índice Global por defecto
-                btn.className = "dynamic-filter-btn" + (index === 3 ? " active" : "");
-                btn.innerText = opc.label;
-                btn.onclick = function() {
-                    document.querySelectorAll('#filter-buttons-container .dynamic-filter-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    renderizarMapaAgeb(opc.id, opc.label);
-                };
-                container.appendChild(btn);
-            });
-
-            // Pintar el mapa con el índice general al cargar
-            renderizarMapaAgeb('G_INDICE', 'Índice de Vulnerabilidad Global');
-
-            // Zoom automático a los polígonos
-            map.flyToBounds(L.geoJSON(data).getBounds(), { padding: [50, 50], duration: 1.5 });
-        })
-        .catch(err => console.error("Error cargando capa AGEB:", err));
+    // Crear botón para Estado de México
+    var btnMex = document.createElement("button");
+    btnMex.className = "dynamic-filter-btn";
+    btnMex.innerHTML = `<b>Estado de México</b>`;
+    btnMex.onclick = function() {
+        cargarAgebEstado("Estado de México", "agebmex.geojson");
+    };
+    container.appendChild(btnMex);
+    
+    // Ocultar leyenda temporalmente
+    var legendContent = document.getElementById('legend-content');
+    if(legendContent) legendContent.innerHTML = "<small>Seleccione un estado primero</small>";
 }
 
+// PASO 2: Descargar archivo y mostrar índices
+function cargarAgebEstado(nombreEstado, archivoGeojson) {
+    // Mostrar mensaje de carga
+    document.getElementById('filter-title').innerText = "Cargando " + nombreEstado + "...";
+    document.getElementById('filter-buttons-container').innerHTML = "<p style='color:#00e5ff; padding:10px; font-weight:bold;'>Descargando polígonos, por favor espere...</p>";
+
+    // Descargar el archivo específico
+    fetch(archivoGeojson)
+        .then(r => r.json())
+        .then(data => {
+            agebRawData = data; // Guardamos los datos del estado elegido
+
+            // Zoom automático al estado recién cargado
+            var bounds = L.geoJSON(data).getBounds();
+            map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+
+            // Mostrar el menú de los 4 índices
+            mostrarFiltrosIndices(nombreEstado);
+        })
+        .catch(err => {
+            console.error("Error cargando capa AGEB:", err);
+            document.getElementById('filter-title').innerText = "Error de Carga";
+            document.getElementById('filter-buttons-container').innerHTML = `<p style='color:#ff3333;'>No se pudo cargar el archivo <b>${archivoGeojson}</b>. Verifica el nombre.</p>`;
+        });
+}
+
+// PASO 3: Menú de los 4 índices de Vulnerabilidad
+function mostrarFiltrosIndices(nombreEstado) {
+    var container = document.getElementById('filter-buttons-container');
+    container.innerHTML = "";
+    document.getElementById('filter-title').innerText = `2. Índice (${nombreEstado})`;
+
+    // Botón para regresar a seleccionar otro estado
+    var btnBack = document.createElement("button");
+    btnBack.innerText = "⬅ Cambiar Estado";
+    btnBack.className = "back-btn";
+    btnBack.onclick = iniciarLogicaMunicipio;
+    container.appendChild(btnBack);
+
+    var opcionesAgeb = [
+        { id: 'g_espacial', label: 'Vulnerabilidad en Hogar' },
+        { id: 'g_urbano', label: 'Deficiencias en Infraestructura' },
+        { id: 'g_socioeco', label: 'Sin Oportunidades' },
+        { id: 'G_INDICE', label: 'Índice de Vulnerabilidad Global' }
+    ];
+
+    opcionesAgeb.forEach((opc, index) => {
+        var btn = document.createElement("button");
+        btn.className = "dynamic-filter-btn" + (index === 3 ? " active" : "");
+        btn.innerText = opc.label;
+        btn.onclick = function() {
+            document.querySelectorAll('#filter-buttons-container .dynamic-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            renderizarMapaAgeb(opc.id, opc.label);
+        };
+        container.appendChild(btn);
+    });
+
+    // Pintar el mapa con el índice general (G_INDICE) por defecto
+    renderizarMapaAgeb('G_INDICE', 'Índice de Vulnerabilidad Global');
+}
+
+// Función auxiliar de colores
+function getColorVulnerabilidad(valorTexto) {
+    if (!valorTexto) return '#333333'; 
+    var v = valorTexto.toString().trim().toUpperCase();
+    if (v === 'MUY ALTO') return '#a50f15'; 
+    if (v === 'ALTO') return '#de2d26';     
+    if (v === 'MEDIO') return '#fb6a4a';    
+    if (v === 'BAJO') return '#fcae91';     
+    if (v === 'MUY BAJO') return '#fee5d9'; 
+    return '#444444'; 
+}
+
+// Dibuja los polígonos AGEB
 function renderizarMapaAgeb(atributo, labelNombre) {
     if (agebLayer) map.removeLayer(agebLayer);
 
-    // Filtrar nulos y obtener valores numéricos
-    var validFeatures = agebRawData.features.filter(f => f.properties[atributo] != null && !isNaN(f.properties[atributo]));
-    var valores = validFeatures.map(f => parseFloat(f.properties[atributo])).sort((a,b) => a - b);
-    var breaks = calcularBreaks(valores);
-
-    agebLayer = L.geoJSON(validFeatures, {
+    agebLayer = L.geoJSON(agebRawData, {
         style: function(feature) {
-            var val = parseFloat(feature.properties[atributo]);
-            var clase = getClase(val, breaks);
+            var valorCategoria = feature.properties[atributo] || "Sin dato";
             return {
-                color: "#111",           // Borde del AGEB
-                weight: 0.5,             // Borde muy fino
-                fillColor: RampaRojos[clase], // Escala de rojos para vulnerabilidad
-                fillOpacity: 0.75,
+                color: "#111",           
+                weight: 0.5,             
+                fillColor: getColorVulnerabilidad(valorCategoria), 
+                fillOpacity: 0.85,       
                 className: 'flujo-interactivo'
             };
         },
         onEachFeature: function(feature, layer) {
             var p = feature.properties;
-            var valFormatted = parseFloat(p[atributo]).toFixed(2);
-            
-            // Popup con todos los datos del AGEB
             var popupContent = `
                 <div style="font-family:'Noto Sans'; font-size:13px;">
                     <strong style="color:#de2d26; font-size:14px;">Análisis AGEB</strong><br>
                     <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
-                    <b>${labelNombre}:</b> <span style="color:#fff">${valFormatted}</span><br><br>
+                    <b>${labelNombre}:</b> <span style="color:#fff">${p[atributo] || "Sin dato"}</span><br><br>
                     <small style="color:#aaa; line-height: 1.4;">
-                        ▸ Espacial (Hogar): ${parseFloat(p.g_espacial || 0).toFixed(2)}<br>
-                        ▸ Urbano (Infraestructura): ${parseFloat(p.g_urbano || 0).toFixed(2)}<br>
-                        ▸ Socioeconómico (Oportunidades): ${parseFloat(p.g_socioeco || 0).toFixed(2)}
+                        ▸ Espacial (Hogar): ${p.g_espacial || "N/A"}<br>
+                        ▸ Urbano (Infraestructura): ${p.g_urbano || "N/A"}<br>
+                        ▸ Socioeconómico: ${p.g_socioeco || "N/A"}
                     </small>
                 </div>
             `;
             layer.bindPopup(popupContent);
             
-            // Efecto Hover
             layer.on({
                 mouseover: function(e) { 
-                    e.target.setStyle({ weight: 3, color: '#00e5ff' }); 
+                    e.target.setStyle({ weight: 2, color: '#fff' }); 
                     e.target.bringToFront(); 
                 },
                 mouseout: function(e) { agebLayer.resetStyle(e.target); }
@@ -436,19 +495,99 @@ function renderizarMapaAgeb(atributo, labelNombre) {
         }
     }).addTo(map);
 
-    actualizarLeyendaAgeb(breaks, labelNombre);
+    actualizarLeyendaAgebCategorica(labelNombre);
 }
 
-function actualizarLeyendaAgeb(breaks, titulo) {
+function actualizarLeyendaAgebCategorica(titulo) {
     var div = document.getElementById('legend-content'); if(!div) return;
-    var f = (n) => (n || 0).toLocaleString('es-MX', {maximumFractionDigits: 2}); 
+    div.innerHTML = `
+        <div style="margin-bottom:8px; font-weight:bold; color:#ddd">${titulo}</div>
+        <div class="legend-item"><span class="legend-color" style="background:#a50f15; border:1px solid #111"></span> Muy Alto</div>
+        <div class="legend-item"><span class="legend-color" style="background:#de2d26; border:1px solid #111"></span> Alto</div>
+        <div class="legend-item"><span class="legend-color" style="background:#fb6a4a; border:1px solid #111"></span> Medio</div>
+        <div class="legend-item"><span class="legend-color" style="background:#fcae91; border:1px solid #111"></span> Bajo</div>
+        <div class="legend-item"><span class="legend-color" style="background:#fee5d9; border:1px solid #111"></span> Muy Bajo</div>
+        <div class="legend-item"><span class="legend-color" style="background:#444444; border:1px solid #111"></span> Sin dato</div>
+    `;
+}
+
+// Función auxiliar para obtener color por texto
+function getColorVulnerabilidad(valorTexto) {
+    if (!valorTexto) return '#333333'; // Gris oscuro para vacíos
     
-    var html = `<div style="margin-bottom:8px; font-weight:bold; color:#ddd">${titulo}</div>`;
-    for(let i=0; i<4; i++) {
-        html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[i]};"></span> ${f(breaks[i])} - ${f(breaks[i+1])}</div>`;
-    }
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[4]};"></span> &gt; ${f(breaks[3])}</div>`;
-    div.innerHTML = html;
+    var v = valorTexto.toString().trim().toUpperCase();
+    
+    // Paleta de colores para vulnerabilidad (Rojos/Naranjas)
+    if (v === 'MUY ALTO') return '#a50f15'; // Rojo muy oscuro
+    if (v === 'ALTO') return '#de2d26';     // Rojo intenso
+    if (v === 'MEDIO') return '#fb6a4a';    // Naranja
+    if (v === 'BAJO') return '#fcae91';     // Salmón claro
+    if (v === 'MUY BAJO') return '#fee5d9'; // Casi blanco/crema
+    
+    return '#444444'; // Gris si dice "Sin dato" u otro valor
+}
+
+function renderizarMapaAgeb(atributo, labelNombre) {
+    if (agebLayer) map.removeLayer(agebLayer);
+
+    agebLayer = L.geoJSON(agebRawData, {
+        style: function(feature) {
+            // Obtenemos el texto exacto (ej. "Bajo", "Alto")
+            var valorCategoria = feature.properties[atributo] || "Sin dato";
+            
+            return {
+                color: "#111",           // Borde del AGEB (negro)
+                weight: 0.5,             // Borde muy fino
+                fillColor: getColorVulnerabilidad(valorCategoria), // Color según la categoría
+                fillOpacity: 0.8,        // Opacidad alta para que se vea el calor
+                className: 'flujo-interactivo'
+            };
+        },
+        onEachFeature: function(feature, layer) {
+            var p = feature.properties;
+            
+            var popupContent = `
+                <div style="font-family:'Noto Sans'; font-size:13px;">
+                    <strong style="color:#de2d26; font-size:14px;">Análisis AGEB</strong><br>
+                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
+                    <b>${labelNombre}:</b> <span style="color:#fff">${p[atributo] || "Sin dato"}</span><br><br>
+                    <small style="color:#aaa; line-height: 1.4;">
+                        ▸ Espacial (Hogar): ${p.g_espacial || "N/A"}<br>
+                        ▸ Urbano (Infraestructura): ${p.g_urbano || "N/A"}<br>
+                        ▸ Socioeconómico: ${p.g_socioeco || "N/A"}
+                    </small>
+                </div>
+            `;
+            layer.bindPopup(popupContent);
+            
+            // Hover (Se pone blanco al pasar el mouse)
+            layer.on({
+                mouseover: function(e) { 
+                    e.target.setStyle({ weight: 2, color: '#fff' }); 
+                    e.target.bringToFront(); 
+                },
+                mouseout: function(e) { agebLayer.resetStyle(e.target); }
+            });
+        }
+    }).addTo(map);
+
+    actualizarLeyendaAgebCategorica(labelNombre);
+}
+
+// Nueva leyenda basada en categorías de texto
+function actualizarLeyendaAgebCategorica(titulo) {
+    var div = document.getElementById('legend-content'); if(!div) return;
+    
+    div.innerHTML = `
+        <div style="margin-bottom:8px; font-weight:bold; color:#ddd">${titulo}</div>
+        
+        <div class="legend-item"><span class="legend-color" style="background:#a50f15; border:1px solid #111"></span> Muy Alto</div>
+        <div class="legend-item"><span class="legend-color" style="background:#de2d26; border:1px solid #111"></span> Alto</div>
+        <div class="legend-item"><span class="legend-color" style="background:#fb6a4a; border:1px solid #111"></span> Medio</div>
+        <div class="legend-item"><span class="legend-color" style="background:#fcae91; border:1px solid #111"></span> Bajo</div>
+        <div class="legend-item"><span class="legend-color" style="background:#fee5d9; border:1px solid #111"></span> Muy Bajo</div>
+        <div class="legend-item"><span class="legend-color" style="background:#444444; border:1px solid #111"></span> Sin dato</div>
+    `;
 }
 
 // ==========================================
