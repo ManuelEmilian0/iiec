@@ -69,7 +69,6 @@ function loadLayer(scaleType) {
     var activeBtn = document.getElementById('btn-' + scaleType);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // LIMPIEZA TOTAL
     if (currentGeoJSONLayer) { map.removeLayer(currentGeoJSONLayer); currentGeoJSONLayer = null; }
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
@@ -77,6 +76,9 @@ function loadLayer(scaleType) {
     
     var statsDiv = document.getElementById('stats-overlay');
     if(statsDiv) statsDiv.style.display = 'none';
+
+    var legendDiv = document.getElementById('legend-overlay');
+    if(legendDiv) legendDiv.style.display = 'none';
 
     var legendContent = document.getElementById('legend-content');
     if(legendContent) legendContent.innerHTML = "<small style='color:#aaa'>Cargando datos...</small>";
@@ -88,7 +90,6 @@ function loadLayer(scaleType) {
 
     var filterBox = document.getElementById('filter-container-box');
     
-    // --- ESCALA ESTATAL ---
     if (scaleType === 'estatal') {
         if(filterBox) {
             filterBox.style.display = 'flex';
@@ -99,7 +100,6 @@ function loadLayer(scaleType) {
         return; 
     }
 
-    // --- ESCALA MUNICIPIO (AGEB) ---
     if (scaleType === 'municipio') {
         if(filterBox) {
             filterBox.style.display = 'flex';
@@ -110,7 +110,6 @@ function loadLayer(scaleType) {
         return;
     }
 
-    // --- MUNDIAL / NACIONAL ---
     if (scaleType === 'mundial') {
         filename = "mundial.geojson";
         zoomCoords = [20, 0]; zoomLevel = 2;
@@ -524,21 +523,41 @@ function renderizarMapaAgeb(atributo, labelNombre) {
 }
 
 function actualizarLeyendaAgebCategorica(titulo) {
-    var div = document.getElementById('legend-content'); if(!div) return;
-    div.innerHTML = `
-        <div style="margin-bottom:8px; font-weight:bold; color:#ddd">${titulo}</div>
-        <div class="legend-item"><span class="legend-color" style="background:#a50f15; border:1px solid #111"></span> Muy Alto</div>
-        <div class="legend-item"><span class="legend-color" style="background:#de2d26; border:1px solid #111"></span> Alto</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fb6a4a; border:1px solid #111"></span> Medio</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fcae91; border:1px solid #111"></span> Bajo</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fee5d9; border:1px solid #111"></span> Muy Bajo</div>
-        <div class="legend-item"><span class="legend-color" style="background:#444444; border:1px solid #111"></span> Sin dato</div>
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content'); 
+    if(!div || !overlay) return;
+    
+    var html = `
+        <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">${titulo}</div>
         
-        <div style="margin-top:12px; font-weight:bold; color:#ddd">Infraestructura Industrial</div>
-        <div class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; border:2px solid white"></span> Planta Armadora</div>
-    `;
-}
+        <div style="width: 100%; padding: 0 5px; box-sizing: border-box; margin-bottom: 15px;">
+            <div style="display: flex; width: 100%; height: 18px; border-radius: 4px; border: 1px solid #555; overflow: hidden; cursor: crosshair;">
+                <div style="flex: 1; background-color: #fee5d9;" title="Muy Bajo"></div>
+                <div style="flex: 1; background-color: #fcae91;" title="Bajo"></div>
+                <div style="flex: 1; background-color: #fb6a4a;" title="Medio"></div>
+                <div style="flex: 1; background-color: #de2d26;" title="Alto"></div>
+                <div style="flex: 1; background-color: #a50f15;" title="Muy Alto"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 8px;">
+                <span>Muy Bajo</span>
+                <span>Muy Alto</span>
+            </div>
+        </div>
 
+        <div style="display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #eee;">
+            <span style="width: 16px; height: 16px; margin-right: 10px; border-radius: 4px; border: 1px solid #777; background: #444444;" title="Polígonos sin información disponible"></span> Sin dato
+        </div>
+        
+        <div style="margin-top:14px; font-weight:bold; color:#ddd; font-size: 13px; margin-bottom: 8px;">Infraestructura Industrial</div>
+        
+        <div style="display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #eee;">
+            <span style="width: 16px; height: 16px; margin-right: 10px; border-radius: 50%; border: 2px solid white; background: #00e5ff;"></span> Planta Armadora
+        </div>
+    `;
+    
+    div.innerHTML = html;
+    overlay.style.display = 'block';
+}
 // PASO 3: Menú de los 4 índices de Vulnerabilidad
 function mostrarFiltrosIndices(nombreEstado) {
     var container = document.getElementById('filter-buttons-container');
@@ -631,18 +650,6 @@ function renderizarMapaAgeb(atributo, labelNombre) {
     actualizarLeyendaAgebCategorica(labelNombre);
 }
 
-function actualizarLeyendaAgebCategorica(titulo) {
-    var div = document.getElementById('legend-content'); if(!div) return;
-    div.innerHTML = `
-        <div style="margin-bottom:8px; font-weight:bold; color:#ddd">${titulo}</div>
-        <div class="legend-item"><span class="legend-color" style="background:#a50f15; border:1px solid #111"></span> Muy Alto</div>
-        <div class="legend-item"><span class="legend-color" style="background:#de2d26; border:1px solid #111"></span> Alto</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fb6a4a; border:1px solid #111"></span> Medio</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fcae91; border:1px solid #111"></span> Bajo</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fee5d9; border:1px solid #111"></span> Muy Bajo</div>
-        <div class="legend-item"><span class="legend-color" style="background:#444444; border:1px solid #111"></span> Sin dato</div>
-    `;
-}
 
 // Función auxiliar para obtener color por texto
 function getColorVulnerabilidad(valorTexto) {
@@ -707,22 +714,6 @@ function renderizarMapaAgeb(atributo, labelNombre) {
     actualizarLeyendaAgebCategorica(labelNombre);
 }
 
-// Nueva leyenda basada en categorías de texto
-function actualizarLeyendaAgebCategorica(titulo) {
-    var div = document.getElementById('legend-content'); if(!div) return;
-    
-    div.innerHTML = `
-        <div style="margin-bottom:8px; font-weight:bold; color:#ddd">${titulo}</div>
-        
-        <div class="legend-item"><span class="legend-color" style="background:#a50f15; border:1px solid #111"></span> Muy Alto</div>
-        <div class="legend-item"><span class="legend-color" style="background:#de2d26; border:1px solid #111"></span> Alto</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fb6a4a; border:1px solid #111"></span> Medio</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fcae91; border:1px solid #111"></span> Bajo</div>
-        <div class="legend-item"><span class="legend-color" style="background:#fee5d9; border:1px solid #111"></span> Muy Bajo</div>
-        <div class="legend-item"><span class="legend-color" style="background:#444444; border:1px solid #111"></span> Sin dato</div>
-    `;
-}
-
 // ==========================================
 // RENDERIZADO DE MAPAS (MUNDIAL/NACIONAL)
 // ==========================================
@@ -774,13 +765,14 @@ function setupUI() {
 
         var scaleBox = document.createElement('div');
         scaleBox.className = 'dashboard-box';
-        // SE AGREGÓ EL BOTÓN MUNICIPIO AQUÍ
         scaleBox.innerHTML = `
-            <h4 class="panel-title">Escalas de Análisis</h4>
-            <button onclick="loadLayer('mundial')" class="scale-btn" id="btn-mundial">🌎 Escala Mundial</button>
-            <button onclick="loadLayer('nacional')" class="scale-btn" id="btn-nacional">🇲🇽 Escala Nacional</button>
-            <button onclick="loadLayer('estatal')" class="scale-btn" id="btn-estatal">🏭 Estatal (Clústeres)</button>
-            <button onclick="loadLayer('municipio')" class="scale-btn" id="btn-municipio">🏘️ Municipio (AGEB)</button>
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('escala-dropdown')">Escalas de Análisis <span>▼</span></h4>
+            <div id="escala-dropdown" class="dropdown-content">
+                <button onclick="loadLayer('mundial')" class="scale-btn" id="btn-mundial">🌎 Escala Mundial</button>
+                <button onclick="loadLayer('nacional')" class="scale-btn" id="btn-nacional">🇲🇽 Escala Nacional</button>
+                <button onclick="loadLayer('estatal')" class="scale-btn" id="btn-estatal">🏭 Estatal (Clústeres)</button>
+                <button onclick="loadLayer('municipio')" class="scale-btn" id="btn-municipio">🏘️ Municipio (AGEB)</button>
+            </div>
         `;
         leftContainer.appendChild(scaleBox);
 
@@ -812,6 +804,7 @@ function setupUI() {
         var legendBox = document.createElement('div');
         legendBox.id = 'legend-overlay';
         legendBox.className = 'dashboard-box';
+        legendBox.style.display = 'none';
         legendBox.innerHTML = `<h4 class="panel-title">Simbología</h4><div id="legend-content"><small style="color:#aaa">Seleccione una escala</small></div>`;
         rightContainer.appendChild(legendBox);
     }
@@ -958,30 +951,53 @@ function getClase(valor, breaks) {
 }
 
 function actualizarLeyenda(breaks, moneda) {
-    var div = document.getElementById('legend-content'); if(!div) return;
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content'); 
+    if(!div || !overlay) return;
+    
+    // Función para formatear números con comas
     var f = (n) => (n || 0).toLocaleString('es-MX', {maximumFractionDigits: 0}); 
-    var html = `<div style="margin-bottom:8px; font-weight:bold; color:#ddd">Valor (${moneda})</div>`;
-    for(let i=0; i<4; i++) html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[i]};"></span> $${f(breaks[i])} - $${f(breaks[i+1])}</div>`;
-    html += `<div class="legend-item"><span class="legend-color" style="background:${RampaRojos[4]};"></span> &gt; $${f(breaks[3])}</div>`;
+    
+    // Extraemos el valor mínimo y máximo de tus cortes
+    var valorMinimo = breaks[0];
+    var valorMaximo = breaks[3];
+    
+    // Convertimos tu arreglo RampaRojos en una cadena separada por comas para el CSS
+    var coloresCSS = RampaRojos.join(', ');
+    
+    // Construimos el HTML con un contenedor de gradiente (linear-gradient)
+    var html = `
+        <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">Valor (${moneda})</div>
+        <div style="width: 100%; padding: 0 5px; box-sizing: border-box;">
+            <div style="width: 100%; height: 18px; border-radius: 4px; border: 1px solid #555; background: linear-gradient(to right, ${coloresCSS});"></div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 8px;">
+                <span>$${f(valorMinimo)}</span>
+                <span>> $${f(valorMaximo)}</span>
+            </div>
+        </div>
+    `;
+    
     div.innerHTML = html;
+    overlay.style.display = 'block';
 }
-
 function actualizarLeyendaIsocronas() {
+    var overlay = document.getElementById('legend-overlay');
     var div = document.getElementById('legend-content');
-    if(div) {
-        div.innerHTML = `
-            <div style="margin-bottom:8px; font-weight:bold; color:#00e5ff">Accesibilidad (Tiempo)</div>
-            <div class="legend-item"><span class="legend-color" style="background:rgba(0, 255, 0, 0.8); border:1px solid #00ff00"></span> 0 - 15 Minutos (Cerca)</div>
-            <div class="legend-item"><span class="legend-color" style="background:rgba(255, 255, 0, 0.6); border:1px solid #ffff00"></span> 15 - 30 Minutos (Medio)</div>
-            <div class="legend-item"><span class="legend-color" style="background:rgba(255, 69, 0, 0.3); border:1px solid #ff4500"></span> 30 - 60 Minutos (Lejos)</div>
-            <div style="margin:10px 0 5px 0; font-weight:bold; color:#ddd">Proveedores</div>
-            <div class="legend-item"><span class="legend-color" style="background:#ff3333; border:1px solid #fff; border-radius:50%"></span> Automotriz</div>
-            <div class="legend-item"><span class="legend-color" style="background:#2196f3; border:1px solid #fff; border-radius:50%"></span> Electrónica</div>
-            <div class="legend-item"><span class="legend-color" style="background:#9c27b0; border:1px solid #fff; border-radius:50%"></span> Servicios SEIT</div>
-            <div class="legend-item"><span class="legend-color" style="background:#ffc107; border:1px solid #fff; border-radius:50%"></span> Eléctrica</div>
-            <div style="margin-top:8px" class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; border:2px solid white"></span> Planta Armadora</div>
-        `;
-    }
+    if(!div || !overlay) return;
+
+    div.innerHTML = `
+        <div style="margin-bottom:8px; font-weight:bold; color:#00e5ff">Accesibilidad (Tiempo)</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(0, 255, 0, 0.8); border:1px solid #00ff00"></span> 0 - 15 Minutos (Cerca)</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 255, 0, 0.6); border:1px solid #ffff00"></span> 15 - 30 Minutos (Medio)</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 69, 0, 0.3); border:1px solid #ff4500"></span> 30 - 60 Minutos (Lejos)</div>
+        <div style="margin:10px 0 5px 0; font-weight:bold; color:#ddd">Proveedores</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ff3333; border:1px solid #fff; border-radius:50%"></span> Automotriz</div>
+        <div class="legend-item"><span class="legend-color" style="background:#2196f3; border:1px solid #fff; border-radius:50%"></span> Electrónica</div>
+        <div class="legend-item"><span class="legend-color" style="background:#9c27b0; border:1px solid #fff; border-radius:50%"></span> Servicios SEIT</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ffc107; border:1px solid #fff; border-radius:50%"></span> Eléctrica</div>
+        <div style="margin-top:8px" class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; border:2px solid white"></span> Planta Armadora</div>
+    `;
+    overlay.style.display = 'block';
 }
 
 function showSection(id) {
@@ -1001,4 +1017,11 @@ function showSection(id) {
         n.classList.remove('active');
         if(n.getAttribute('onclick') && n.getAttribute('onclick').includes(id)) n.classList.add('active');
     });
+}
+
+function toggleDropdown(id) {
+    var content = document.getElementById(id);
+    if (content) {
+        content.classList.toggle('show');
+    }
 }
