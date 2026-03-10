@@ -567,3 +567,75 @@ strong {
   color: #008cff; /* Color Azul */
   text-decoration: underline;
 }
+
+/* =========================================
+   7. ANIMACIONES Y FLUIDEZ (MEJORAS UX)
+   ========================================= */
+
+/* A) Fade-in suave para el cambio de pestañas (Inicio, Marco, Metodología) */
+@keyframes fadeInSuave {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.active-panel {
+  display: block;
+  animation: fadeInSuave 0.4s ease-in-out forwards;
+}
+
+/* B) Efecto de entrada (Slide-in) para el panel lateral izquierdo */
+@keyframes slideInIzquierda {
+  from { 
+      transform: translateX(-120%); 
+      opacity: 0; 
+  }
+  to { 
+      transform: translateX(0); 
+      opacity: 1; 
+  }
+}
+
+#left-sidebar-container {
+  /* Le aplicamos la animación para que entre flotando de izquierda a derecha */
+  animation: slideInIzquierda 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+/* C) Botones Vivos: Animaciones interactivas (Hover) */
+
+/* 1. Botones de Filtro: Que se deslicen un poquito a la derecha */
+.dynamic-filter-btn {
+  transition: all 0.3s ease !important; /* Transición suave */
+}
+
+.dynamic-filter-btn:hover {
+  background: #555;
+  border-color: #aaa;
+  transform: translateX(4px); /* Se mueve 4px a la derecha */
+}
+
+/* 2. Botones de Escala (Mundial, Nacional, etc.): Que "salten" un poquito hacia arriba */
+.scale-btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.scale-btn:hover {
+  background: #004080;
+  color: #fff;
+  border-color: #aaa;
+  transform: translateY(-3px); /* Se eleva 3px */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5); /* Sombra extra al flotar */
+}
+
+/* 3. Botones de Descarga/Cámara: Efecto de presionado y flote */
+.download-btn, .screenshot-btn {
+  transition: all 0.2s ease !important;
+}
+
+.download-btn:hover, .screenshot-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1); /* Lo hace un poco más brillante */
+}
+
+.download-btn:active, .screenshot-btn:active {
+  transform: translateY(1px); /* Efecto de hundimiento al hacer clic */
+}

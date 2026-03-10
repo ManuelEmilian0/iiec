@@ -318,76 +318,61 @@ function procesarYUnirIsocronas(features) {
 function filtrarPorEstado(nombreEstado) {
     var estadoBusqueda = normalizarTexto(nombreEstado);
 
-    // 1. Filtrar DENUE
-    var denueEstado = denueRawData.features.filter(f => {
-        var nom = f.properties.NOMGEO || f.properties.ENTIDAD || f.properties.ESTADO || ""; 
-        return normalizarTexto(nom) === estadoBusqueda;
-    });
-
-    // 2. Filtrar ARMADORAS (¡CORRECCIÓN BAJA CALIFORNIA SUR!)
+    // 1. Filtrar DENUE, ARMADORAS e ISOCRONAS
+    var denueEstado = denueRawData.features.filter(f => normalizarTexto(f.properties.NOMGEO || f.properties.ENTIDAD || f.properties.ESTADO) === estadoBusqueda);
+    
     var armadorasEstado = armadorasRawData.features.filter(f => {
         var estadoArmadora = normalizarTexto(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
-        // Si el usuario busca "BAJA CALIFORNIA", evitamos que coincida con "SUR"
-        if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) {
-            return false;
-        }
+        if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
         return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
     });
 
-    // 3. Filtrar ISOCRONAS
-    var isocronasRawList = isocronasRawData.features.filter(f => {
-        var est = f.properties.NOMGEO || f.properties.Estado || f.properties.ESTADO || f.properties.ENTIDAD || f.properties.entidad || "";
-        return normalizarTexto(est) === estadoBusqueda;
-    });
-
+    var isocronasRawList = isocronasRawData.features.filter(f => normalizarTexto(f.properties.NOMGEO || f.properties.Estado || f.properties.ESTADO || f.properties.ENTIDAD) === estadoBusqueda);
     var isocronasEstado = procesarYUnirIsocronas(isocronasRawList);
 
-    // ORDEN CORRECTO: Mayores tiempos (polígonos más grandes) se dibujan AL FONDO,
-    // y los tiempos menores (polígonos chicos) se dibujan AL FRENTE (al final del array).
-    isocronasEstado.sort((a, b) => {
-        return parseInt(b.properties.AA_MINS || 0) - parseInt(a.properties.AA_MINS || 0);
-    });
+    // Ordenamos isocronas (Las más grandes al fondo)
+    isocronasEstado.sort((a, b) => parseInt(b.properties.AA_MINS || 0) - parseInt(a.properties.AA_MINS || 0));
 
-    // A) ISOCRONAS (FONDO)
+    // LIMPIEZA TOTAL DEL MAPA
     if (isocronasLayer) map.removeLayer(isocronasLayer);
+    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+    if (armadorasLayer) map.removeLayer(armadorasLayer);
+
+    // VECTORES PARA GUARDAR LOS OBJETOS INVISIBLES
+    var animIso15 = [], animIso30 = [], animIso60 = [];
+    var animDenue = [];
+    var animArmadoras = [];
+
+    // --- A) ISOCRONAS (Nacen invisibles) ---
     if (isocronasEstado.length > 0) {
         isocronasLayer = L.geoJSON(isocronasEstado, {
-            style: function(feature) {
+            style: function() {
+                // TODO INVISIBLE AL INICIO
+                return { opacity: 0, fillOpacity: 0, weight: 1.5, className: 'sin-interaccion' };
+            },
+            onEachFeature: function(feature, layer) {
                 var mins = parseInt(feature.properties.AA_MINS || 0);
-                
-                // Efecto cristal/transparente para exteriores, pero sólido para interior
-                // Al superponer anillos translucidos que cubren el mismo centro, el interior se mancha.
-                // Mantener el Verde (<=15) muy opaco previene que el Naranja/Amarillo de fondo lo contamine.
-                var opacidadRelleno = 0.25; // 45-60 min (Fondo oscuro)
-                if (mins <= 30) opacidadRelleno = 0.4; // Medio
-                if (mins <= 15) opacidadRelleno = 0.8; // Centro (Verde sólido, no se mancha)
-
-                return {
-                    color: getColorIsocrona(mins),      
-                    fillColor: getColorIsocrona(mins),  
-                    weight: 1, 
-                    opacity: 1, 
-                    fillOpacity: opacidadRelleno,
-                    className: 'sin-interaccion'
-                };
+                if (mins <= 15) animIso15.push(layer);
+                else if (mins <= 30) animIso30.push(layer);
+                else animIso60.push(layer);
             }
         }).addTo(map);
         isocronasLayer.bringToBack();
     }
 
-    // B) DENUE (MEDIO)
-    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+    // --- B) PUNTOS DENUE (Nacen invisibles) ---
     if (denueEstado.length > 0) {
         currentGeoJSONLayer = L.geoJSON(denueEstado, {
             pointToLayer: function (feature, latlng) {
                 var sector = feature.properties.Conjunto || "Otros";
                 if(sector === "Actividades SEIT") sector = "Servicios SEIT";
+                // INVISIBLE AL INICIO (opacity: 0, fillOpacity: 0)
                 return L.circleMarker(latlng, {
-                    radius: 5, fillColor: getColorConjunto(sector), 
-                    color: "#ffffff", weight: 0.8, opacity: 1, fillOpacity: 0.9
+                    radius: 5, fillColor: getColorConjunto(sector), color: "#ffffff", weight: 0.8, opacity: 0, fillOpacity: 0 
                 });
             },
             onEachFeature: function(feature, layer) {
+                animDenue.push(layer);
                 var empresa = feature.properties.Nombre || feature.properties.Empresa;
                 var sector = feature.properties.Conjunto;
                 layer.bindPopup(`<b>${empresa}</b><br><small>${sector}</small>`);
@@ -395,38 +380,76 @@ function filtrarPorEstado(nombreEstado) {
         }).addTo(map);
     }
 
-    // C) ARMADORAS (ARRIBA) 
-    // Se dibujan DESPUÉS de hacer el zoom para un movimiento limpio
+    // --- C) PLANTAS ARMADORAS (Nacen invisibles) ---
+    if (armadorasEstado.length > 0) {
+        armadorasLayer = L.geoJSON(armadorasEstado, {
+            pointToLayer: function (feature, latlng) {
+                // INVISIBLE AL INICIO
+                return L.circleMarker(latlng, {
+                    radius: 12, fillColor: "#00e5ff", color: "#fff", weight: 3, opacity: 0, fillOpacity: 0 
+                });
+            },
+            onEachFeature: function(feature, layer) {
+                animArmadoras.push(layer);
+            }
+        }).addTo(map);
+    }
+
+    // --- LÓGICA MÁESTRA DE ANIMACIÓN (EL RADAR) ---
+    function ejecutarAnimacion() {
+        // Mezclamos aleatoriamente las empresas para un efecto "Popcorn" de encendido
+        animDenue.sort(() => Math.random() - 0.5);
+        let tercio = Math.floor(animDenue.length / 3);
+        let denue1 = animDenue.slice(0, tercio);
+        let denue2 = animDenue.slice(tercio, tercio * 2);
+        let denue3 = animDenue.slice(tercio * 2);
+
+        // FASE 1 (100ms): Enciende Centro 15 min + Plantas Armadoras + 1er tercio de empresas
+        setTimeout(() => {
+            animIso15.forEach(l => l.setStyle({opacity: 1, fillOpacity: 0.8, color: getColorIsocrona(15), fillColor: getColorIsocrona(15)}));
+            
+            animArmadoras.forEach(l => {
+                l.setStyle({opacity: 1, fillOpacity: 1}); // Enciende Planta Cyan
+                var nombre = l.feature.properties.NOMBRE || l.feature.properties.Nombre || "Planta";
+                l.bindTooltip(nombre, { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] });
+            });
+
+            denue1.forEach(l => l.setStyle({opacity: 1, fillOpacity: 0.9})); // Enciende empresas
+        }, 100);
+
+        // FASE 2 (800ms): Enciende Anillo 30 min + 2do tercio de empresas
+        setTimeout(() => {
+            animIso30.forEach(l => l.setStyle({opacity: 1, fillOpacity: 0.4, color: getColorIsocrona(30), fillColor: getColorIsocrona(30)}));
+            denue2.forEach(l => l.setStyle({opacity: 1, fillOpacity: 0.9}));
+        }, 800);
+
+        // FASE 3 (1500ms): Enciende Anillo 60 min + resto de empresas
+        setTimeout(() => {
+            animIso60.forEach(l => l.setStyle({opacity: 1, fillOpacity: 0.25, color: getColorIsocrona(60), fillColor: getColorIsocrona(60)}));
+            denue3.forEach(l => l.setStyle({opacity: 1, fillOpacity: 0.9}));
+        }, 1500);
+    }
+
+    // --- D) VUELO Y GATILLO DE ANIMACIÓN ---
     try {
         if (armadorasEstado.length > 0) {
             var latlngs = armadorasEstado.map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
             map.flyToBounds(latlngs, { padding: [100, 100], duration: 1.5, maxZoom: 11 });
-            
-            // Espera a que termine el vuelo para dibujarlos
-            map.once('moveend', function() {
-                dibujarArmadorasPuntos(armadorasEstado);
-            });
+            // Cuando termine el vuelo, dispara el Radar
+            map.once('moveend', ejecutarAnimacion);
         } else if (isocronasEstado.length > 0) {
             map.flyToBounds(isocronasLayer.getBounds(), { padding: [50, 50] });
-            map.once('moveend', function() {
-                dibujarArmadorasPuntos(armadorasEstado);
-            });
-        } else if (currentGeoJSONLayer && denueEstado.length > 0) {
-            map.flyToBounds(currentGeoJSONLayer.getBounds(), { padding: [50, 50] });
-            map.once('moveend', function() {
-                dibujarArmadorasPuntos(armadorasEstado);
-            });
+            map.once('moveend', ejecutarAnimacion);
         } else {
-            // Si no hay zoom, dibújalos directamente
-            dibujarArmadorasPuntos(armadorasEstado);
+            ejecutarAnimacion(); // Si no hay vuelo, enciende de inmediato
         }
-    } catch (e) { 
-        console.error("Error zoom:", e); 
-        dibujarArmadorasPuntos(armadorasEstado);
+    } catch (e) {
+        console.error("Error zoom:", e);
+        ejecutarAnimacion(); 
     }
 
     actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado);
-    actualizarLeyendaIsocronas(); 
+    actualizarLeyendaIsocronas();
 }
 
 function dibujarArmadorasPuntos(features) {
@@ -885,8 +908,10 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
     var canvas = document.getElementById('myChart');
     if (!canvas) return;
 
-    // Aumentar la altura del canvas padre para forzar el scroll en la gráfica Estatal (pastel) pero no excesivamente
-    canvas.parentElement.style.height = '260px';
+    // --- CORRECCIÓN CRÍTICA DE TAMAÑO ---
+    // En lugar de 260px, lo limitamos a 150px para que quede compacto
+    // y no aplaste los botones de abajo.
+    canvas.parentElement.style.height = '150px';
 
     var labels = Object.keys(conteo);
     var dataValues = Object.values(conteo);
@@ -911,11 +936,11 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
             responsive: true, 
             maintainAspectRatio: false, 
             layout: {
-                padding: { top: 15, bottom: 15, left: 15, right: 15 }
+                padding: { top: 5, bottom: 5, left: 5, right: 5 } // Menos padding para aprovechar el espacio
             },
             plugins: { 
                 legend: { 
-                    display: false
+                    display: false // Mantenemos la leyenda apagada porque ya está en el mapa
                 } 
             }
         }
@@ -1040,22 +1065,24 @@ function getClase(valor, breaks) {
     if (valor <= breaks[0]) return 0; if (valor <= breaks[1]) return 1; if (valor <= breaks[2]) return 2; if (valor <= breaks[3]) return 3; return 4;
 }
 
+// ==========================================
+// 1. LEYENDA MUNDIAL / NACIONAL
+// ==========================================
 function actualizarLeyenda(breaks, moneda) {
     var overlay = document.getElementById('legend-overlay');
     var div = document.getElementById('legend-content'); 
     if(!div || !overlay) return;
     
-    // Función para formatear números con comas
     var f = (n) => (n || 0).toLocaleString('es-MX', {maximumFractionDigits: 0}); 
-    
-    // Extraemos el valor mínimo y máximo de tus cortes
     var valorMinimo = breaks[0];
     var valorMaximo = breaks[3];
-    
-    // Convertimos tu arreglo RampaRojos en una cadena separada por comas para el CSS
     var coloresCSS = RampaRojos.join(', ');
     
-    // Construimos el HTML con un contenedor de gradiente y forma de cono/flecha usando clip-path
+    // --- TEXTO DINÁMICO DE LA FUENTE (OCDE vs MIP) ---
+    var textoFuente = currentScaleType === 'mundial' 
+        ? "Organización para la Cooperación y el Desarrollo Económicos (OCDE) 2026" 
+        : "Cuadros de Oferta y Utilización (COU) y Matrices Insumo-Producto (MIP), INEGI 2020";
+    
     var html = `
         <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">Valor (${moneda})</div>
         <div style="width: 100%; padding: 0 5px; box-sizing: border-box;">
@@ -1065,11 +1092,89 @@ function actualizarLeyenda(breaks, moneda) {
                 <span>> $${f(valorMaximo)}</span>
             </div>
         </div>
+        
+        <div style="margin-top: 15px; font-size: 10px; color: #888; text-align: right; font-style: italic; border-top: 1px solid #444; padding-top: 5px;">
+            Fuente: ${textoFuente}
+        </div>
     `;
     
     div.innerHTML = html;
     overlay.style.display = 'block';
 }
+
+// ==========================================
+// LEYENDA ESTATAL (Clústeres e Isocronas)
+// ==========================================
+function actualizarLeyendaIsocronas() {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if(!div || !overlay) return;
+
+    div.innerHTML = `
+        <div style="margin-bottom:8px; font-weight:bold; color:#00e5ff">Accesibilidad (Tiempo)</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(0, 255, 0, 0.8); border:1px solid #00ff00"></span> 0 - 15 Minutos (Cerca)</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 255, 0, 0.6); border:1px solid #ffff00"></span> 15 - 30 Minutos (Medio)</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 69, 0, 0.3); border:1px solid #ff4500"></span> 30 - 60 Minutos (Lejos)</div>
+        
+        <div style="margin:10px 0 5px 0; font-weight:bold; color:#ddd">Proveedores</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ff3333; border:1px solid #fff; border-radius:50%"></span> Automotriz</div>
+        <div class="legend-item"><span class="legend-color" style="background:#2196f3; border:1px solid #fff; border-radius:50%"></span> Electrónica</div>
+        <div class="legend-item"><span class="legend-color" style="background:#9c27b0; border:1px solid #fff; border-radius:50%"></span> Servicios SEIT</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ffc107; border:1px solid #fff; border-radius:50%"></span> Eléctrica</div>
+        
+        <div style="margin-top:8px" class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; border:2px solid white"></span> Planta Armadora</div>
+        
+        <div style="margin-top: 15px; font-size: 10px; color: #888; text-align: right; font-style: italic; border-top: 1px solid #444; padding-top: 5px;">
+            Fuente: DENUE; Directorio Estadístico Nacional de Unidades Económicas, INEGI (2022)
+        </div>
+    `;
+    overlay.style.display = 'block';
+}
+
+// ==========================================
+// 3. LEYENDA MUNICIPAL (AGEBs)
+// ==========================================
+function actualizarLeyendaAgebCategorica(titulo) {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content'); 
+    if(!div || !overlay) return;
+    
+    var html = `
+        <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">${titulo}</div>
+        
+        <div style="width: 100%; padding: 0 5px; box-sizing: border-box; margin-bottom: 15px;">
+            <div style="display: flex; width: 100%; height: 18px; border-radius: 4px; border: 1px solid #555; overflow: hidden; cursor: crosshair;">
+                <div style="flex: 1; background-color: #fee5d9;" title="Muy Bajo"></div>
+                <div style="flex: 1; background-color: #fcae91;" title="Bajo"></div>
+                <div style="flex: 1; background-color: #fb6a4a;" title="Medio"></div>
+                <div style="flex: 1; background-color: #de2d26;" title="Alto"></div>
+                <div style="flex: 1; background-color: #a50f15;" title="Muy Alto"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 8px;">
+                <span>Muy Bajo</span>
+                <span>Muy Alto</span>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #eee;">
+            <span style="width: 16px; height: 16px; margin-right: 10px; border-radius: 4px; border: 1px solid #777; background: #444444;" title="Polígonos sin información disponible"></span> Sin dato
+        </div>
+        
+        <div style="margin-top:14px; font-weight:bold; color:#ddd; font-size: 13px; margin-bottom: 8px;">Infraestructura Industrial</div>
+        
+        <div style="display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #eee;">
+            <span style="width: 16px; height: 16px; margin-right: 10px; border-radius: 50%; border: 2px solid white; background: #00e5ff;"></span> Planta Armadora
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 10px; color: #888; text-align: right; font-style: italic; border-top: 1px solid #444; padding-top: 5px;">
+            Fuente: Sistema para la Consulta de Información Censal (SCINCE), INEGI 2020
+        </div>
+    `;
+    
+    div.innerHTML = html;
+    overlay.style.display = 'block';
+}
+
 function actualizarLeyendaIsocronas() {
     var overlay = document.getElementById('legend-overlay');
     var div = document.getElementById('legend-content');
