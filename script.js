@@ -136,35 +136,101 @@ function loadLayer(scaleType) {
 // 4. LÓGICA MUNDIAL & NACIONAL
 // ==========================================
 function iniciarFiltroMundial_Paso1(data) {
-    document.getElementById('filter-title').innerText = "1. Seleccione Industria";
-    var opciones = [...new Set(data.features.map(f => f.properties.Industria))].sort();
-    crearBotones(opciones, (sel) => iniciarFiltroMundial_Paso2(data, sel));
-}
+    var container = document.getElementById('filter-buttons-container');
+    container.innerHTML = "";
+    document.getElementById('filter-title').innerText = "Filtros Globales";
 
-function iniciarFiltroMundial_Paso2(data, industriaSel) {
-    document.getElementById('filter-title').innerText = "2. Seleccione Origen";
-    var datosFiltrados = data.features.filter(f => f.properties.Industria === industriaSel);
-    var origenes = [...new Set(datosFiltrados.map(f => f.properties.Pais_Orige))].sort();
-    crearBotones(origenes, (origenSel) => {
-        var finalData = datosFiltrados.filter(f => f.properties.Pais_Orige === origenSel);
+    var opcionesIndustria = [...new Set(data.features.map(f => f.properties.Industria))].sort();
+    
+    // Select 1: Industria
+    var selectIndustria = document.createElement("select");
+    selectIndustria.className = "dynamic-filter-select";
+    selectIndustria.innerHTML = `<option value="" disabled selected>-- 1. Seleccione Industria --</option>`;
+    opcionesIndustria.forEach(item => {
+        selectIndustria.innerHTML += `<option value="${item}">${item}</option>`;
+    });
+
+    // Select 2: Origen (País)
+    var selectOrigen = document.createElement("select");
+    selectOrigen.className = "dynamic-filter-select";
+    selectOrigen.style.display = 'none'; // oculto inicialmente
+    
+    // Evento onChange Select 1
+    selectIndustria.onchange = function() {
+        var industriaSel = this.value;
+        var datosFiltrados = data.features.filter(f => f.properties.Industria === industriaSel);
+        var origenes = [...new Set(datosFiltrados.map(f => f.properties.Pais_Orige))].sort();
+        
+        // Limpiamos y repoblamos Select 2
+        selectOrigen.innerHTML = `<option value="" disabled selected>-- 2. Seleccione País --</option>`;
+        origenes.forEach(item => {
+            selectOrigen.innerHTML += `<option value="${item}">${item}</option>`;
+        });
+        selectOrigen.style.display = 'block'; // mostrar Select 2
+        
+        // Resetea visualización
+        if(currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+    };
+
+    // Evento onChange Select 2
+    selectOrigen.onchange = function() {
+        var industriaSel = selectIndustria.value;
+        var origenSel = this.value;
+        var finalData = data.features.filter(f => f.properties.Industria === industriaSel && f.properties.Pais_Orige === origenSel);
         renderizarMapaFlujos(finalData, 'Valor', 'MDD', 'Pais_Desti');
-    }, () => iniciarFiltroMundial_Paso1(data)); 
+    };
+
+    container.appendChild(selectIndustria);
+    container.appendChild(selectOrigen);
 }
 
 function iniciarFiltroNacional_Paso1(data) {
-    document.getElementById('filter-title').innerText = "1. Seleccione Subsector";
-    var opciones = [...new Set(data.features.map(f => f.properties.SUBSECTO_3 || f.properties.SUBSECTO_2))].sort();
-    crearBotones(opciones, (sel) => iniciarFiltroNacional_Paso2(data, sel));
-}
+    var container = document.getElementById('filter-buttons-container');
+    container.innerHTML = "";
+    document.getElementById('filter-title').innerText = "Filtros Nacionales";
 
-function iniciarFiltroNacional_Paso2(data, subsectorSel) {
-    document.getElementById('filter-title').innerText = "2. Seleccione Estado Origen";
-    var datosFiltrados = data.features.filter(f => (f.properties.SUBSECTO_3 === subsectorSel || f.properties.SUBSECTO_2 === subsectorSel));
-    var origenes = [...new Set(datosFiltrados.map(f => f.properties.Edo_V))].sort();
-    crearBotones(origenes, (origenSel) => {
-        var finalData = datosFiltrados.filter(f => f.properties.Edo_V === origenSel);
+    var opcionesSubsector = [...new Set(data.features.map(f => f.properties.SUBSECTO_3 || f.properties.SUBSECTO_2))].sort();
+    
+    // Select 1: Subsector
+    var selectSubsector = document.createElement("select");
+    selectSubsector.className = "dynamic-filter-select";
+    selectSubsector.innerHTML = `<option value="" disabled selected>-- 1. Seleccione Subsector --</option>`;
+    opcionesSubsector.forEach(item => {
+        selectSubsector.innerHTML += `<option value="${item}">${item}</option>`;
+    });
+
+    // Select 2: Estado
+    var selectEstado = document.createElement("select");
+    selectEstado.className = "dynamic-filter-select";
+    selectEstado.style.display = 'none'; // oculto inicialmente
+    
+    // Evento onChange Select 1
+    selectSubsector.onchange = function() {
+        var subsectorSel = this.value;
+        var datosFiltrados = data.features.filter(f => (f.properties.SUBSECTO_3 === subsectorSel || f.properties.SUBSECTO_2 === subsectorSel));
+        var estados = [...new Set(datosFiltrados.map(f => f.properties.Edo_V))].sort();
+        
+        // Limpiamos y repoblamos Select 2
+        selectEstado.innerHTML = `<option value="" disabled selected>-- 2. Seleccione Estado --</option>`;
+        estados.forEach(item => {
+            selectEstado.innerHTML += `<option value="${item}">${item}</option>`;
+        });
+        selectEstado.style.display = 'block'; // mostrar Select 2
+        
+        // Resetea visualización
+        if(currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+    };
+
+    // Evento onChange Select 2
+    selectEstado.onchange = function() {
+        var subsectorSel = selectSubsector.value;
+        var estadoSel = this.value;
+        var finalData = data.features.filter(f => (f.properties.SUBSECTO_3 === subsectorSel || f.properties.SUBSECTO_2 === subsectorSel) && f.properties.Edo_V === estadoSel);
         renderizarMapaFlujos(finalData, 'VALOR', 'MDP', 'EDO_C');
-    }, () => iniciarFiltroNacional_Paso1(data));
+    };
+
+    container.appendChild(selectSubsector);
+    container.appendChild(selectEstado);
 }
 
 // ==========================================
@@ -193,18 +259,32 @@ function generarMenuEstados(data) {
     if (title) title.innerText = "Seleccione Estado";
 
     var estados = [...new Set(data.features.map(f => f.properties.NOMGEO || "Desconocido"))].sort();
+    
+    var select = document.createElement("select");
+    select.className = "dynamic-filter-select";
+    
+    var defaultOption = document.createElement("option");
+    defaultOption.innerText = "-- Elija una opción --";
+    defaultOption.value = "";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    select.appendChild(defaultOption);
+
     estados.forEach(estado => {
         if(!estado) return; 
-        var btn = document.createElement("button");
-        btn.className = "dynamic-filter-btn";
-        btn.innerHTML = `<b>${estado}</b>`;
-        btn.onclick = function() {
-            document.querySelectorAll('.dynamic-filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            filtrarPorEstado(estado);
-        };
-        container.appendChild(btn);
+        var opt = document.createElement("option");
+        opt.value = estado;
+        opt.innerText = estado;
+        select.appendChild(opt);
     });
+
+    select.onchange = function() {
+        if (this.value) {
+            filtrarPorEstado(this.value);
+        }
+    };
+    
+    container.appendChild(select);
 }
 
 function normalizarTexto(texto) {
@@ -262,8 +342,10 @@ function filtrarPorEstado(nombreEstado) {
 
     var isocronasEstado = procesarYUnirIsocronas(isocronasRawList);
 
+    // ORDEN CORRECTO: Mayores tiempos (polígonos más grandes) se dibujan AL FONDO,
+    // y los tiempos menores (polígonos chicos) se dibujan AL FRENTE (al final del array).
     isocronasEstado.sort((a, b) => {
-        return (b.properties.AA_MINS || 0) - (a.properties.AA_MINS || 0);
+        return parseInt(b.properties.AA_MINS || 0) - parseInt(a.properties.AA_MINS || 0);
     });
 
     // A) ISOCRONAS (FONDO)
@@ -272,14 +354,20 @@ function filtrarPorEstado(nombreEstado) {
         isocronasLayer = L.geoJSON(isocronasEstado, {
             style: function(feature) {
                 var mins = parseInt(feature.properties.AA_MINS || 0);
-                var opacidadRelleno = 0.3; 
-                if (mins <= 30) opacidadRelleno = 0.6; 
-                if (mins <= 15) opacidadRelleno = 0.8; 
+                
+                // Efecto cristal/transparente para exteriores, pero sólido para interior
+                // Al superponer anillos translucidos que cubren el mismo centro, el interior se mancha.
+                // Mantener el Verde (<=15) muy opaco previene que el Naranja/Amarillo de fondo lo contamine.
+                var opacidadRelleno = 0.25; // 45-60 min (Fondo oscuro)
+                if (mins <= 30) opacidadRelleno = 0.4; // Medio
+                if (mins <= 15) opacidadRelleno = 0.8; // Centro (Verde sólido, no se mancha)
 
                 return {
                     color: getColorIsocrona(mins),      
                     fillColor: getColorIsocrona(mins),  
-                    weight: 1, opacity: 1, fillOpacity: opacidadRelleno,
+                    weight: 1, 
+                    opacity: 1, 
+                    fillOpacity: opacidadRelleno,
                     className: 'sin-interaccion'
                 };
             }
@@ -307,19 +395,35 @@ function filtrarPorEstado(nombreEstado) {
         }).addTo(map);
     }
 
-    // C) ARMADORAS (ARRIBA)
-    dibujarArmadorasPuntos(armadorasEstado);
-
+    // C) ARMADORAS (ARRIBA) 
+    // Se dibujan DESPUÉS de hacer el zoom para un movimiento limpio
     try {
         if (armadorasEstado.length > 0) {
             var latlngs = armadorasEstado.map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
             map.flyToBounds(latlngs, { padding: [100, 100], duration: 1.5, maxZoom: 11 });
+            
+            // Espera a que termine el vuelo para dibujarlos
+            map.once('moveend', function() {
+                dibujarArmadorasPuntos(armadorasEstado);
+            });
         } else if (isocronasEstado.length > 0) {
             map.flyToBounds(isocronasLayer.getBounds(), { padding: [50, 50] });
+            map.once('moveend', function() {
+                dibujarArmadorasPuntos(armadorasEstado);
+            });
         } else if (currentGeoJSONLayer && denueEstado.length > 0) {
             map.flyToBounds(currentGeoJSONLayer.getBounds(), { padding: [50, 50] });
+            map.once('moveend', function() {
+                dibujarArmadorasPuntos(armadorasEstado);
+            });
+        } else {
+            // Si no hay zoom, dibújalos directamente
+            dibujarArmadorasPuntos(armadorasEstado);
         }
-    } catch (e) { console.error("Error zoom:", e); }
+    } catch (e) { 
+        console.error("Error zoom:", e); 
+        dibujarArmadorasPuntos(armadorasEstado);
+    }
 
     actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado);
     actualizarLeyendaIsocronas(); 
@@ -348,16 +452,14 @@ function dibujarArmadorasPuntos(features) {
 
 // PASO 1: Menú para elegir Estado (Optimizado para múltiples estados)
 function iniciarLogicaMunicipio() {
-    // Limpiamos capas previas al entrar o al regresar al menú
     if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; } 
     agebRawData = null; 
     
     var container = document.getElementById('filter-buttons-container');
     container.innerHTML = "";
-    document.getElementById('filter-title').innerText = "1. Seleccione Estado";
+    document.getElementById('filter-title').innerText = "Filtros Municipales (AGEBs)";
 
-    // --- LISTA MAESTRA DE ESTADOS Y SUS ARCHIVOS ---
     var estadosAgeb = [
         { nombre: "Aguascalientes", archivo: "agebags.geojson" },
         { nombre: "Baja California", archivo: "agebbc.geojson" },
@@ -372,93 +474,86 @@ function iniciarLogicaMunicipio() {
         { nombre: "Sonora", archivo: "agebson.geojson" }
     ];
 
-    // Generar los botones automáticamente usando la lista
+    // Select 1: Estado AGEB
+    var selectEstado = document.createElement("select");
+    selectEstado.className = "dynamic-filter-select";
+    selectEstado.innerHTML = `<option value="" disabled selected>-- 1. Seleccione un estado --</option>`;
     estadosAgeb.forEach(estado => {
-        var btn = document.createElement("button");
-        btn.className = "dynamic-filter-btn";
-        btn.innerHTML = `<b>${estado.nombre}</b>`;
-        btn.onclick = function() {
-            // Al hacer clic, carga el archivo correspondiente a ese estado
-            cargarAgebEstado(estado.nombre, estado.archivo);
-        };
-        container.appendChild(btn);
+        selectEstado.innerHTML += `<option value="${estado.archivo}">${estado.nombre}</option>`;
     });
-    
-    var legendContent = document.getElementById('legend-content');
-    if(legendContent) legendContent.innerHTML = "<small>Seleccione un estado primero</small>";
-}
 
-// PASO 2: Descargar archivo AGEB + Armadoras
-function cargarAgebEstado(nombreEstado, archivoGeojson) {
-    document.getElementById('filter-title').innerText = "Cargando " + nombreEstado + "...";
-    document.getElementById('filter-buttons-container').innerHTML = "<p style='color:#00e5ff; padding:10px; font-weight:bold;'>Descargando datos espaciales, por favor espere...</p>";
-
-    // Descargar AMBOS archivos al mismo tiempo
-    Promise.all([
-        fetch(archivoGeojson).then(r => r.json()),
-        fetch('armadoras.geojson').then(r => r.json())
-    ])
-    .then(([agebData, armadorasData]) => {
-        agebRawData = agebData; 
-        armadorasRawData = armadorasData; // Guardamos las armadoras globalmente
-
-        // --- FILTRAR Y DIBUJAR ARMADORAS ---
-        var estadoBusqueda = normalizarTexto(nombreEstado);
-        var armadorasFiltradas = armadorasRawData.features.filter(f => {
-            var estadoArmadora = normalizarTexto(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
-            // Prevenir bug de Baja California Sur
-            if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
-            return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
-        });
-
-        dibujarArmadorasPuntos(armadorasFiltradas); // Función que ya teníamos, dibuja los puntos cyan
-
-        // --- ZOOM A LOS AGEB ---
-        var bounds = L.geoJSON(agebData).getBounds();
-        map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-
-        // Mostrar menú de vulnerabilidad
-        mostrarFiltrosIndices(nombreEstado);
-    })
-    .catch(err => {
-        console.error("Error cargando capas:", err);
-        document.getElementById('filter-title').innerText = "Error de Carga";
-        document.getElementById('filter-buttons-container').innerHTML = `<p style='color:#ff3333;'>No se pudieron cargar los datos de <b>${nombreEstado}</b>.</p>`;
-    });
-}
-
-// PASO 3: Menú de los 4 índices de Vulnerabilidad
-function mostrarFiltrosIndices(nombreEstado) {
-    var container = document.getElementById('filter-buttons-container');
-    container.innerHTML = "";
-    document.getElementById('filter-title').innerText = `2. Índice (${nombreEstado})`;
-
-    var btnBack = document.createElement("button");
-    btnBack.innerText = "⬅ Cambiar Estado";
-    btnBack.className = "back-btn";
-    btnBack.onclick = iniciarLogicaMunicipio;
-    container.appendChild(btnBack);
+    // Select 2: Índice Vuln
+    var selectIndice = document.createElement("select");
+    selectIndice.className = "dynamic-filter-select";
+    selectIndice.style.display = 'none';
 
     var opcionesAgeb = [
         { id: 'g_espacial', label: 'Vulnerabilidad en Hogar' },
         { id: 'g_urbano', label: 'Deficiencias en Infraestructura' },
         { id: 'g_socioeco', label: 'Sin Oportunidades' },
-        { id: 'G_INDICE', label: 'Índice de Vulnerabilidad Global' }
+        { id: 'G_INDICE', label: 'Índice Global' }
     ];
 
-    opcionesAgeb.forEach((opc, index) => {
-        var btn = document.createElement("button");
-        btn.className = "dynamic-filter-btn" + (index === 3 ? " active" : "");
-        btn.innerText = opc.label;
-        btn.onclick = function() {
-            document.querySelectorAll('#filter-buttons-container .dynamic-filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            renderizarMapaAgeb(opc.id, opc.label);
-        };
-        container.appendChild(btn);
-    });
+    selectEstado.onchange = function() {
+        if(this.value) {
+            var nombreEst = this.options[this.selectedIndex].text;
+            document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
+            cargarAgebEstadoAcumulativo(nombreEst, this.value, selectIndice, opcionesAgeb);
+        }
+    };
 
-    renderizarMapaAgeb('G_INDICE', 'Índice de Vulnerabilidad Global');
+    selectIndice.onchange = function() {
+        if(this.value) {
+            var labelNombre = this.options[this.selectedIndex].text;
+            renderizarMapaAgeb(this.value, labelNombre);
+        }
+    };
+    
+    container.appendChild(selectEstado);
+    container.appendChild(selectIndice);
+    
+    var legendContent = document.getElementById('legend-content');
+    if(legendContent) legendContent.innerHTML = "<small>Seleccione un estado primero</small>";
+}
+
+// PASO 2 Acumulativo: Descarga JSON y Visibiliza Select 2
+function cargarAgebEstadoAcumulativo(nombreEstado, archivoGeojson, selectIndice, opcionesAgeb) {
+    Promise.all([
+        fetch(archivoGeojson).then(r => r.json()),
+        fetch('armadoras.geojson').then(r => r.json())
+    ])
+    .then(([agebData, armadorasData]) => {
+        document.getElementById('filter-title').innerText = "Filtros Municipales (AGEBs)";
+        agebRawData = agebData; 
+        armadorasRawData = armadorasData;
+
+        var estadoBusqueda = normalizarTexto(nombreEstado);
+        var armadorasFiltradas = armadorasRawData.features.filter(f => {
+            var estadoArmadora = normalizarTexto(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
+            if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
+            return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
+        });
+
+        dibujarArmadorasPuntos(armadorasFiltradas);
+
+        var bounds = L.geoJSON(agebData).getBounds();
+        map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+
+        // Poblamos e Invocamos Select 2 (Índices)
+        selectIndice.innerHTML = `<option value="" disabled>-- 2. Seleccione un Índice --</option>`;
+        opcionesAgeb.forEach((opc, idx) => {
+            var sel = idx === 3 ? "selected" : "";
+            selectIndice.innerHTML += `<option value="${opc.id}" ${sel}>${opc.label}</option>`;
+        });
+        selectIndice.style.display = 'block';
+        
+        // Renderizamos por defecto el Índice Global
+        renderizarMapaAgeb('G_INDICE', 'Índice Global');
+    })
+    .catch(err => {
+        console.error("Error cargando capas:", err);
+        document.getElementById('filter-title').innerText = "Error cargando " + nombreEstado;
+    });
 }
 
 // Función auxiliar de colores
@@ -558,161 +653,6 @@ function actualizarLeyendaAgebCategorica(titulo) {
     div.innerHTML = html;
     overlay.style.display = 'block';
 }
-// PASO 3: Menú de los 4 índices de Vulnerabilidad
-function mostrarFiltrosIndices(nombreEstado) {
-    var container = document.getElementById('filter-buttons-container');
-    container.innerHTML = "";
-    document.getElementById('filter-title').innerText = `2. Índice (${nombreEstado})`;
-
-    // Botón para regresar a seleccionar otro estado
-    var btnBack = document.createElement("button");
-    btnBack.innerText = "⬅ Cambiar Estado";
-    btnBack.className = "back-btn";
-    btnBack.onclick = iniciarLogicaMunicipio;
-    container.appendChild(btnBack);
-
-    var opcionesAgeb = [
-        { id: 'g_espacial', label: 'Vulnerabilidad en Hogar' },
-        { id: 'g_urbano', label: 'Deficiencias en Infraestructura' },
-        { id: 'g_socioeco', label: 'Sin Oportunidades' },
-        { id: 'G_INDICE', label: 'Índice de Vulnerabilidad Global' }
-    ];
-
-    opcionesAgeb.forEach((opc, index) => {
-        var btn = document.createElement("button");
-        btn.className = "dynamic-filter-btn" + (index === 3 ? " active" : "");
-        btn.innerText = opc.label;
-        btn.onclick = function() {
-            document.querySelectorAll('#filter-buttons-container .dynamic-filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            renderizarMapaAgeb(opc.id, opc.label);
-        };
-        container.appendChild(btn);
-    });
-
-    // Pintar el mapa con el índice general (G_INDICE) por defecto
-    renderizarMapaAgeb('G_INDICE', 'Índice de Vulnerabilidad Global');
-}
-
-// Función auxiliar de colores
-function getColorVulnerabilidad(valorTexto) {
-    if (!valorTexto) return '#333333'; 
-    var v = valorTexto.toString().trim().toUpperCase();
-    if (v === 'MUY ALTO') return '#a50f15'; 
-    if (v === 'ALTO') return '#de2d26';     
-    if (v === 'MEDIO') return '#fb6a4a';    
-    if (v === 'BAJO') return '#fcae91';     
-    if (v === 'MUY BAJO') return '#fee5d9'; 
-    return '#444444'; 
-}
-
-// Dibuja los polígonos AGEB
-function renderizarMapaAgeb(atributo, labelNombre) {
-    if (agebLayer) map.removeLayer(agebLayer);
-
-    agebLayer = L.geoJSON(agebRawData, {
-        style: function(feature) {
-            var valorCategoria = feature.properties[atributo] || "Sin dato";
-            return {
-                color: "#111",           
-                weight: 0.5,             
-                fillColor: getColorVulnerabilidad(valorCategoria), 
-                fillOpacity: 0.85,       
-                className: 'flujo-interactivo'
-            };
-        },
-        onEachFeature: function(feature, layer) {
-            var p = feature.properties;
-            var popupContent = `
-                <div style="font-family:'Noto Sans'; font-size:13px;">
-                    <strong style="color:#de2d26; font-size:14px;">Análisis AGEB</strong><br>
-                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
-                    <b>${labelNombre}:</b> <span style="color:#fff">${p[atributo] || "Sin dato"}</span><br><br>
-                    <small style="color:#aaa; line-height: 1.4;">
-                        ▸ Espacial (Hogar): ${p.g_espacial || "N/A"}<br>
-                        ▸ Urbano (Infraestructura): ${p.g_urbano || "N/A"}<br>
-                        ▸ Socioeconómico: ${p.g_socioeco || "N/A"}
-                    </small>
-                </div>
-            `;
-            layer.bindPopup(popupContent);
-            
-            layer.on({
-                mouseover: function(e) { 
-                    e.target.setStyle({ weight: 2, color: '#fff' }); 
-                    e.target.bringToFront(); 
-                },
-                mouseout: function(e) { agebLayer.resetStyle(e.target); }
-            });
-        }
-    }).addTo(map);
-
-    actualizarLeyendaAgebCategorica(labelNombre);
-}
-
-
-// Función auxiliar para obtener color por texto
-function getColorVulnerabilidad(valorTexto) {
-    if (!valorTexto) return '#333333'; // Gris oscuro para vacíos
-    
-    var v = valorTexto.toString().trim().toUpperCase();
-    
-    // Paleta de colores para vulnerabilidad (Rojos/Naranjas)
-    if (v === 'MUY ALTO') return '#a50f15'; // Rojo muy oscuro
-    if (v === 'ALTO') return '#de2d26';     // Rojo intenso
-    if (v === 'MEDIO') return '#fb6a4a';    // Naranja
-    if (v === 'BAJO') return '#fcae91';     // Salmón claro
-    if (v === 'MUY BAJO') return '#fee5d9'; // Casi blanco/crema
-    
-    return '#444444'; // Gris si dice "Sin dato" u otro valor
-}
-
-function renderizarMapaAgeb(atributo, labelNombre) {
-    if (agebLayer) map.removeLayer(agebLayer);
-
-    agebLayer = L.geoJSON(agebRawData, {
-        style: function(feature) {
-            // Obtenemos el texto exacto (ej. "Bajo", "Alto")
-            var valorCategoria = feature.properties[atributo] || "Sin dato";
-            
-            return {
-                color: "#111",           // Borde del AGEB (negro)
-                weight: 0.5,             // Borde muy fino
-                fillColor: getColorVulnerabilidad(valorCategoria), // Color según la categoría
-                fillOpacity: 0.8,        // Opacidad alta para que se vea el calor
-                className: 'flujo-interactivo'
-            };
-        },
-        onEachFeature: function(feature, layer) {
-            var p = feature.properties;
-            
-            var popupContent = `
-                <div style="font-family:'Noto Sans'; font-size:13px;">
-                    <strong style="color:#de2d26; font-size:14px;">Análisis AGEB</strong><br>
-                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
-                    <b>${labelNombre}:</b> <span style="color:#fff">${p[atributo] || "Sin dato"}</span><br><br>
-                    <small style="color:#aaa; line-height: 1.4;">
-                        ▸ Espacial (Hogar): ${p.g_espacial || "N/A"}<br>
-                        ▸ Urbano (Infraestructura): ${p.g_urbano || "N/A"}<br>
-                        ▸ Socioeconómico: ${p.g_socioeco || "N/A"}
-                    </small>
-                </div>
-            `;
-            layer.bindPopup(popupContent);
-            
-            // Hover (Se pone blanco al pasar el mouse)
-            layer.on({
-                mouseover: function(e) { 
-                    e.target.setStyle({ weight: 2, color: '#fff' }); 
-                    e.target.bringToFront(); 
-                },
-                mouseout: function(e) { agebLayer.resetStyle(e.target); }
-            });
-        }
-    }).addTo(map);
-
-    actualizarLeyendaAgebCategorica(labelNombre);
-}
 
 // ==========================================
 // RENDERIZADO DE MAPAS (MUNDIAL/NACIONAL)
@@ -726,15 +666,34 @@ function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino
     var valores = validFeatures.map(f => f.properties[campoValor]).sort((a,b) => a - b);
     var breaks = calcularBreaks(valores);
 
-    currentGeoJSONLayer = L.geoJSON(validFeatures, {
-        style: function(feature) {
-            var val = feature.properties[campoValor];
-            var clase = getClase(val, breaks);
-            return { color: RampaRojos[clase], weight: Grosores[clase], opacity: 0.9, className: 'flujo-interactivo' };
-        },
-        onEachFeature: function(feature, layer) {
-            var p = feature.properties;
-            var valFormatted = (p[campoValor] || 0).toLocaleString(); 
+    var fg = L.featureGroup().addTo(map);
+    currentGeoJSONLayer = fg;
+
+    validFeatures.forEach((feature, index) => {
+        var p = feature.properties;
+        var val = p[campoValor];
+        var clase = getClase(val, breaks);
+        
+        var coords = [];
+        if (feature.geometry.type === 'LineString') {
+            coords = feature.geometry.coordinates.map(c => [c[1], c[0]]);
+        } else if (feature.geometry.type === 'MultiLineString') {
+            coords = feature.geometry.coordinates[0].map(c => [c[1], c[0]]);
+        }
+
+        if (coords.length > 0) {
+            // INVERTIMOS para que el trazo nazca en el origen lejano y aterrice en el Destino.
+            coords.reverse();
+
+            // Creamos una línea regular
+            var polyline = L.polyline(coords, {
+                color: RampaRojos[clase],
+                weight: Grosores[clase] + 1,
+                opacity: 0.8,
+                className: 'flujo-animado'
+            });
+
+            var valFormatted = (val || 0).toLocaleString(); 
             var popupContent = `
                 <div style="font-family:'Noto Sans'; font-size:13px;">
                     <strong style="color:#de2d26; font-size:14px;">${p[campoDestino]}</strong><br>
@@ -742,13 +701,56 @@ function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino
                     Valor: <b style="color:#fff">$${valFormatted}</b> <small>${etiquetaMoneda}</small>
                 </div>
             `;
-            layer.bindPopup(popupContent);
-            layer.on({
-                mouseover: function(e) { e.target.setStyle({ weight: 10, color: '#ffff00' }); e.target.bringToFront(); },
-                mouseout: function(e) { currentGeoJSONLayer.resetStyle(e.target); }
+            polyline.bindPopup(popupContent);
+            
+            polyline.on({
+                mouseover: function(e) { 
+                    var layer = e.target;
+                    layer.setStyle({ weight: layer.options.weight + 4, color: '#ffff00' });
+                    layer.bringToFront();
+                },
+                mouseout: function(e) { 
+                    var layer = e.target;
+                    layer.setStyle({ weight: Grosores[clase] + 1, color: RampaRojos[clase] });
+                }
             });
+
+            fg.addLayer(polyline);
+
+            // Animación CSS nativa de 1 sola vez (sin loops)
+            setTimeout(() => {
+                if (polyline._path) {
+                    var length = polyline._path.getTotalLength();
+                    // Ocultamos línea inicial
+                    polyline._path.style.transition = polyline._path.style.WebkitTransition = 'none';
+                    polyline._path.style.strokeDasharray = length + ' ' + length;
+                    polyline._path.style.strokeDashoffset = length;
+                    
+                    polyline._path.getBoundingClientRect(); // trigger reflow
+                    
+                    var delay = index * 200; // Cascada
+                    
+                    // Iniciar el dibujo del trazo css
+                    setTimeout(() => {
+                        polyline._path.style.transition = polyline._path.style.WebkitTransition = 'stroke-dashoffset 1.3s ease-in-out';
+                        polyline._path.style.strokeDashoffset = '0';
+                    }, delay);
+                    
+                    // Cuando termina de dibujarse el trazo (delay cascade + duración 1.3s), limpiamos el CSS
+                    // Esto arregla el bug del ZOOM: Leaflet recalcula el tamaño del SVG al hacer zoom,
+                    // por lo que el viejo dasharray ocultaría la línea. Al borrarlo, queda como una línea sólida normal.
+                    setTimeout(() => {
+                        if (polyline._path) {
+                            polyline._path.style.transition = '';
+                            polyline._path.style.WebkitTransition = '';
+                            polyline._path.style.strokeDasharray = '';
+                            polyline._path.style.strokeDashoffset = '';
+                        }
+                    }, delay + 1500);
+                }
+            }, 100);
         }
-    }).addTo(map);
+    });
 
     actualizarLeyenda(breaks, etiquetaMoneda);
 }
@@ -762,20 +764,34 @@ function setupUI() {
         leftContainer = document.createElement('div');
         leftContainer.id = 'left-sidebar-container';
         document.body.appendChild(leftContainer);
+    }
 
+    // Usamos query Selector para evitar duplicados en re-renders si la UI ya existe
+    if (!document.getElementById('scale-box')) {
         var scaleBox = document.createElement('div');
+        scaleBox.id = 'scale-box';
         scaleBox.className = 'dashboard-box';
         scaleBox.innerHTML = `
-            <h4 class="panel-title toggleable" onclick="toggleDropdown('escala-dropdown')">Escalas de Análisis <span>▼</span></h4>
-            <div id="escala-dropdown" class="dropdown-content">
-                <button onclick="loadLayer('mundial')" class="scale-btn" id="btn-mundial">🌎 Escala Mundial</button>
-                <button onclick="loadLayer('nacional')" class="scale-btn" id="btn-nacional">🇲🇽 Escala Nacional</button>
-                <button onclick="loadLayer('estatal')" class="scale-btn" id="btn-estatal">🏭 Estatal (Clústeres)</button>
-                <button onclick="loadLayer('municipio')" class="scale-btn" id="btn-municipio">🏘️ Municipio (AGEB)</button>
+            <h4 class="panel-title">Escalas de Análisis</h4>
+            <div class="scale-icons-container">
+                <button onclick="loadLayer('mundial')" class="scale-btn" id="btn-mundial" title="Escala Mundial">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M22 12h-20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </button>
+                <button onclick="loadLayer('nacional')" class="scale-btn" id="btn-nacional" title="Escala Nacional">
+                    <img src="https://cdn.jsdelivr.net/gh/djaiss/mapsicon@master/all/mx/vector.svg" alt="México" style="width: 22px; height: 22px; filter: invert(1);">
+                </button>
+                <button onclick="loadLayer('estatal')" class="scale-btn" id="btn-estatal" title="Escala Estatal (Clústeres)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="16" r="3" fill="currentColor"/><circle cx="8" cy="8" r="3" fill="currentColor"/><circle cx="18" cy="8" r="3" fill="currentColor"/><circle cx="8" cy="18" r="3" fill="currentColor"/><path d="M10 10l4 4M16 10l-6 6M10 16l4-4"/></svg>
+                </button>
+                <button onclick="loadLayer('municipio')" class="scale-btn" id="btn-municipio" title="Escala Municipal (AGEB)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 20 8 18 20 6 22 2 10" fill="currentColor" fill-opacity="0.3"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                </button>
             </div>
         `;
         leftContainer.appendChild(scaleBox);
+    }
 
+    if (!document.getElementById('filter-container-box')) {
         var filterBox = document.createElement('div');
         filterBox.id = 'filter-container-box';
         filterBox.className = 'dashboard-box';
@@ -783,12 +799,16 @@ function setupUI() {
         leftContainer.appendChild(filterBox);
     }
 
-    var rightContainer = document.getElementById('right-sidebar-container');
-    if (!rightContainer) {
-        rightContainer = document.createElement('div');
-        rightContainer.id = 'right-sidebar-container';
-        document.body.appendChild(rightContainer);
+    if (!document.getElementById('legend-overlay')) {
+        var legendBox = document.createElement('div');
+        legendBox.id = 'legend-overlay';
+        legendBox.className = 'dashboard-box';
+        legendBox.style.display = 'none';
+        legendBox.innerHTML = `<h4 class="panel-title">Simbología</h4><div id="legend-content"><small style="color:#aaa">Seleccione una escala</small></div>`;
+        leftContainer.appendChild(legendBox); // Ahora se añade al lado izquierdo antes de statsBox
+    }
 
+    if (!document.getElementById('stats-overlay')) {
         var statsBox = document.createElement('div');
         statsBox.id = 'stats-overlay';
         statsBox.className = 'dashboard-box';
@@ -796,17 +816,9 @@ function setupUI() {
         statsBox.innerHTML = `
             <h4 class="panel-title">Análisis de Datos</h4>
             <div style="height:180px; position:relative;"><canvas id="myChart"></canvas></div>
-            <button onclick="descargarDatos()" class="download-btn">⬇ Descargar CSV</button>
             <button onclick="capturarImagen()" class="screenshot-btn">📸 Guardar Reporte (Img)</button>
         `;
-        rightContainer.appendChild(statsBox);
-
-        var legendBox = document.createElement('div');
-        legendBox.id = 'legend-overlay';
-        legendBox.className = 'dashboard-box';
-        legendBox.style.display = 'none';
-        legendBox.innerHTML = `<h4 class="panel-title">Simbología</h4><div id="legend-content"><small style="color:#aaa">Seleccione una escala</small></div>`;
-        rightContainer.appendChild(legendBox);
+        leftContainer.appendChild(statsBox); 
     }
 }
 
@@ -819,15 +831,31 @@ function crearBotones(lista, callback, backCallback) {
         container.appendChild(btnBack);
     }
     if(lista.length === 0) { container.innerHTML += "<p style='color:#aaa'>No hay datos.</p>"; return; }
+    
+    var select = document.createElement("select");
+    select.className = "dynamic-filter-select";
+    
+    var defaultOption = document.createElement("option");
+    defaultOption.innerText = "-- Seleccione una opción --";
+    defaultOption.value = "";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    select.appendChild(defaultOption);
+
     lista.forEach(item => {
-        var btn = document.createElement("button");
-        btn.innerText = item; btn.className = "dynamic-filter-btn";
-        btn.onclick = function() {
-             container.querySelectorAll('.dynamic-filter-btn').forEach(s => s.classList.remove('active'));
-             this.classList.add('active'); callback(item);
-        };
-        container.appendChild(btn);
+        var opt = document.createElement("option");
+        opt.value = item;
+        opt.innerText = item;
+        select.appendChild(opt);
     });
+
+    select.onchange = function() {
+        if(this.value) {
+            callback(this.value);
+        }
+    };
+    
+    container.appendChild(select);
 }
 
 function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
@@ -857,6 +885,9 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
     var canvas = document.getElementById('myChart');
     if (!canvas) return;
 
+    // Aumentar la altura del canvas padre para forzar el scroll en la gráfica Estatal (pastel) pero no excesivamente
+    canvas.parentElement.style.height = '260px';
+
     var labels = Object.keys(conteo);
     var dataValues = Object.values(conteo);
     var colores = labels.map(l => getColorConjunto(l));
@@ -865,9 +896,29 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
     if(dataValues.length === 0) return;
 
     mainChart = new Chart(canvas.getContext('2d'), {
-        type: 'bar',
-        data: { labels: labels, datasets: [{ label: 'Empresas', data: dataValues, backgroundColor: colores, borderColor: '#333', borderWidth: 1 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid:{color:'#444'}, ticks:{color:'#aaa'} }, y: { ticks:{color:'#fff', font:{size:10}}, grid:{display:false} } } }
+        type: 'pie',
+        data: { 
+            labels: labels, 
+            datasets: [{ 
+                label: 'Empresas', 
+                data: dataValues, 
+                backgroundColor: colores, 
+                borderColor: '#222', 
+                borderWidth: 1 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            layout: {
+                padding: { top: 15, bottom: 15, left: 15, right: 15 }
+            },
+            plugins: { 
+                legend: { 
+                    display: false
+                } 
+            }
+        }
     });
 }
 
@@ -886,17 +937,56 @@ function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) 
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
+    // Regresar altura a su tamaño compacto por defecto para gráficas de barras
+    canvas.parentElement.style.height = '180px';
+    
     let validFeatures = features.filter(f => f.properties[campoValor] != null && !isNaN(f.properties[campoValor]));
     let topData = [...validFeatures].sort((a, b) => b.properties[campoValor] - a.properties[campoValor]).slice(0, 5);
     
     let labels = topData.map(f => f.properties[campoEtiqueta]);
     let dataValues = topData.map(f => f.properties[campoValor]);
 
+    // Gradiente Dinámico de Valores Altos (Oscuro) a Valores Bajos (Claro)
+    let coloresGradiente = ['#a50f15', '#de2d26', '#fb6a4a', '#fcae91', '#fee5d9'];
+    let bgColors = dataValues.map((val, idx) => coloresGradiente[idx] || '#fee5d9');
+
     if (mainChart) mainChart.destroy();
     mainChart = new Chart(ctx, {
         type: 'bar',
-        data: { labels: labels, datasets: [{ label: `Valor`, data: dataValues, backgroundColor: 'rgba(222, 45, 38, 0.8)', borderColor: '#a50f15', borderWidth: 1 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#aaa' }, grid: { color:'#444' } }, y: { ticks: { color: '#fff' }, grid: { display:false } } } }
+        data: { 
+            labels: labels, 
+            datasets: [{ 
+                label: `Valor`, 
+                data: dataValues, 
+                backgroundColor: bgColors, 
+                borderColor: '#333', 
+                borderWidth: 1 
+            }] 
+        },
+        options: { 
+            indexAxis: 'y', 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { display: false } 
+            }, 
+            scales: { 
+                x: { 
+                    ticks: { 
+                        color: '#aaa',
+                        callback: function(value) {
+                            // Si es escala nacional, dividir entre 1M para simplificar vista de eje
+                            return currentScaleType === 'nacional' ? value / 1000000 : value;
+                        }
+                    }, 
+                    grid: { color:'#444' } 
+                }, 
+                y: { 
+                    ticks: { color: '#fff' }, 
+                    grid: { display:false } 
+                } 
+            } 
+        }
     });
 }
 
@@ -965,12 +1055,12 @@ function actualizarLeyenda(breaks, moneda) {
     // Convertimos tu arreglo RampaRojos en una cadena separada por comas para el CSS
     var coloresCSS = RampaRojos.join(', ');
     
-    // Construimos el HTML con un contenedor de gradiente (linear-gradient)
+    // Construimos el HTML con un contenedor de gradiente y forma de cono/flecha usando clip-path
     var html = `
         <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">Valor (${moneda})</div>
         <div style="width: 100%; padding: 0 5px; box-sizing: border-box;">
-            <div style="width: 100%; height: 18px; border-radius: 4px; border: 1px solid #555; background: linear-gradient(to right, ${coloresCSS});"></div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 8px;">
+            <div style="width: 100%; height: 35px; background: linear-gradient(to right, ${coloresCSS}); clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 60%);"></div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 5px;">
                 <span>$${f(valorMinimo)}</span>
                 <span>> $${f(valorMaximo)}</span>
             </div>

@@ -1,12 +1,13 @@
 /* =========================================
    1. RESET Y ESTILOS GENERALES
    ========================================= */
-body { 
-    margin: 0; padding: 0; 
-    font-family: 'Noto Sans', sans-serif;
-    background-color: #333;
-    color: #eee;
-    overflow: hidden; /* IMPORTANTE: Evita scroll en toda la página */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Noto Sans", sans-serif;
+  background-color: #333;
+  color: #eee;
+  overflow: hidden; /* IMPORTANTE: Evita scroll en toda la página */
 }
 
 /* =========================================
@@ -14,85 +15,129 @@ body {
    ========================================= */
 /* Barra Superior (Logos y Título) - Altura: 60px */
 #title-bar {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 60px;
-    background: rgba(0, 51, 102, 0.95);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    z-index: 2001; /* Encima de todo */
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(0, 51, 102, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  z-index: 2001; /* Encima de todo */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .title-text {
-    font-size: 14px; font-weight: 900; color: #fff;
-    text-align: center; line-height: 1.2;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
 }
 
-.logo-container { display: flex; align-items: center; }
-.logo { height: 40px; width: auto; margin-right: 20px; }
-.logo-spacer { width: 60px; }
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+.logo {
+  height: 40px;
+  width: auto;
+  margin-right: 20px;
+}
+.logo-spacer {
+  width: 60px;
+}
 
 /* Barra de Navegación (Menú) - Altura: 40px, Empieza en: 60px */
 #nav-bar {
-    position: fixed; top: 60px; left: 0;
-    width: 100%; height: 40px;
-    background: #003366;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    z-index: 2000;
-    display: flex; align-items: center;
-    padding: 0 10px; box-sizing: border-box;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: #003366;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
-.nav-buttons-container { display: flex; align-items: center; overflow-x: auto; }
+.nav-buttons-container {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+}
 
 .nav-button {
-    background: none; border: none;
-    padding: 0 15px; height: 40px;
-    line-height: 40px; color: #ccc;
-    cursor: pointer;
-    font-weight: 700; font-family: 'Noto Sans', sans-serif;
-    font-size: 14px; text-transform: uppercase;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-    flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0 15px;
+  height: 40px;
+  line-height: 40px;
+  color: #ccc;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
-.nav-button:hover { color: #fff; border-bottom-color: #555; }
-.nav-button.active { color: #fff; border-bottom-color: #a50f15; }
+.nav-button:hover {
+  color: #fff;
+  border-bottom-color: #555;
+}
+.nav-button.active {
+  color: #fff;
+  border-bottom-color: #a50f15;
+}
 
 /* =========================================
    3. CONTENEDOR PRINCIPAL
    ========================================= */
 #main-container {
-    padding-top: 100px; /* Espacio para el header fijo */
-    height: 100vh;      /* Ocupa toda la altura */
-    box-sizing: border-box;
-    position: relative;
-    background-color: #222;
+  padding-top: 100px; /* Espacio para el header fijo */
+  height: 100vh; /* Ocupa toda la altura */
+  box-sizing: border-box;
+  position: relative;
+  background-color: #222;
 }
 
 .main-content-panel {
-    display: none; /* Se activa con JS */
-    width: 100%; 
-    height: 100%;
-    position: relative;
-    overflow-y: auto; /* Permite scroll en secciones de texto */
+  display: none; /* Se activa con JS */
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow-y: auto; /* Permite scroll en secciones de texto */
 }
-.active-panel { display: block; }
+.active-panel {
+  display: block;
+}
 
 /* --- CORRECCIÓN CRÍTICA PARA EL MAPA --- */
 /* Esto obliga al mapa a ocupar todo el espacio disponible sin colapsar */
 #inicio {
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* El mapa no debe tener scrollbars nativos */
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* El mapa no debe tener scrollbars nativos */
 }
 
-#map { 
-    position: absolute; 
-    top: 0; bottom: 0; left: 0; right: 0; 
-    width: 100%; height: 100%; 
-    background: #222; 
-    z-index: 1; 
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: #222;
+  z-index: 1;
 }
 
 /* =========================================
@@ -101,282 +146,424 @@ body {
 
 /* --- CONTENEDOR IZQUIERDO: CONTROLES --- */
 #left-sidebar-container {
-    position: absolute;
-    top: 110px;
-    left: 20px;
-    width: 260px !important;
-    bottom: 20px; /* Llega hasta abajo */
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    pointer-events: none; /* Permite clic al mapa en huecos */
+  position: absolute;
+  top: 110px;
+  left: 20px;
+  width: 260px !important;
+  bottom: 20px; /* Llega hasta abajo */
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  pointer-events: none; /* Permite clic al mapa en huecos */
 }
 
 /* --- CONTENEDOR DERECHO: RESULTADOS --- */
 #right-sidebar-container {
-    position: absolute;
-    top: 110px;
-    right: 20px;
-    width: 260px !important;
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    pointer-events: none;
+  display: none; /* Inactivado ya que paneles se movieron a la izquierda */
 }
 
 /* --- CAJAS (Dashboard Boxes) --- */
-.dashboard-box, .control-box {
-    background: rgba(30, 30, 30, 0.95);
-    color: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #555;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-    pointer-events: auto; /* Reactiva clicks */
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    flex-shrink: 0; /* Evita que se aplasten */
+.dashboard-box,
+.control-box {
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  padding: 10px 15px; /* Ligeramente más compacto el padding vertical */
+  border-radius: 8px;
+  border: 1px solid #555;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  pointer-events: auto; /* Reactiva clicks */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0; /* Evita que se aplasten si es posible */
 
-    /* --- AJUSTES NUEVOS (SCROLL) --- */
-    max-height: 40vh; /* O usa 350px. Limita la altura para que no se salga de la pantalla */
-    overflow-y: auto; /* Si el contenido es mayor a la altura, activa el scroll */
+  /* --- AJUSTES NUEVOS (SCROLL MÓVIL/LAPTOP) --- */
+  max-height: 25vh; /* Se reduce height max para que quepan 4 paneles */
+  overflow-y: auto; /* Si el contenido es mayor a la altura, activa el scroll */
+}
+
+/* Permitir que el recuadro de gráficas sea más grande, pero aún mantenga scroll si es necesario */
+#stats-overlay {
+  max-height: 38vh;
+  overflow-y: auto;
 }
 
 /* --- ESTILO ELEGANTE PARA EL SCROLL (Webkit) --- */
-.dashboard-box::-webkit-scrollbar, 
+.dashboard-box::-webkit-scrollbar,
 .control-box::-webkit-scrollbar {
-    width: 6px; /* Barra fina */
+  width: 6px; /* Barra fina */
 }
 
-.dashboard-box::-webkit-scrollbar-track, 
+.dashboard-box::-webkit-scrollbar-track,
 .control-box::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2); /* Fondo del riel */
-    border-radius: 3px;
+  background: rgba(0, 0, 0, 0.2); /* Fondo del riel */
+  border-radius: 3px;
 }
 
-.dashboard-box::-webkit-scrollbar-thumb, 
+.dashboard-box::-webkit-scrollbar-thumb,
 .control-box::-webkit-scrollbar-thumb {
-    background: #555; /* Color de la barra */
-    border-radius: 3px;
+  background: #555; /* Color de la barra */
+  border-radius: 3px;
 }
 
-.dashboard-box::-webkit-scrollbar-thumb:hover, 
+.dashboard-box::-webkit-scrollbar-thumb:hover,
 .control-box::-webkit-scrollbar-thumb:hover {
-    background: #888; /* Color al pasar el mouse */
+  background: #888; /* Color al pasar el mouse */
 }
 
 /* Títulos */
-.panel-title, #filter-title {
-    margin: 0 0 10px 0;
-    font-size: 14px;
-    color: #fcae91;
-    border-bottom: 1px solid #555;
-    padding-bottom: 5px;
-    font-weight: 700;
-    text-transform: uppercase;
+.panel-title,
+#filter-title {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #fcae91;
+  border-bottom: 1px solid #555;
+  padding-bottom: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 /* Scroll interno para filtros */
 #filter-container-box {
-    display: flex;
-    flex-direction: column;
-    max-height: 55vh; /* Altura máxima ajustada */
-    min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 55vh; /* Altura máxima ajustada */
+  min-height: 0;
 }
 #filter-buttons-container {
-    overflow-y: auto;
-    flex-grow: 1;
-    padding-right: 5px;
+  overflow-y: auto;
+  flex-grow: 1;
+  padding-right: 5px;
 }
 
 /* Botones de Escala */
-.scale-btn {
-    display: block; width: 100%;
-    padding: 10px; margin-bottom: 8px;
-    background: #002B56; color: #ddd;
-    border: 1px solid #444; border-radius: 6px;
-    cursor: pointer; text-align: left; font-weight: 600;
-    box-sizing: border-box;
-    transition: all 0.2s;
+.scale-icons-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
 }
-.scale-btn:hover { background: #004080; color: #fff; border-color: #aaa; }
-.scale-btn.active { background: #D59F0F; color: #222; border-color: #D59F0F; font-weight: 800; }
+.scale-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  background: #002b56;
+  color: #ddd;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: all 0.2s;
+  padding: 8px;
+}
+.scale-btn svg {
+  width: 100%;
+  height: 100%;
+  max-width: 24px;
+  max-height: 24px;
+}
+.scale-btn:hover {
+  background: #004080;
+  color: #fff;
+  border-color: #aaa;
+}
+.scale-btn.active {
+  background: #d59f0f;
+  color: #222;
+  border-color: #d59f0f;
+  box-shadow: 0 0 10px rgba(213, 159, 15, 0.5);
+}
 
 /* Botones de Filtro (Unificados) */
 .dynamic-filter-btn {
-    display: block; width: 100%;
-    margin: 4px 0; padding: 8px;
-    background: #333; color: #eee;
-    border: 1px solid #555; border-radius: 4px;
-    cursor: pointer; text-align: left; font-size: 12px;
-    box-sizing: border-box;
+  display: block;
+  width: 100%;
+  margin: 4px 0;
+  padding: 8px;
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  box-sizing: border-box;
 }
-.dynamic-filter-btn:hover { background: #555; border-color: #aaa; }
-.dynamic-filter-btn.active { background: #a50f15; border-color: #fff; font-weight: bold; }
+.dynamic-filter-btn:hover {
+  background: #555;
+  border-color: #aaa;
+}
+.dynamic-filter-btn.active {
+  background: #a50f15;
+  border-color: #fff;
+  font-weight: bold;
+}
+
+/* Menú Select Desplegable */
+.dynamic-filter-select {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: "Noto Sans", sans-serif;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none; /* Estilo nativo oculto */
+  background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+  background-repeat: no-repeat;
+  background-position-x: 95%;
+  background-position-y: 5px;
+}
+.dynamic-filter-select:hover {
+  background-color: #444;
+  border-color: #aaa;
+}
+.dynamic-filter-select:focus {
+  border-color: #008cff;
+}
+.dynamic-filter-select option {
+  background: #222;
+  color: #eee;
+  padding: 5px;
+}
 
 .back-btn {
-    width: 100%; padding: 8px; margin-bottom: 8px;
-    background: #555; color: #fff; 
-    border: none; border-radius: 4px; 
-    cursor: pointer; font-size: 11px; text-transform: uppercase;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: #555;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  text-transform: uppercase;
 }
-.back-btn:hover { background: #777; }
+.back-btn:hover {
+  background: #777;
+}
 
 /* Botón de Descarga */
 .download-btn {
-    width: 100%; margin-top: 10px; padding: 10px;
-    background: #2e7d32; color: white;
-    border: none; border-radius: 4px;
-    cursor: pointer; font-size: 12px; font-weight: bold;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: background 0.2s;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
 }
-.download-btn:hover { background: #1b5e20; }
+.download-btn:hover {
+  background: #1b5e20;
+}
 
 /* Scrollbar personalizado */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #222; }
-::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #222;
+}
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
 
 /* =========================================
    5. LEYENDA Y OTROS ESTILOS
    ========================================= */
-.legend-item { display: flex; align-items: center; margin-bottom: 4px; font-size: 12px; }
-.legend-color { width: 16px; height: 16px; margin-right: 10px; border-radius: 4px; border: 1px solid #777; display: inline-block; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+.legend-color {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  border-radius: 4px;
+  border: 1px solid #777;
+  display: inline-block;
+}
 
 .legend-gradient-container {
-    width: 100%;
-    margin-top: 10px;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .legend-gradient-bar {
-    width: 100%;
-    height: 15px;
-    border-radius: 4px;
-    border: 1px solid #777;
-    margin-bottom: 5px;
+  width: 100%;
+  height: 15px;
+  border-radius: 4px;
+  border: 1px solid #777;
+  margin-bottom: 5px;
 }
 
 .legend-gradient-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: #ddd;
-    font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #ddd;
+  font-weight: 600;
 }
 
-
 #legend-overlay {
-    display: none;
+  display: none;
 }
 
 .dropdown-content {
-    display: none;
-    flex-direction: column;
+  display: none;
+  flex-direction: column;
 }
 
 .dropdown-content.show {
-    display: flex;
+  display: flex;
 }
 
 .panel-title.toggleable {
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* =========================================
    6. CONTENIDO DE TEXTO (Marco, Metodología)
    ========================================= */
 .panel-inner-content {
-    max-width: 900px; margin: 40px auto;
-    padding: 0 20px 60px 20px;
-    line-height: 1.7; font-size: 16px; color: #ddd;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px 60px 20px;
+  line-height: 1.7;
+  font-size: 16px;
+  color: #ddd;
 }
 .panel-inner-content h2 {
-    font-size: 28px; font-weight: 700; color: #fff;
-    border-bottom: 2px solid #a50f15; padding-bottom: 10px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  border-bottom: 2px solid #a50f15;
+  padding-bottom: 10px;
 }
 .panel-inner-content h3 {
-    font-size: 20px; font-weight: 700; color: #fcae91; margin-top: 30px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fcae91;
+  margin-top: 30px;
 }
-.panel-inner-content p { text-align: justify; margin-bottom: 15px; }
-.panel-inner-content b, strong { color: #fff; }
+.panel-inner-content p {
+  text-align: justify;
+  margin-bottom: 15px;
+}
+.panel-inner-content b,
+strong {
+  color: #fff;
+}
 
-.credits-content p { margin-bottom: 5px; }
-.credits-content h3 { color: #ddd; font-size: 16px; margin: 5px 0; }
+.credits-content p {
+  margin-bottom: 5px;
+}
+.credits-content h3 {
+  color: #ddd;
+  font-size: 16px;
+  margin: 5px 0;
+}
 
 /* Ajustes de Leaflet Popup y Tooltips */
-.leaflet-popup-content-wrapper { background: #333; color: #eee; border-radius: 4px; border: 1px solid #555; }
-.leaflet-popup-tip { background: #333; border: 1px solid #555; border-top: none; border-left: none; }
-.leaflet-container { font-family: 'Noto Sans', sans-serif; }
-.leaflet-tooltip { 
-    background: rgba(30,30,30,0.9); 
-    border: 1px solid #555; 
-    color: #fff; 
-    box-shadow: none;
+.leaflet-popup-content-wrapper {
+  background: #333;
+  color: #eee;
+  border-radius: 4px;
+  border: 1px solid #555;
+}
+.leaflet-popup-tip {
+  background: #333;
+  border: 1px solid #555;
+  border-top: none;
+  border-left: none;
+}
+.leaflet-container {
+  font-family: "Noto Sans", sans-serif;
+}
+.leaflet-tooltip {
+  background: rgba(30, 30, 30, 0.9);
+  border: 1px solid #555;
+  color: #fff;
+  box-shadow: none;
 }
 
 /* Botón de Captura (Azul) */
 .screenshot-btn {
-    width: 100%; 
-    margin-top: 10px; /* ESPACIO VITAL */
-    padding: 10px;
-    background: #0277bd; 
-    color: white;
-    border: none; 
-    border-radius: 4px;
-    cursor: pointer; 
-    font-size: 12px; 
-    font-weight: bold;
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 6px;
-    transition: background 0.2s;
+  width: 100%;
+  margin-top: 10px; /* ESPACIO VITAL */
+  padding: 10px;
+  background: #0277bd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
 }
-.screenshot-btn:hover { background: #01579b; }
+.screenshot-btn:hover {
+  background: #01579b;
+}
 
 /* Estilo limpio para nombres de Armadoras */
 .etiqueta-armadora {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    color: #00e5ff; /* Cyan neón */
-    font-weight: 900;
-    font-size: 14px; /* Un poco más grande */
-    text-shadow: 2px 2px 3px #000; /* Sombra para leerse sobre el mapa oscuro */
-    font-family: sans-serif;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #00a2ff; /* Cyan neón */
+  font-weight: 900;
+  font-size: 14px; /* Un poco más grande */
+  text-shadow: 2px 2px 3px #000; /* Sombra para leerse sobre el mapa oscuro */
+  font-family: sans-serif;
 }
 
 /* Ocultar la flecha pequeña del tooltip por defecto */
 .leaflet-tooltip-top:before {
-    display: none;
-}
-
-/* Elimina la flechita del tooltip de Leaflet */
-.leaflet-tooltip-top:before {
-    display: none;
+  display: none;
 }
 
 /* CLASE MÁGICA: Hace que los elementos sean "invisibles" al mouse */
 .sin-interaccion {
-    pointer-events: none !important;
-    cursor: default;
+  pointer-events: none !important;
+  cursor: default;
 }
 
-/* Estilo de la etiqueta de la Armadora */
-.etiqueta-armadora {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    color: #00e5ff;
-    font-weight: 900;
-    font-size: 14px;
-    text-shadow: 0px 0px 4px #000;
+/* Enlace Portafolio */
+.portfolio-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
-.leaflet-tooltip-top:before { display: none; }
+
+.portfolio-link:hover {
+  color: #008cff; /* Color Azul */
+  text-decoration: underline;
+}
