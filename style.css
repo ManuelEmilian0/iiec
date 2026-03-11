@@ -639,3 +639,42 @@ strong {
 .download-btn:active, .screenshot-btn:active {
   transform: translateY(1px); /* Efecto de hundimiento al hacer clic */
 }
+
+/* =========================================
+   8. TRANSICIONES GLOBALES DE LEAFLET
+   ========================================= */
+path.leaflet-interactive {
+  transition: fill-opacity 0.6s ease-in-out, stroke-opacity 0.6s ease-in-out, opacity 0.6s ease-in-out !important;
+}
+
+/* =========================================
+   9. CONTROL DE CAPAS (MODO OSCURO)
+   ========================================= */
+.leaflet-control-layers {
+  background: rgba(30, 30, 30, 0.95) !important;
+  border: 1px solid #555 !important;
+  border-radius: 8px !important;
+  color: #eee !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Invertir el color del icono (que por defecto es negro) para que sea blanco */
+.leaflet-control-layers-toggle {
+  filter: invert(1) brightness(1.5);
+}
+
+.leaflet-control-layers-expanded {
+  padding: 10px !important;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* Color de los botones circulares (radio buttons) */
+.leaflet-control-layers label {
+  cursor: pointer;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

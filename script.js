@@ -35,11 +35,30 @@ function initMap() {
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // 1. Definir el Mapa Oscuro (Actual)
+    var cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 19
-    }).addTo(map);
+    });
+
+    // 2. Definir el Mapa Satelital (Esri World Imagery)
+    var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP',
+        maxZoom: 19
+    });
+
+    // 3. Añadir el mapa oscuro por defecto
+    cartoDark.addTo(map);
+
+    // 4. Crear la lista de mapas para el menú
+    var mapasBase = {
+        "Mapa Oscuro (Carto)": cartoDark,
+        "Satélite (Esri)": satelite
+    };
+
+    // 5. Agregar el control de capas en la esquina superior derecha
+    L.control.layers(mapasBase, null, { position: 'topright' }).addTo(map);
 
     setupUI();
     cargarArmadorasContexto();
