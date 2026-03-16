@@ -678,3 +678,36 @@ path.leaflet-interactive {
   align-items: center;
   gap: 8px;
 }
+
+/* =========================================
+   10. CONTROL DE FUENTE Y RESUMEN DINÁMICO
+   ========================================= */
+
+/* Estilo para el recuadrito de Fuente en la esquina inferior izquierda */
+.fuente-control {
+  background: rgba(30, 30, 30, 0.9);
+  color: #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: "Noto Sans", sans-serif;
+  font-style: italic;
+  border: 1px solid #555;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  pointer-events: none; /* Para que no bloquee los clics en el mapa por debajo */
+  max-width: 350px;
+}
+
+/* Estilo para el párrafo resumen (Ej: Alemania, mayor intercambio...) */
+.dynamic-summary-box {
+  margin-top: 15px;
+  margin-bottom: 5px;
+  padding: 10px;
+  border-left: 4px solid #00a2ff; /* El toque "neón" azul */
+  background: rgba(0, 162, 255, 0.1); /* Fondo sutil azulado */
+  font-size: 12px;
+  color: #ddd;
+  border-radius: 0 4px 4px 0;
+  line-height: 1.4;
+  display: none; /* Inicia oculto, JS lo enciende cuando haya texto */
+}
