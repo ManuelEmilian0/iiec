@@ -12,9 +12,12 @@ var denueRawData = null;
 var armadorasRawData = null;
 var isocronasRawData = null;
 var agebRawData = null;         
+var vinculacionRawData = null;  // <--- NUEVO: Datos de Vinculación Empresas
 
 var currentScaleType = '';      
 var mainChart = null;           
+var estratoChart = null;        // <--- NUEVO: Gráfica de pastel (Estrato)
+var empresaChart = null;        // <--- NUEVO: Gráfica de barras apiladas (Empresa)
 var fuenteControl = null;       // <--- NUEVO: Control de Fuente
 
 const RampaRojos = ['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15'];
@@ -123,6 +126,12 @@ function loadLayer(scaleType) {
 
     var summaryDiv = document.getElementById('dynamic-summary');
     if (summaryDiv) summaryDiv.style.display = 'none';
+
+    // Ocultar gráficas de vinculación al cambiar de escala
+    var vincContainer = document.getElementById('vinculacion-charts-container');
+    if (vincContainer) vincContainer.style.display = 'none';
+    if (estratoChart) { estratoChart.destroy(); estratoChart = null; }
+    if (empresaChart) { empresaChart.destroy(); empresaChart = null; }
 
     currentScaleType = scaleType;
     
@@ -284,11 +293,13 @@ function iniciarLogicaEstatal() {
     Promise.all([
         fetch('denue.geojson').then(r => r.json()),
         fetch('armadoras.geojson').then(r => r.json()),
-        fetch('isocronas.geojson').then(r => r.json()) 
-    ]).then(([denueData, armadorasData, isocronasData]) => {
+        fetch('isocronas.geojson').then(r => r.json()),
+        fetch('Vinculacion_empresas_DENUE_2026.geojson').then(r => r.json())
+    ]).then(([denueData, armadorasData, isocronasData, vinculacionData]) => {
         denueRawData = denueData;
         armadorasRawData = armadorasData;
         isocronasRawData = isocronasData;
+        vinculacionRawData = vinculacionData;
         generarMenuEstados(denueData);
         var legendContent = document.getElementById('legend-content');
         if(legendContent) legendContent.innerHTML = "<small>Seleccione un Estado</small>";
@@ -820,6 +831,14 @@ function setupUI() {
             <h4 class="panel-title">Análisis de Datos</h4>
             <div style="height:180px; position:relative;"><canvas id="myChart"></canvas></div>
             <div id="dynamic-summary" class="dynamic-summary-box"></div>
+            <div id="vinculacion-charts-container" style="display:none;">
+                <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distribución por Estrato</h4>
+                <div style="height:180px; position:relative;"><canvas id="estratoChart"></canvas></div>
+                <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Unidades Económicas por Empresa</h4>
+                <div style="height:300px; position:relative;"><canvas id="empresaChart"></canvas></div>
+            </div>
             <button onclick="capturarImagen()" class="screenshot-btn">📸 Guardar Reporte (Img)</button>
         `;
         leftContainer.appendChild(statsBox); 
@@ -894,6 +913,280 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
             }
         }
     });
+
+    // ====================================================
+    // NUEVAS GRÁFICAS: Vinculación Empresas DENUE 2026
+    // ====================================================
+    actualizarGraficasVinculacion(nombreEstado);
+}
+
+// ==========================================
+// NUEVAS GRÁFICAS: VINCULACIÓN EMPRESAS 2026
+// ==========================================
+function normalizarEstadoVinculacion(nombre) {
+    if (!nombre) return "";
+    return nombre.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function normalizarEstrato(estrato) {
+    if (!estrato) return "Sin dato";
+    var s = estrato.toString().trim();
+    // Unificar formatos: "GRANDE " -> "GRANDE", etc.
+    s = s.replace(/\s+$/, '');
+    // Mapear a categorías consistentes
+    var upper = s.toUpperCase();
+    if (upper === 'MICRO' || s === '0 a 5 personas') return 'Micro (0-5)';
+    if (upper === 'PEQUEÑA' || upper === 'PEQUEÑA' || s === '6 a 10 personas') return 'Pequeña (6-10)';
+    if (s === '11 a 30 personas') return 'Pequeña (11-30)';
+    if (s === '31 a 50 personas') return 'Mediana (31-50)';
+    if (upper === 'MEDIANA' || s === '51 a 100 personas') return 'Mediana (51-100)';
+    if (s === '101 a 250 personas') return 'Grande (101-250)';
+    if (upper === 'GRANDE' || s === '251 y más personas') return 'Grande (251+)';
+    return s || 'Sin dato';
+}
+
+function actualizarGraficasVinculacion(nombreEstado) {
+    var container = document.getElementById('vinculacion-charts-container');
+    if (!container) return;
+    
+    if (!vinculacionRawData || !vinculacionRawData.features) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // Filtrar por estado
+    var estadoBusqueda = normalizarEstadoVinculacion(nombreEstado);
+    var featuresEstado = vinculacionRawData.features.filter(f => {
+        var entidad = normalizarEstadoVinculacion(f.properties.Entidad);
+        if (estadoBusqueda === "BAJA CALIFORNIA" && entidad.includes("SUR")) return false;
+        return entidad === estadoBusqueda || entidad.includes(estadoBusqueda) || estadoBusqueda.includes(entidad);
+    });
+
+    if (featuresEstado.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+
+    // =============================================
+    // 1. GRÁFICA DE PASTEL: ESTRATO
+    // =============================================
+    var conteoEstrato = {};
+    featuresEstado.forEach(f => {
+        var est = normalizarEstrato(f.properties.Estrato);
+        conteoEstrato[est] = (conteoEstrato[est] || 0) + 1;
+    });
+
+    // Orden lógico de estratos
+    var ordenEstratos = [
+        'Micro (0-5)', 'Pequeña (6-10)', 'Pequeña (11-30)', 
+        'Mediana (31-50)', 'Mediana (51-100)', 
+        'Grande (101-250)', 'Grande (251+)', 'Sin dato'
+    ];
+    var estratoLabels = [];
+    var estratoValues = [];
+    ordenEstratos.forEach(key => {
+        if (conteoEstrato[key] && conteoEstrato[key] > 0) {
+            estratoLabels.push(key);
+            estratoValues.push(conteoEstrato[key]);
+        }
+    });
+    // Agregar cualquier estrato no contemplado
+    Object.keys(conteoEstrato).forEach(key => {
+        if (!ordenEstratos.includes(key) && conteoEstrato[key] > 0) {
+            estratoLabels.push(key);
+            estratoValues.push(conteoEstrato[key]);
+        }
+    });
+
+    var coloresEstrato = [
+        '#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', 
+        '#ef3b2c', '#cb181d', '#99000d', '#555555'
+    ];
+
+    var canvasEstrato = document.getElementById('estratoChart');
+    if (canvasEstrato) {
+        if (estratoChart) estratoChart.destroy();
+        estratoChart = new Chart(canvasEstrato.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: estratoLabels,
+                datasets: [{
+                    data: estratoValues,
+                    backgroundColor: coloresEstrato.slice(0, estratoLabels.length),
+                    borderColor: '#222',
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: 5 },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { 
+                            color: '#ccc', 
+                            font: { size: 10 },
+                            boxWidth: 12,
+                            padding: 6
+                        }
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 12 },
+                        textShadowBlur: 3,
+                        textShadowColor: '#000',
+                        formatter: function(value, context) {
+                            var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            var pct = ((value / total) * 100).toFixed(1);
+                            return pct > 5 ? value + '\n(' + pct + '%)' : '';
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // =============================================
+    // 2. GRÁFICA DE BARRAS APILADAS: EMPRESA
+    // =============================================
+    // Contar unidades económicas por empresa y por estrato
+    var empresaEstrato = {}; // { empresa: { estrato1: count, estrato2: count } }
+    featuresEstado.forEach(f => {
+        var emp = (f.properties['Nombre de empresa'] || 'Sin nombre').trim();
+        var est = normalizarEstrato(f.properties.Estrato);
+        if (!empresaEstrato[emp]) empresaEstrato[emp] = {};
+        empresaEstrato[emp][est] = (empresaEstrato[emp][est] || 0) + 1;
+    });
+
+    // Ordenar empresas por total de unidades (descendente), top 20
+    var empresasTotales = Object.keys(empresaEstrato).map(emp => ({
+        nombre: emp,
+        total: Object.values(empresaEstrato[emp]).reduce((a, b) => a + b, 0)
+    }));
+    empresasTotales.sort((a, b) => b.total - a.total);
+    var topEmpresas = empresasTotales.slice(0, 20);
+
+    // Obtener todos los estratos presentes en estas empresas
+    var estratosPresentes = new Set();
+    topEmpresas.forEach(e => {
+        Object.keys(empresaEstrato[e.nombre]).forEach(est => estratosPresentes.add(est));
+    });
+
+    // Crear datasets apilados (uno por estrato)
+    var coloresBarrasEstrato = {
+        'Micro (0-5)': '#fee5d9',
+        'Pequeña (6-10)': '#fcbba1',
+        'Pequeña (11-30)': '#fc9272',
+        'Mediana (31-50)': '#fb6a4a',
+        'Mediana (51-100)': '#ef3b2c',
+        'Grande (101-250)': '#cb181d',
+        'Grande (251+)': '#99000d',
+        'Sin dato': '#555555'
+    };
+
+    var datasets = [];
+    ordenEstratos.forEach(est => {
+        if (!estratosPresentes.has(est)) return;
+        datasets.push({
+            label: est,
+            data: topEmpresas.map(e => empresaEstrato[e.nombre][est] || 0),
+            backgroundColor: coloresBarrasEstrato[est] || '#888',
+            borderColor: '#333',
+            borderWidth: 0.5
+        });
+    });
+    // Agregar estratos no contemplados en el orden
+    estratosPresentes.forEach(est => {
+        if (!ordenEstratos.includes(est)) {
+            datasets.push({
+                label: est,
+                data: topEmpresas.map(e => empresaEstrato[e.nombre][est] || 0),
+                backgroundColor: '#888',
+                borderColor: '#333',
+                borderWidth: 0.5
+            });
+        }
+    });
+
+    var empresaLabels = topEmpresas.map(e => e.nombre.length > 18 ? e.nombre.substring(0, 17) + '…' : e.nombre);
+
+    // Ajustar altura dinámica según cantidad de empresas
+    var canvasEmpresaParent = document.getElementById('empresaChart');
+    if (canvasEmpresaParent) {
+        var alturaBarras = Math.max(300, topEmpresas.length * 28);
+        canvasEmpresaParent.parentElement.style.height = alturaBarras + 'px';
+
+        if (empresaChart) empresaChart.destroy();
+        empresaChart = new Chart(canvasEmpresaParent.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: empresaLabels,
+                datasets: datasets
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { color: '#aaa', font: { size: 10 } },
+                        grid: { color: '#444' },
+                        title: {
+                            display: true,
+                            text: 'Unidades Económicas',
+                            color: '#aaa',
+                            font: { size: 11 }
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: { color: '#ddd', font: { size: 10 } },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { 
+                            color: '#ccc', 
+                            font: { size: 9 },
+                            boxWidth: 10,
+                            padding: 5
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            return context.dataset.data[context.dataIndex] > 0;
+                        },
+                        color: '#fff',
+                        font: { weight: 'bold', size: 9 },
+                        textShadowBlur: 2,
+                        textShadowColor: '#000',
+                        formatter: function(value) {
+                            return value > 0 ? value : '';
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                // Mostrar nombre completo en tooltip
+                                var idx = context[0].dataIndex;
+                                return topEmpresas[idx].nombre;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) {
