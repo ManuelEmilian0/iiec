@@ -1,0 +1,413 @@
+// ==========================================
+// 2. ESCALA ESTATAL (CLÚSTERES + ISOCRONAS)
+// ==========================================
+
+function cargarArmadorasContexto() {
+    fetch('armadoras.geojson').then(r => r.json()).then(data => {
+        window.armadorasContextoGlobalLayer = L.geoJSON(data, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, { radius: 2, fillColor: "#fff", color: "#fff", weight: 0, opacity: 0.3, fillOpacity: 0.3 });
+            }
+        });
+        if (currentScaleType === 'nacional') {
+            window.armadorasContextoGlobalLayer.addTo(map);
+        }
+    }).catch(e => console.log("Fondo armadoras no encontrado."));
+}
+
+function iniciarLogicaEstatal() {
+    Promise.all([
+        fetch('denue.geojson').then(r => r.json()),
+        fetch('armadoras.geojson').then(r => r.json()),
+        fetch('isocronas.geojson').then(r => r.json()),
+        fetch('Vinculacion_empresas_DENUE_2026.geojson').then(r => r.json())
+    ]).then(([denueData, armadorasData, isocronasData, vinculacionData]) => {
+        denueRawData = denueData;
+        armadorasRawData = armadorasData;
+        isocronasRawData = isocronasData;
+        vinculacionRawData = vinculacionData;
+        generarMenuEstados(denueData);
+        var legendContent = document.getElementById('legend-content');
+        if (legendContent) legendContent.innerHTML = "<small>Seleccione un Estado</small>";
+        map.flyTo([23.6345, -102.5528], 5);
+    }).catch(err => console.error("Error cargando datos:", err));
+}
+
+function generarMenuEstados(data) {
+    var container = document.getElementById('filter-buttons-container');
+    var title = document.getElementById('filter-title');
+    if (container) container.innerHTML = "";
+    if (title) title.innerText = "Accesibilidad a la Armadora Automotriz";
+
+    var estadosMap = new Map();
+    data.features.forEach(f => {
+        let nameRaw = f.properties.NOMGEO || f.properties.Entidad || f.properties.ENTIDAD;
+        if (nameRaw && nameRaw !== "Desconocido") {
+            let nameTrimmed = nameRaw.toString().trim();
+            let nameNorm = obtenerNombreEstandarEstado(nameTrimmed);
+            if (nameNorm && nameNorm !== "" && nameNorm !== "DESCONOCIDO") {
+                if (!estadosMap.has(nameNorm)) {
+                    let nombreMostrar = nameTrimmed.toUpperCase();
+                    if (nombreMostrar.includes("IGNACIO DE LA LLAVE")) nombreMostrar = "VERACRUZ";
+                    if (nombreMostrar.includes("DE OCAMPO")) nombreMostrar = "MICHOACÁN";
+                    if (nombreMostrar.includes("DE ZARAGOZA")) nombreMostrar = "COAHUILA";
+                    if (nombreMostrar.includes("DE ARTEAGA")) nombreMostrar = "QUERÉTARO";
+                    if (nombreMostrar === "ESTADO DE MEXICO" || nombreMostrar === "MEXICO" || nombreMostrar === "ESTADO DE MÉXICO" || nombreMostrar === "MÉXICO") nombreMostrar = "MÉXICO";
+                    estadosMap.set(nameNorm, nombreMostrar);
+                }
+            }
+        }
+    });
+    var estados = Array.from(estadosMap.values()).sort();
+
+    var select = document.createElement("select");
+    select.className = "dynamic-filter-select";
+
+    var defaultOption = document.createElement("option");
+    defaultOption.innerText = "-- Entidad Federativa --";
+    defaultOption.value = ""; defaultOption.disabled = true; defaultOption.selected = true;
+    select.appendChild(defaultOption);
+
+    estados.forEach(estado => {
+        var opt = document.createElement("option"); opt.value = estado; opt.innerText = estado;
+        select.appendChild(opt);
+    });
+
+    select.onchange = function () { if (this.value) filtrarPorEstado(this.value); };
+    container.appendChild(select);
+}
+
+function normalizarTexto(texto) {
+    if (!texto) return "";
+    return texto.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function obtenerNombreEstandarEstado(nombre) {
+    let n = normalizarTexto(nombre);
+    if (n === "VERACRUZ DE IGNACIO DE LA LLAVE") return "VERACRUZ";
+    if (n === "MICHOACAN DE OCAMPO") return "MICHOACAN";
+    if (n === "COAHUILA DE ZARAGOZA") return "COAHUILA";
+    if (n === "ESTADO DE MEXICO") return "MEXICO";
+    if (n === "QUERETARO DE ARTEAGA") return "QUERETARO";
+    return n;
+}
+
+function procesarYUnirIsocronas(features) {
+    if (typeof turf === 'undefined') return features;
+    var grupos = { 15: [], 30: [], 60: [] };
+    features.forEach(f => {
+        var m = parseInt(f.properties.AA_MINS || 0);
+        if (m <= 15) grupos[15].push(f);
+        else if (m <= 30) grupos[30].push(f);
+        else if (m <= 60) grupos[60].push(f);
+    });
+    var featuresUnidas = [];
+    const unirGrupo = (lista, minutos) => {
+        if (lista.length === 0) return;
+        try {
+            var unido = lista[0];
+            for (var i = 1; i < lista.length; i++) unido = turf.union(unido, lista[i]);
+            unido.properties = { AA_MINS: minutos };
+            featuresUnidas.push(unido);
+        } catch (e) { featuresUnidas.push(...lista); }
+    };
+    unirGrupo(grupos[15], 15); unirGrupo(grupos[30], 30); unirGrupo(grupos[60], 60);
+    return featuresUnidas;
+}
+
+function filtrarPorEstado(nombreEstado) {
+    var estadoBusqueda = obtenerNombreEstandarEstado(nombreEstado);
+
+    var denueEstado = denueRawData.features.filter(f => obtenerNombreEstandarEstado(f.properties.NOMGEO || f.properties.Entidad || f.properties.ENTIDAD || f.properties.ESTADO) === estadoBusqueda);
+    var armadorasEstado = armadorasRawData.features.filter(f => {
+        var estadoArmadora = obtenerNombreEstandarEstado(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
+        if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
+        return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
+    });
+    var isocronasRawList = isocronasRawData.features.filter(f => obtenerNombreEstandarEstado(f.properties.NOMGEO || f.properties.Entidad || f.properties.Estado || f.properties.ESTADO || f.properties.ENTIDAD) === estadoBusqueda);
+    var isocronasEstado = procesarYUnirIsocronas(isocronasRawList);
+
+    isocronasEstado.sort((a, b) => parseInt(b.properties.AA_MINS || 0) - parseInt(a.properties.AA_MINS || 0));
+
+    if (isocronasLayer) map.removeLayer(isocronasLayer);
+    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+    if (armadorasLayer) map.removeLayer(armadorasLayer);
+
+    var animIso15 = [], animIso30 = [], animIso60 = [];
+    var animDenue = [], animArmadoras = [];
+
+    if (isocronasEstado.length > 0) {
+        isocronasLayer = L.geoJSON(isocronasEstado, {
+            style: function () { return { opacity: 0, fillOpacity: 0, weight: 1.5, className: 'sin-interaccion' }; },
+            onEachFeature: function (feature, layer) {
+                var mins = parseInt(feature.properties.AA_MINS || 0);
+                if (mins <= 15) animIso15.push(layer); else if (mins <= 30) animIso30.push(layer); else animIso60.push(layer);
+            }
+        }).addTo(map);
+        isocronasLayer.bringToBack();
+    }
+
+    if (denueEstado.length > 0) {
+        currentGeoJSONLayer = L.geoJSON(denueEstado, {
+            pointToLayer: function (feature, latlng) {
+                var sector = feature.properties.Conjunto || feature.properties['Industrias agrupadas'] || "Otros"; if (sector === "Actividades SEIT") sector = "Servicios SEIT";
+                return L.circleMarker(latlng, { radius: 5, fillColor: getColorConjunto(sector), color: "#ffffff", weight: 0.8, opacity: 0, fillOpacity: 0 });
+            },
+            onEachFeature: function (feature, layer) {
+                animDenue.push(layer);
+                layer.bindPopup(`<b>${feature.properties.Nombre || feature.properties.Empresa || feature.properties['Nombre de empresa']}</b><br><small>${feature.properties.Conjunto || feature.properties['Industrias agrupadas'] || 'Otros'}</small>`);
+            }
+        }).addTo(map);
+    }
+
+    if (armadorasEstado.length > 0) {
+        armadorasLayer = L.geoJSON(armadorasEstado, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, { radius: 12, fillColor: "#00e5ff", color: "#fff", weight: 3, opacity: 0, fillOpacity: 0 });
+            },
+            onEachFeature: function (feature, layer) { animArmadoras.push(layer); }
+        }).addTo(map);
+    }
+
+    function ejecutarAnimacion() {
+        animDenue.sort(() => Math.random() - 0.5);
+        let tercio = Math.floor(animDenue.length / 3);
+        let denue1 = animDenue.slice(0, tercio);
+        let denue2 = animDenue.slice(tercio, tercio * 2);
+        let denue3 = animDenue.slice(tercio * 2);
+
+        setTimeout(() => {
+            animIso15.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.8, color: getColorIsocrona(15), fillColor: getColorIsocrona(15) }));
+            animArmadoras.forEach(l => {
+                l.setStyle({ opacity: 1, fillOpacity: 1 });
+                l.bindTooltip(l.feature.properties.NOMBRE || l.feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] });
+            });
+            denue1.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
+        }, 100);
+        setTimeout(() => {
+            animIso30.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.4, color: getColorIsocrona(30), fillColor: getColorIsocrona(30) }));
+            denue2.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
+        }, 800);
+        setTimeout(() => {
+            animIso60.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.25, color: getColorIsocrona(60), fillColor: getColorIsocrona(60) }));
+            denue3.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
+        }, 1500);
+    }
+
+    try {
+        if (armadorasEstado.length > 0) {
+            let latlngs = armadorasEstado.map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+            map.flyToBounds(latlngs, { padding: [100, 100], duration: 1.5, maxZoom: 11 }); map.once('moveend', ejecutarAnimacion);
+        } else if (isocronasEstado.length > 0) {
+            map.flyToBounds(isocronasLayer.getBounds(), { padding: [50, 50] }); map.once('moveend', ejecutarAnimacion);
+        } else if (currentGeoJSONLayer && denueEstado.length > 0) {
+            map.flyToBounds(currentGeoJSONLayer.getBounds(), { padding: [50, 50] }); map.once('moveend', ejecutarAnimacion);
+        } else { ejecutarAnimacion(); }
+    } catch (e) { ejecutarAnimacion(); }
+
+    actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado);
+    actualizarLeyendaIsocronas();
+}
+
+function dibujarArmadorasPuntos(features) {
+    if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+    if (!features || features.length === 0) return;
+    armadorasLayer = L.geoJSON(features, {
+        pointToLayer: function (feature, latlng) { return L.circleMarker(latlng, { radius: 12, fillColor: "#00e5ff", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1 }); },
+        onEachFeature: function (feature, layer) { layer.bindTooltip(feature.properties.NOMBRE || feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] }); }
+    }).addTo(map);
+}
+
+function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var conteo = {};
+    denueEstado.forEach(f => {
+        var ramo = f.properties.Conjunto || f.properties['Industrias agrupadas'] || "Otros"; if (ramo === "Actividades SEIT") ramo = "Servicios SEIT";
+        conteo[ramo] = (conteo[ramo] || 0) + 1;
+    });
+
+    var titulo = document.getElementById('stats-title-text');
+    if (titulo) {
+        var subtitulo = armadorasEstado.length > 0
+            ? `<span style="color:#00e5ff; font-size:12px">🏭 Plantas Armadoras Presentes</span>` : `<span style="color:#aaa; font-size:12px">Sin planta armadora</span>`;
+        titulo.innerHTML = `
+            <span style="font-size:18px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br>
+            <span style="font-size:13px; color:#ddd">Total Empresas: <b>${denueEstado.length}</b></span><br>${subtitulo}
+        `;
+    }
+
+    var canvas = document.getElementById('myChart');
+    if (!canvas) return; canvas.parentElement.style.height = '150px';
+
+    var labels = Object.keys(conteo); var dataValues = Object.values(conteo);
+    var colores = labels.map(l => getColorConjunto(l));
+
+    if (mainChart) mainChart.destroy();
+    if (dataValues.length === 0) return;
+
+    mainChart = new Chart(canvas.getContext('2d'), {
+        type: 'pie',
+        data: { labels: labels, datasets: [{ label: 'Empresas', data: dataValues, backgroundColor: colores, borderColor: '#222', borderWidth: 1 }] },
+        plugins: [ChartDataLabels],
+        options: {
+            responsive: true, maintainAspectRatio: false, layout: { padding: { top: 5, bottom: 5, left: 5, right: 5 } },
+            plugins: {
+                legend: { display: false },
+                datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: function (value) { return value > 0 ? value : ''; } }
+            }
+        }
+    });
+
+    actualizarGraficasVinculacion(nombreEstado);
+}
+
+// ==========================================
+// VINCULACIÓN EMPRESAS
+// ==========================================
+function normalizarEstadoVinculacion(nombre) {
+    return nombre ? nombre.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() : "";
+}
+
+function normalizarEstrato(estrato) {
+    if (!estrato) return "Sin dato";
+    var s = estrato.toString().trim().replace(/\s+$/, '');
+    var upper = s.toUpperCase();
+    if (upper === 'MICRO' || s === '0 a 5 personas') return 'Micro (0-5)';
+    if (upper === 'PEQUEÑA' || s === '6 a 10 personas') return 'Pequeña (6-10)';
+    if (s === '11 a 30 personas') return 'Pequeña (11-30)';
+    if (s === '31 a 50 personas') return 'Mediana (31-50)';
+    if (upper === 'MEDIANA' || s === '51 a 100 personas') return 'Mediana (51-100)';
+    if (s === '101 a 250 personas') return 'Grande (101-250)';
+    if (upper === 'GRANDE' || s === '251 y más personas') return 'Grande (251+)';
+    return s || 'Sin dato';
+}
+
+function actualizarGraficasVinculacion(nombreEstado) {
+    var container = document.getElementById('vinculacion-charts-container');
+    if (!container || !vinculacionRawData || !vinculacionRawData.features) { if (container) container.style.display = 'none'; return; }
+
+    var estadoBusqueda = obtenerNombreEstandarEstado(nombreEstado);
+    var featuresEstado = vinculacionRawData.features.filter(f => {
+        var entidad = obtenerNombreEstandarEstado(f.properties.Entidad);
+        if (estadoBusqueda === "BAJA CALIFORNIA" && entidad.includes("SUR")) return false;
+        return entidad === estadoBusqueda || entidad.includes(estadoBusqueda) || estadoBusqueda.includes(entidad);
+    });
+
+    if (featuresEstado.length === 0) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+
+    var conteoEstrato = {};
+    featuresEstado.forEach(f => { var est = normalizarEstrato(f.properties.Estrato); conteoEstrato[est] = (conteoEstrato[est] || 0) + 1; });
+
+    var ordenEstratos = ['Micro (0-5)', 'Pequeña (6-10)', 'Pequeña (11-30)', 'Mediana (31-50)', 'Mediana (51-100)', 'Grande (101-250)', 'Grande (251+)', 'Sin dato'];
+    var estratoLabels = [], estratoValues = [];
+    ordenEstratos.forEach(key => { if (conteoEstrato[key] > 0) { estratoLabels.push(key); estratoValues.push(conteoEstrato[key]); } });
+    Object.keys(conteoEstrato).forEach(key => { if (!ordenEstratos.includes(key) && conteoEstrato[key] > 0) { estratoLabels.push(key); estratoValues.push(conteoEstrato[key]); } });
+
+    var coloresEstrato = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d', '#555555'];
+    var canvasEstrato = document.getElementById('estratoChart');
+    if (canvasEstrato) {
+        if (estratoChart) estratoChart.destroy();
+        estratoChart = new Chart(canvasEstrato.getContext('2d'), {
+            type: 'pie',
+            data: { labels: estratoLabels, datasets: [{ data: estratoValues, backgroundColor: coloresEstrato.slice(0, estratoLabels.length), borderColor: '#222', borderWidth: 1 }] },
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true, maintainAspectRatio: false, layout: { padding: 5 },
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { color: '#ccc', font: { size: 10 }, boxWidth: 12, padding: 6 } },
+                    datalabels: {
+                        color: '#fff', font: { weight: 'bold', size: 12 }, textShadowBlur: 3, textShadowColor: '#000',
+                        formatter: function (value, context) {
+                            var total = context.dataset.data.reduce((a, b) => a + b, 0); var pct = ((value / total) * 100).toFixed(1);
+                            return pct > 5 ? value + '\n(' + pct + '%)' : '';
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    var empresaEstrato = {};
+    featuresEstado.forEach(f => {
+        var emp = (f.properties['Nombre de empresa'] || 'Sin nombre').trim(); var est = normalizarEstrato(f.properties.Estrato);
+        if (!empresaEstrato[emp]) empresaEstrato[emp] = {};
+        empresaEstrato[emp][est] = (empresaEstrato[emp][est] || 0) + 1;
+    });
+
+    var empresasTotales = Object.keys(empresaEstrato).map(emp => ({ nombre: emp, total: Object.values(empresaEstrato[emp]).reduce((a, b) => a + b, 0) }));
+    empresasTotales.sort((a, b) => b.total - a.total);
+    var topEmpresas = empresasTotales.slice(0, 20);
+
+    var estratosPresentes = new Set();
+    topEmpresas.forEach(e => Object.keys(empresaEstrato[e.nombre]).forEach(est => estratosPresentes.add(est)));
+
+    var coloresBarrasEstrato = { 'Micro (0-5)': '#fee5d9', 'Pequeña (6-10)': '#fcbba1', 'Pequeña (11-30)': '#fc9272', 'Mediana (31-50)': '#fb6a4a', 'Mediana (51-100)': '#ef3b2c', 'Grande (101-250)': '#cb181d', 'Grande (251+)': '#99000d', 'Sin dato': '#555555' };
+    var datasets = [];
+    ordenEstratos.forEach(est => {
+        if (estratosPresentes.has(est)) datasets.push({ label: est, data: topEmpresas.map(e => empresaEstrato[e.nombre][est] || 0), backgroundColor: coloresBarrasEstrato[est] || '#888', borderColor: '#333', borderWidth: 0.5 });
+    });
+    estratosPresentes.forEach(est => {
+        if (!ordenEstratos.includes(est)) datasets.push({ label: est, data: topEmpresas.map(e => empresaEstrato[e.nombre][est] || 0), backgroundColor: '#888', borderColor: '#333', borderWidth: 0.5 });
+    });
+
+    var empresaLabels = topEmpresas.map(e => e.nombre.length > 18 ? e.nombre.substring(0, 17) + '…' : e.nombre);
+    var canvasEmpresaParent = document.getElementById('empresaChart');
+    if (canvasEmpresaParent) {
+        var alturaBarras = Math.max(300, topEmpresas.length * 28);
+        canvasEmpresaParent.parentElement.style.height = alturaBarras + 'px';
+        if (empresaChart) empresaChart.destroy();
+        empresaChart = new Chart(canvasEmpresaParent.getContext('2d'), {
+            type: 'bar', data: { labels: empresaLabels, datasets: datasets }, plugins: [ChartDataLabels],
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                scales: { x: { stacked: true, ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#444' }, title: { display: true, text: 'Unidades Económicas', color: '#aaa', font: { size: 11 } } }, y: { stacked: true, ticks: { color: '#ddd', font: { size: 10 } }, grid: { display: false } } },
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { color: '#ccc', font: { size: 9 }, boxWidth: 10, padding: 5 } },
+                    datalabels: { display: function (context) { return context.dataset.data[context.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 9 }, textShadowBlur: 2, textShadowColor: '#000', formatter: function (value) { return value > 0 ? value : ''; } },
+                    tooltip: { callbacks: { title: function (context) { return topEmpresas[context[0].dataIndex].nombre; } } }
+                }
+            }
+        });
+    }
+}
+
+// ==========================================
+// UTILIDADES ESTATALES
+// ==========================================
+function getColorConjunto(conjunto) {
+    const c = (conjunto || '').toString().trim();
+    if (c.includes('Automo')) return '#ff3333';
+    if (c.includes('Electrónica')) return '#2196f3';
+    if (c.includes('Eléctrica')) return '#ffc107';
+    if (c.includes('SEIT') || c.includes('Servicios')) return '#9c27b0';
+    return '#bbbbbb';
+}
+
+function getColorIsocrona(minutos) {
+    var m = parseInt(minutos);
+    if (m <= 15) return '#00ff00'; if (m <= 30) return '#ffff00'; if (m <= 60) return '#ff4500';
+    return '#808080';
+}
+
+function actualizarLeyendaIsocronas() {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if (!div || !overlay) return;
+
+    div.innerHTML = `
+        <div style="margin-bottom:8px; font-weight:bold; color:#00e5ff">Tiempo en Auto</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(0, 255, 0, 0.8); border:1px solid #00ff00"></span> 0 - 15 Minutos</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 255, 0, 0.6); border:1px solid #ffff00"></span> 15 - 30 Minutos</div>
+        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 69, 0, 0.3); border:1px solid #ff4500"></span> 30 - 60 Minutos</div>
+        <div style="margin:10px 0 5px 0; font-weight:bold; color:#ddd">Proveedores</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ff3333; border:1px solid #fff; border-radius:50%"></span> Automotriz</div>
+        <div class="legend-item"><span class="legend-color" style="background:#2196f3; border:1px solid #fff; border-radius:50%"></span> Electrónica</div>
+        <div class="legend-item"><span class="legend-color" style="background:#9c27b0; border:1px solid #fff; border-radius:50%"></span> Servicios SEIT</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ffc107; border:1px solid #fff; border-radius:50%"></span> Eléctrica</div>
+        <div style="margin-top:8px" class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; border:2px solid white"></span> Planta Armadora</div>
+    `;
+    overlay.style.display = 'block';
+}

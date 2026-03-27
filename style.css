@@ -1,0 +1,894 @@
+/* =========================================
+   1. RESET Y ESTILOS GENERALES
+   ========================================= */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Noto Sans", sans-serif;
+  background-color: #333;
+  color: #eee;
+  overflow: hidden;
+  /* IMPORTANTE: Evita scroll en toda la página */
+}
+
+/* =========================================
+   2. ENCABEZADO (TÍTULO Y NAV)
+   ========================================= */
+/* Barra Superior (Logos y Título) - Altura: 60px */
+#title-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(0, 51, 102, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  z-index: 2001;
+  /* Encima de todo */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.title-text {
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+  margin-right: 20px;
+}
+
+.logo-spacer {
+  width: 60px;
+}
+
+/* Barra de Navegación (Menú) - Altura: 40px, Empieza en: 60px */
+#nav-bar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: #003366;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.nav-buttons-container {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  padding: 0 15px;
+  height: 40px;
+  line-height: 40px;
+  color: #ccc;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.nav-button:hover {
+  color: #fff;
+  border-bottom-color: #555;
+}
+
+.nav-button.active {
+  color: #fff;
+  border-bottom-color: #a50f15;
+}
+
+/* =========================================
+   3. CONTENEDOR PRINCIPAL
+   ========================================= */
+#main-container {
+  padding-top: 100px;
+  /* Espacio para el header fijo */
+  height: 100vh;
+  /* Ocupa toda la altura */
+  box-sizing: border-box;
+  position: relative;
+  background-color: #222;
+}
+
+.main-content-panel {
+  display: none;
+  /* Se activa con JS */
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow-y: auto;
+  /* Permite scroll en secciones de texto */
+}
+
+.active-panel {
+  display: block;
+}
+
+/* --- CORRECCIÓN CRÍTICA PARA EL MAPA --- */
+/* Esto obliga al mapa a ocupar todo el espacio disponible sin colapsar */
+#inicio {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* El mapa no debe tener scrollbars nativos */
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: #222;
+  z-index: 1;
+}
+
+/* =========================================
+   4. ESTRUCTURA DE PANELES (FIXED LAYOUT)
+   ========================================= */
+
+/* --- CONTENEDOR IZQUIERDO: CONTROLES --- */
+#left-sidebar-container {
+  position: absolute;
+  top: 100px;
+  /* Comienza justo debajo de la barra de navegación */
+  left: 0;
+  /* Pegado al borde */
+  width: 450px !important;
+  /* Ancho ampliado para llegar cerca del botón Contacto */
+  bottom: 0;
+  /* Ocupa hasta abajo */
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* Separación entre cajas */
+  padding: 20px;
+  /* Espacio para que las cajas no toquen los bordes del panel */
+  background: rgba(35, 35, 35, 0.95);
+  /* Fondo sólido semitransparente oscuro */
+  backdrop-filter: blur(5px);
+  border-right: 1px solid #444;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
+  overflow-y: auto;
+  /* El GRAN scroll del panel principal */
+  pointer-events: auto;
+  /* Ahora el panel bloquea los clicks hácia el mapa debajo de él */
+}
+
+/* --- CONTENEDOR DERECHO: RESULTADOS --- */
+#right-sidebar-container {
+  display: none;
+  /* Inactivado ya que paneles se movieron a la izquierda */
+}
+
+/* --- CAJAS (Dashboard Boxes) --- */
+.dashboard-box,
+.control-box {
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  padding: 10px 15px;
+  /* Ligeramente más compacto el padding vertical */
+  border-radius: 8px;
+  border: 1px solid #555;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  /* Reactiva clicks */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  /* Evita que se aplasten si es posible */
+
+  /* Al eliminarse max-height y overflow, el scroll pasa al #left-sidebar-container */
+}
+
+/* Permitir que el recuadro de gráficas adopte tamaño natural */
+
+
+/* --- ESTILO ELEGANTE PARA EL SCROLL (Webkit) --- */
+.dashboard-box::-webkit-scrollbar,
+.control-box::-webkit-scrollbar {
+  width: 6px;
+  /* Barra fina */
+}
+
+.dashboard-box::-webkit-scrollbar-track,
+.control-box::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  /* Fondo del riel */
+  border-radius: 3px;
+}
+
+.dashboard-box::-webkit-scrollbar-thumb,
+.control-box::-webkit-scrollbar-thumb {
+  background: #555;
+  /* Color de la barra */
+  border-radius: 3px;
+}
+
+.dashboard-box::-webkit-scrollbar-thumb:hover,
+.control-box::-webkit-scrollbar-thumb:hover {
+  background: #888;
+  /* Color al pasar el mouse */
+}
+
+/* Títulos */
+.panel-title,
+#filter-title,
+#stats-title-text {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #fcae91;
+  padding-bottom: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center; /* Centrar todos los subtítulos */
+  width: 100%;
+  display: inline-block;
+}
+
+.toggleable {
+  cursor: pointer;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  position: relative; /* Clave para que la flecha flote al borde */
+}
+
+.drop-arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 12px;
+  color: #888;
+  position: absolute; /* Arroja la flecha al extremo derecho independientemente del texto centrado */
+  right: 0;
+}
+
+.toggleable:hover {
+  filter: brightness(1.2);
+}
+
+/* Scroll interno para filtros - Removido el comportamiento de scroll aquí para pasarlo al panel global */
+#filter-buttons-container {
+  padding-right: 5px;
+}
+
+/* Botones de Escala */
+.scale-icons-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.scale-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  background: #002b56;
+  color: #ddd;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: all 0.2s;
+  padding: 8px;
+}
+
+.scale-btn svg {
+  width: 100%;
+  height: 100%;
+  max-width: 24px;
+  max-height: 24px;
+}
+
+.scale-btn:hover {
+  background: #004080;
+  color: #fff;
+  border-color: #aaa;
+}
+
+.scale-btn.active {
+  background: #d59f0f;
+  color: #222;
+  border-color: #d59f0f;
+  box-shadow: 0 0 10px rgba(213, 159, 15, 0.5);
+}
+
+/* Botones de Filtro (Unificados) */
+.dynamic-filter-btn {
+  display: block;
+  width: 100%;
+  margin: 4px 0;
+  padding: 8px;
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.dynamic-filter-btn:hover {
+  background: #555;
+  border-color: #aaa;
+}
+
+.dynamic-filter-btn.active {
+  background: #a50f15;
+  border-color: #fff;
+  font-weight: bold;
+}
+
+/* Menú Select Desplegable */
+.dynamic-filter-select {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: "Noto Sans", sans-serif;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  /* Estilo nativo oculto */
+  background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+  background-repeat: no-repeat;
+  background-position-x: 95%;
+  background-position-y: 5px;
+}
+
+.dynamic-filter-select:hover {
+  background-color: #444;
+  border-color: #aaa;
+}
+
+.dynamic-filter-select:focus {
+  border-color: #008cff;
+}
+
+.dynamic-filter-select option {
+  background: #222;
+  color: #eee;
+  padding: 5px;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: #555;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.back-btn:hover {
+  background: #777;
+}
+
+/* Botón de Descarga */
+.download-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.download-btn:hover {
+  background: #1b5e20;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #222;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+/* =========================================
+   5. LEYENDA Y OTROS ESTILOS
+   ========================================= */
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  border-radius: 4px;
+  border: 1px solid #777;
+  display: inline-block;
+}
+
+.legend-gradient-container {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.legend-gradient-bar {
+  width: 100%;
+  height: 15px;
+  border-radius: 4px;
+  border: 1px solid #777;
+  margin-bottom: 5px;
+}
+
+.legend-gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #ddd;
+  font-weight: 600;
+}
+
+#legend-overlay {
+  display: none;
+}
+
+.dropdown-content {
+  display: none;
+  flex-direction: column;
+}
+
+.dropdown-content.show {
+  display: flex;
+}
+
+.panel-title.toggleable {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =========================================
+   6. CONTENIDO DE TEXTO (Marco, Metodología)
+   ========================================= */
+.panel-inner-content {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px 60px 20px;
+  line-height: 1.7;
+  font-size: 16px;
+  color: #ddd;
+}
+
+.panel-inner-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  border-bottom: 2px solid #a50f15;
+  padding-bottom: 10px;
+}
+
+.panel-inner-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fcae91;
+  margin-top: 30px;
+}
+
+.panel-inner-content p {
+  text-align: justify;
+  margin-bottom: 15px;
+}
+
+.panel-inner-content b,
+strong {
+  color: #fff;
+}
+
+.credits-content p {
+  margin-bottom: 5px;
+}
+
+.credits-content h3 {
+  color: #ddd;
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+/* Ajustes de Leaflet Popup y Tooltips */
+.leaflet-popup-content-wrapper {
+  background: #333;
+  color: #eee;
+  border-radius: 4px;
+  border: 1px solid #555;
+}
+
+.leaflet-popup-tip {
+  background: #333;
+  border: 1px solid #555;
+  border-top: none;
+  border-left: none;
+}
+
+.leaflet-container {
+  font-family: "Noto Sans", sans-serif;
+}
+
+.leaflet-tooltip {
+  background: rgba(30, 30, 30, 0.9);
+  border: 1px solid #555;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Botón de Captura (Azul) */
+.screenshot-btn {
+  width: 100%;
+  margin-top: 10px;
+  /* ESPACIO VITAL */
+  padding: 10px;
+  background: #0277bd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.screenshot-btn:hover {
+  background: #01579b;
+}
+
+/* Estilo limpio para nombres de Armadoras */
+.etiqueta-armadora {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #00a2ff;
+  /* Cyan neón */
+  font-weight: 900;
+  font-size: 14px;
+  /* Un poco más grande */
+  text-shadow: 2px 2px 3px #000;
+  /* Sombra para leerse sobre el mapa oscuro */
+  font-family: sans-serif;
+}
+
+/* Ocultar la flecha pequeña del tooltip por defecto */
+.leaflet-tooltip-top:before {
+  display: none;
+}
+
+/* CLASE MÁGICA: Hace que los elementos sean "invisibles" al mouse */
+.sin-interaccion {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+/* Enlace Portafolio */
+.portfolio-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.portfolio-link:hover {
+  color: #008cff;
+  /* Color Azul */
+  text-decoration: underline;
+}
+
+/* =========================================
+   7. ANIMACIONES Y FLUIDEZ (MEJORAS UX)
+   ========================================= */
+
+/* A) Fade-in suave para el cambio de pestañas (Inicio, Marco, Metodología) */
+@keyframes fadeInSuave {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.active-panel {
+  display: block;
+  animation: fadeInSuave 0.4s ease-in-out forwards;
+}
+
+/* B) Efecto de entrada (Slide-in) para el panel lateral izquierdo */
+@keyframes slideInIzquierda {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+#left-sidebar-container {
+  /* Le aplicamos la animación para que entre flotando de izquierda a derecha */
+  animation: slideInIzquierda 0.5s ease-out forwards;
+  transition: transform 0.4s ease-in-out;
+}
+
+/* Botón flotante para Ocultar/Mostrar el slide */
+@keyframes slideInBottonIzquierda {
+  from { left: -30px; opacity: 0; }
+  to { left: 450px; opacity: 1; }
+}
+
+#sidebar-toggle-tab {
+  position: absolute;
+  top: 110px; /* Lado superior derecho (ahora referenciado a left) */
+  left: 450px; /* Igual al ancho del left-sidebar para que nazca pegado externamente */
+  width: 30px;
+  height: 50px;
+  background: rgba(35, 35, 35, 0.95);
+  border: 1px solid #444;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 2000;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s ease-in-out;
+  animation: slideInBottonIzquierda 0.5s ease-out forwards;
+}
+
+#sidebar-toggle-tab.hidden-btn {
+  left: 0 !important; /* Retorna al borde izquierdo cuando el panel desaparece */
+}
+
+#sidebar-toggle-tab:hover {
+  background: #555;
+  color: #fcae91;
+}
+
+.hidden-panel {
+  transform: translateX(-100%) !important;
+}
+
+/* C) Botones Vivos: Animaciones interactivas (Hover) */
+
+/* 1. Botones de Filtro: Que se deslicen un poquito a la derecha */
+.dynamic-filter-btn {
+  transition: all 0.3s ease !important;
+  /* Transición suave */
+}
+
+.dynamic-filter-btn:hover {
+  background: #555;
+  border-color: #aaa;
+  transform: translateX(4px);
+  /* Se mueve 4px a la derecha */
+}
+
+/* 2. Botones de Escala (Mundial, Nacional, etc.): Que "salten" un poquito hacia arriba */
+.scale-btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.scale-btn:hover {
+  background: #004080;
+  color: #fff;
+  border-color: #aaa;
+  transform: translateY(-3px);
+  /* Se eleva 3px */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  /* Sombra extra al flotar */
+}
+
+/* 3. Botones de Descarga/Cámara: Efecto de presionado y flote */
+.download-btn,
+.screenshot-btn {
+  transition: all 0.2s ease !important;
+}
+
+.download-btn:hover,
+.screenshot-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  /* Lo hace un poco más brillante */
+}
+
+.download-btn:active,
+.screenshot-btn:active {
+  transform: translateY(1px);
+  /* Efecto de hundimiento al hacer clic */
+}
+
+/* =========================================
+   8. TRANSICIONES GLOBALES DE LEAFLET
+   ========================================= */
+path.leaflet-interactive {
+  transition: fill-opacity 0.6s ease-in-out, stroke-opacity 0.6s ease-in-out, opacity 0.6s ease-in-out !important;
+}
+
+/* =========================================
+   9. CONTROL DE CAPAS (MODO OSCURO)
+   ========================================= */
+.leaflet-control-layers {
+  background: rgba(30, 30, 30, 0.95) !important;
+  border: 1px solid #555 !important;
+  border-radius: 8px !important;
+  color: #eee !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Invertir el color del icono (que por defecto es negro) para que sea blanco */
+.leaflet-control-layers-toggle {
+  filter: invert(1) brightness(1.5);
+}
+
+.leaflet-control-layers-expanded {
+  padding: 10px !important;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* Color de los botones circulares (radio buttons) */
+.leaflet-control-layers label {
+  cursor: pointer;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* =========================================
+   10. CONTROL DE FUENTE Y RESUMEN DINÁMICO
+   ========================================= */
+
+/* Estilo para el recuadrito de Fuente en la esquina inferior izquierda */
+.fuente-control {
+  background: rgba(30, 30, 30, 0.9);
+  color: #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: "Noto Sans", sans-serif;
+  font-style: italic;
+  border: 1px solid #555;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  /* Para que no bloquee los clics en el mapa por debajo */
+  max-width: 350px;
+}
+
+/* Estilo para el párrafo resumen (Ej: Alemania, mayor intercambio...) */
+.dynamic-summary-box {
+  margin-top: 15px;
+  margin-bottom: 5px;
+  padding: 10px;
+  border-left: 4px solid #00a2ff;
+  /* El toque "neón" azul */
+  background: rgba(0, 162, 255, 0.1);
+  /* Fondo sutil azulado */
+  font-size: 12px;
+  color: #ddd;
+  border-radius: 0 4px 4px 0;
+  line-height: 1.4;
+  display: none;
+  /* Inicia oculto, JS lo enciende cuando haya texto */
+}
+
+/* Custom Leaflet Controls Layout */
+.leaflet-bottom.leaflet-right {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.leaflet-bottom.leaflet-right .leaflet-control {
+  pointer-events: auto;
+}
+
+/* 1. Zoom en la parte superior del grupo inferior derecho */
+.leaflet-control-zoom {
+  order: 1;
+  margin-bottom: 10px !important;
+  margin-right: 10px !important;
+}
+
+/* 2. Recuadro de fuentes debajo del zoom */
+.fuente-control {
+  order: 2;
+  margin-bottom: 10px !important;
+  margin-right: 10px !important;
+}
+
+/* 3. Atribución de Leaflet a la izquierda del cuadro de fuentes */
+.leaflet-control-attribution {
+  position: absolute !important;
+  right: 100% !important;
+  /* Empuja el texto a la izquierda de la fuente */
+  bottom: 10px !important;
+  /* Misma base que la fuente */
+  margin-right: 10px !important;
+  /* Espacio de separación */
+  white-space: nowrap;
+  background: rgba(30, 30, 30, 0.7) !important;
+  color: #aaa !important;
+  border-radius: 4px;
+}
