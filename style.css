@@ -12,53 +12,13 @@ body {
 }
 
 /* =========================================
-   2. ENCABEZADO (TÍTULO Y NAV)
+   2. ENCABEZADO Y NAVEGACIÓN
    ========================================= */
-/* Barra Superior (Logos y Título) - Altura: 60px */
-#title-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  background: rgba(0, 51, 102, 0.95);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  z-index: 2001;
-  /* Encima de todo */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
 
-.title-text {
-  font-size: 14px;
-  font-weight: 900;
-  color: #fff;
-  text-align: center;
-  line-height: 1.2;
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-}
-
-.logo {
-  height: 40px;
-  width: auto;
-  margin-right: 20px;
-}
-
-.logo-spacer {
-  width: 60px;
-}
-
-/* Barra de Navegación (Menú) - Altura: 40px, Empieza en: 60px */
+/* Barra de Navegación principal - Altura: 40px */
 #nav-bar {
   position: fixed;
-  top: 60px;
+  top: 0;
   left: 0;
   width: 100%;
   height: 40px;
@@ -108,8 +68,8 @@ body {
    3. CONTENEDOR PRINCIPAL
    ========================================= */
 #main-container {
-  padding-top: 100px;
-  /* Espacio para el header fijo */
+  padding-top: 40px;
+  /* Espacio solo para nav-bar */
   height: 100vh;
   /* Ocupa toda la altura */
   box-sizing: border-box;
@@ -159,8 +119,8 @@ body {
 /* --- CONTENEDOR IZQUIERDO: CONTROLES --- */
 #left-sidebar-container {
   position: absolute;
-  top: 100px;
-  /* Comienza justo debajo de la barra de navegación */
+  top: 40px;
+  /* Comienza justo debajo de la barra de navegación que mide 40px */
   left: 0;
   /* Pegado al borde */
   width: 450px !important;
@@ -253,7 +213,8 @@ body {
   padding-bottom: 5px;
   font-weight: 700;
   text-transform: uppercase;
-  text-align: center; /* Centrar todos los subtítulos */
+  text-align: center;
+  /* Centrar todos los subtítulos */
   width: 100%;
   display: inline-block;
 }
@@ -263,7 +224,8 @@ body {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  position: relative; /* Clave para que la flecha flote al borde */
+  position: relative;
+  /* Clave para que la flecha flote al borde */
 }
 
 .drop-arrow {
@@ -271,7 +233,8 @@ body {
   transition: transform 0.3s ease;
   font-size: 12px;
   color: #888;
-  position: absolute; /* Arroja la flecha al extremo derecho independientemente del texto centrado */
+  position: absolute;
+  /* Arroja la flecha al extremo derecho independientemente del texto centrado */
   right: 0;
 }
 
@@ -685,14 +648,23 @@ strong {
 
 /* Botón flotante para Ocultar/Mostrar el slide */
 @keyframes slideInBottonIzquierda {
-  from { left: -30px; opacity: 0; }
-  to { left: 450px; opacity: 1; }
+  from {
+    left: -30px;
+    opacity: 0;
+  }
+
+  to {
+    left: 450px;
+    opacity: 1;
+  }
 }
 
 #sidebar-toggle-tab {
   position: absolute;
-  top: 110px; /* Lado superior derecho (ahora referenciado a left) */
-  left: 450px; /* Igual al ancho del left-sidebar para que nazca pegado externamente */
+  top: 110px;
+  /* Lado superior derecho (ahora referenciado a left) */
+  left: 450px;
+  /* Igual al ancho del left-sidebar para que nazca pegado externamente */
   width: 30px;
   height: 50px;
   background: rgba(35, 35, 35, 0.95);
@@ -712,7 +684,8 @@ strong {
 }
 
 #sidebar-toggle-tab.hidden-btn {
-  left: 0 !important; /* Retorna al borde izquierdo cuando el panel desaparece */
+  left: 0 !important;
+  /* Retorna al borde izquierdo cuando el panel desaparece */
 }
 
 #sidebar-toggle-tab:hover {
@@ -891,4 +864,345 @@ path.leaflet-interactive {
   background: rgba(30, 30, 30, 0.7) !important;
   color: #aaa !important;
   border-radius: 4px;
+}
+
+/* =========================================
+   PORTADA DE INICIO (SPLASH SCREEN)
+   ========================================= */
+#splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background-image: url('portada.jpg');
+  background-size: cover;
+  background-position: center;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  /* Vuelto a centrar arriba */
+  justify-content: center;
+  transition: opacity 0.6s ease-out;
+}
+
+.splash-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.40);
+  /* 40% transparencia pedida */
+  z-index: 1;
+}
+
+.splash-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 900px;
+  padding: 35px 40px;
+  /* Reducción ligera del padding */
+  color: #fff;
+  border-radius: 12px;
+  background: rgba(20, 20, 20, 0.65);
+  /* Ventana interna levemente opaca */
+  backdrop-filter: blur(8px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9);
+  animation: splashFadeInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes splashFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.splash-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.splash-logo {
+  height: 100px;
+  width: auto;
+  filter: drop-shadow(0px 2px 4px rgba(255, 255, 255, 0.2));
+}
+
+.splash-title {
+  font-size: 38px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  margin-bottom: 25px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  line-height: 1.3;
+}
+
+.splash-mission {
+  font-size: 16px;
+  color: #ddd;
+  line-height: 1.7;
+  margin-bottom: 40px;
+  text-align: justify;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.splash-btn {
+  background: #a50f15;
+  /* Usar el rojo tinto de la paleta unam */
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 15px 45px;
+  border: 1px solid #ff4d4d;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(165, 15, 21, 0.6);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.splash-btn:hover {
+  background: #d32f2f;
+  border-color: #fff;
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(211, 47, 47, 0.8);
+}
+
+/* =========================================
+   PANEL DERECHO (DIAGRAMAS)
+   ========================================= */
+/* --- (Estilos del right-sidebar eliminados, paneles reposicionados a la izquierda) --- */
+
+/* MARCO LEGAL TREE */
+.marco-legal-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 5px;
+}
+
+.legal-card {
+  display: block;
+  text-decoration: none;
+  background: rgba(30, 30, 30, 0.6);
+  border-left: 4px solid #444;
+  padding: 10px;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInDown 0.5s forwards;
+  cursor: pointer;
+}
+
+.legal-card.level-mundial {
+  border-left-color: #9c27b0;
+}
+
+.legal-card.level-nacional {
+  border-left-color: #2196f3;
+}
+
+.legal-card.level-estatal {
+  border-left-color: #ffeb3b;
+}
+
+.legal-card.level-municipal {
+  border-left-color: #ff3333;
+}
+
+.legal-card:hover {
+  background: rgba(50, 50, 50, 0.8);
+  transform: scale(1.02);
+  color: #fff;
+  border-left-width: 6px;
+}
+
+.legal-card::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -2px;
+  width: 2px;
+  height: 10px;
+  background: #555;
+  display: none;
+}
+
+.legal-card:not(:first-child)::before {
+  display: block;
+}
+
+@keyframes fadeInDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* PENTA-HELICE DIAGRAM */
+.penta-helix-container {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.penta-center {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  border-radius: 50%;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+  z-index: 1;
+}
+
+.penta-node {
+  position: absolute;
+  width: 55px;
+  height: 55px;
+  background: rgba(20, 20, 20, 0.9);
+  border: 2px solid #555;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #aaa;
+  font-size: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 2;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.penta-node:hover {
+  border-color: #00e5ff;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+  transform: scale(1.15);
+  z-index: 3;
+}
+
+.penta-node i {
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+/* Tooltip on hover for penta-nodes */
+.penta-node .penta-tooltip {
+  visibility: hidden;
+  position: absolute;
+  bottom: 60px;
+  background: rgba(10, 10, 10, 0.95);
+  color: #fff;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #00e5ff;
+  width: 140px;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+.penta-node:hover .penta-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Node Positioning */
+.node-gov {
+  top: 10px;
+}
+
+.node-aca {
+  top: 80px;
+  right: 20px;
+  border-color: #9c27b0;
+}
+
+.node-pri {
+  bottom: 20px;
+  right: 50px;
+  border-color: #2196f3;
+}
+
+.node-soc {
+  bottom: 20px;
+  left: 50px;
+  border-color: #ffeb3b;
+}
+
+.node-env {
+  top: 80px;
+  left: 20px;
+  border-color: #4caf50;
+}
+
+.penta-node.node-gov:hover {
+  border-color: #f44336;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.6);
+}
+
+.penta-node.node-aca:hover {
+  border-color: #9c27b0;
+  box-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+}
+
+.penta-node.node-pri:hover {
+  border-color: #2196f3;
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
+}
+
+.penta-node.node-soc:hover {
+  border-color: #ffeb3b;
+  box-shadow: 0 0 15px rgba(255, 235, 59, 0.6);
+}
+
+.penta-node.node-env:hover {
+  border-color: #4caf50;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+}
+
+/* SVG Lines between nodes and center */
+.penta-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.penta-lines line {
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 1.5;
+  stroke-dasharray: 4;
 }

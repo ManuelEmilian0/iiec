@@ -127,6 +127,11 @@ function loadLayer(scaleType) {
         if (arrow) arrow.style.transform = 'rotate(0deg)';
     }
 
+    // Actualizar Panel Derecho Dinámico
+    if (typeof actualizarPanelDerecho === "function") {
+        actualizarPanelDerecho(scaleType);
+    }
+
     // Delegar lógica a los otros módulos (escala_estatal.js y escala_municipal.js)
     if (scaleType === 'estatal') {
         if (filterBox) {
@@ -570,6 +575,55 @@ function setupUI() {
         leftContainer.appendChild(legendBox);
     }
 
+    if (!document.getElementById('marco-legal-box')) {
+        // Marco Legal Multiescalar
+        var marcoBox = document.createElement('div');
+        marcoBox.id = 'marco-legal-box';
+        marcoBox.className = 'dashboard-box';
+        marcoBox.innerHTML = `
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('marco-legal-content', 'marco-arrow')" title="Ocultar/Mostrar">
+                <span style="font-size: 13px;">Marco Normativo</span> <span id="marco-arrow" class="drop-arrow" style="transform: rotate(0deg);">▼</span>
+            </h4>
+            <div id="marco-legal-content" class="dropdown-content show">
+                <div class="marco-legal-tree" id="marco-legal-tree">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        `;
+        leftContainer.appendChild(marcoBox);
+    }
+
+    if (!document.getElementById('penta-helix-box')) {
+        // Pentágono Multi-Hélice
+        var pentaBox = document.createElement('div');
+        pentaBox.id = 'penta-helix-box';
+        pentaBox.className = 'dashboard-box';
+        pentaBox.innerHTML = `
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('penta-helix-content', 'penta-arrow')" title="Ocultar/Mostrar">
+                <span style="font-size: 13px;">Actores (Penta-Hélice)</span> <span id="penta-arrow" class="drop-arrow" style="transform: rotate(0deg);">▼</span>
+            </h4>
+            <div id="penta-helix-content" class="dropdown-content show">
+                <div class="penta-helix-container">
+                    <div class="penta-center"></div>
+                    <svg class="penta-lines">
+                        <line x1="50%" y1="50%" x2="50%" y2="15%"></line>
+                        <line x1="50%" y1="50%" x2="85%" y2="40%"></line>
+                        <line x1="50%" y1="50%" x2="75%" y2="85%"></line>
+                        <line x1="50%" y1="50%" x2="25%" y2="85%"></line>
+                        <line x1="50%" y1="50%" x2="15%" y2="40%"></line>
+                    </svg>
+                    
+                    <div class="penta-node node-gov" id="ph-gov" onclick="mostrarModalPenta('gov')"><i>🏛️</i>Gob<div class="penta-tooltip" id="ph-tt-gov">Gobierno</div></div>
+                    <div class="penta-node node-aca" id="ph-aca" onclick="mostrarModalPenta('aca')"><i>🎓</i>Aca<div class="penta-tooltip" id="ph-tt-aca">Academia</div></div>
+                    <div class="penta-node node-pri" id="ph-pri" onclick="mostrarModalPenta('pri')"><i>🏢</i>Pri<div class="penta-tooltip" id="ph-tt-pri">S. Privado</div></div>
+                    <div class="penta-node node-soc" id="ph-soc" onclick="mostrarModalPenta('soc')"><i>👥</i>Soc<div class="penta-tooltip" id="ph-tt-soc">Soc. Civil</div></div>
+                    <div class="penta-node node-env" id="ph-env" onclick="mostrarModalPenta('env')"><i>🌱</i>Amb<div class="penta-tooltip" id="ph-tt-env">Ambiente</div></div>
+                </div>
+            </div>
+        `;
+        leftContainer.appendChild(pentaBox);
+    }
+
     if (!document.getElementById('stats-overlay')) {
         var statsBox = document.createElement('div');
         statsBox.id = 'stats-overlay'; statsBox.className = 'dashboard-box'; statsBox.style.display = 'none';
@@ -584,28 +638,95 @@ function setupUI() {
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distribución por Estrato</h4>
                     <div style="height:240px; position:relative;"><canvas id="estratoChart"></canvas></div>
+                    <div id="sintesis-estrato" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Unidades Económicas por Empresa</h4>
                     <div style="height:400px; position:relative;"><canvas id="empresaChart"></canvas></div>
+                    <div id="sintesis-empresa" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
                 </div>
             </div>
         `;
         leftContainer.appendChild(statsBox);
     }
+
+    // Se ha movido el contenido a leftContainer
+}
+
+// ==========================================
+// FUNCIÓN PARA ACTUALIZAR DIAGRAMAS EN PANEL DERECHO
+// ==========================================
+function actualizarPanelDerecho(escala) {
+    var marcoTree = document.getElementById('marco-legal-tree');
+
+    // Configuración Penta-Hélice
+    var ttGov = document.getElementById('ph-tt-gov');
+    var ttAca = document.getElementById('ph-tt-aca');
+    var ttPri = document.getElementById('ph-tt-pri');
+    var ttSoc = document.getElementById('ph-tt-soc');
+    var ttEnv = document.getElementById('ph-tt-env');
+
+    if (!marcoTree || !ttGov) return;
+
+    var htmlLeyes = "";
+
+    if (escala === 'mundial') {
+        htmlLeyes += '<a href="https://www.gob.mx/t-mec" target="_blank" class="legal-card level-mundial">📜 T-MEC<br><small>Tratado entre México, EE.UU. y Canadá</small></a>';
+        htmlLeyes += '<a href="https://www.un.org/sustainabledevelopment/es/objetivos-de-desarrollo-sostenible/" target="_blank" class="legal-card level-mundial">🌎 Objetivos de Desarrollo Sostenible<br><small>Agenda 2030 (ONU)</small></a>';
+
+        ttGov.innerHTML = "<b>Gobierno Nacional:</b><br>Secretaría de Relaciones Exteriores, Economía";
+        ttAca.innerHTML = "<b>Academia:</b><br>Universidades Nacionales, IIEc UNAM";
+        ttPri.innerHTML = "<b>Sector Privado:</b><br>Corporaciones Multinacionales, CONCAMIN";
+        ttSoc.innerHTML = "<b>Sociedad Civil:</b><br>ONGs Internacionales";
+        ttEnv.innerHTML = "<b>Ambiente:</b><br>Tratados Climáticos Globales";
+
+    } else if (escala === 'nacional') {
+        htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf" target="_blank" class="legal-card level-nacional">⚖️ Constitución Política de los E.U.M.<br><small>Artículos 25, 26, 27 y 115</small></a>';
+        htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGAHOTDU_011220.pdf" target="_blank" class="legal-card level-nacional">📘 Ley General de Asentamientos Humanos<br><small>LGAHOTDU</small></a>';
+        htmlLeyes += '<a href="https://www.dof.gob.mx/nota_detalle.php?codigo=5643444&fecha=22/02/2022" target="_blank" class="legal-card level-nacional">📗 NOM-001-SEDATU-2021<br><small>Espacios Públicos</small></a>';
+
+        ttGov.innerHTML = "<b>Gobierno Federal:</b><br>SEDATU, SEMARNAT, INEGI";
+        ttAca.innerHTML = "<b>Academia:</b><br>CONAHCYT, Centros Públicos de Inv.";
+        ttPri.innerHTML = "<b>Sector Privado:</b><br>Cámaras Industriales Nacionales (CANACINTRA)";
+        ttSoc.innerHTML = "<b>Sociedad Civil:</b><br>Colegios de Especialistas";
+        ttEnv.innerHTML = "<b>Ambiente:</b><br>LGEEPA y Normativas Federales";
+
+    } else if (escala === 'estatal') {
+        htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGAHOTDU_011220.pdf" target="_blank" class="legal-card level-nacional">📘 LGAHOTDU (Nacional)</a>';
+        htmlLeyes += '<a href="https://ordenjuridico.gob.mx/" target="_blank" class="legal-card level-estatal">📙 Constitución Política del Estado<br><small>Soberanía y Ordenamiento</small></a>';
+        htmlLeyes += '<a href="https://ordenjuridico.gob.mx/" target="_blank" class="legal-card level-estatal">📒 Ley Estatal de Asentamientos Humanos<br><small>Regulación Territorial</small></a>';
+
+        ttGov.innerHTML = "<b>Gobierno Estatal:</b><br>Gobernador, Sec. de Desarrollo Urbano del Edo.";
+        ttAca.innerHTML = "<b>Academia:</b><br>Universidades Estatales, Tecnológicos";
+        ttPri.innerHTML = "<b>Sector Privado:</b><br>Clústeres Industriales Estatales";
+        ttSoc.innerHTML = "<b>Sociedad Civil:</b><br>Sindicatos, Asociaciones Civiles Estatales";
+        ttEnv.innerHTML = "<b>Ambiente:</b><br>Procuraduría Ambiental Estatal";
+
+    } else if (escala === 'municipio') {
+        htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGAHOTDU_011220.pdf" target="_blank" class="legal-card level-nacional">📘 LGAHOTDU (Nacional)</a>';
+        htmlLeyes += '<a href="https://ordenjuridico.gob.mx/" target="_blank" class="legal-card level-estatal">📒 Ley Estatal de AA.HH. (Estatal)</a>';
+        htmlLeyes += '<a href="https://www.gob.mx/incedm" target="_blank" class="legal-card level-municipal">📕 Bando de Policía y Gobierno<br><small>Administración Local</small></a>';
+        htmlLeyes += '<a href="https://sistemas.sedatu.gob.mx/regisdocs/siga/" target="_blank" class="legal-card level-municipal">📓 P.M.D.U.<br><small>Programa Municipal de Desarrollo Urbano</small></a>';
+        htmlLeyes += '<a href="https://sistemas.sedatu.gob.mx/regisdocs/siga/" target="_blank" class="legal-card level-municipal">📔 Planes Parciales / Reglamentos<br><small>Zonificación de usos de suelo</small></a>';
+
+        ttGov.innerHTML = "<b>Gobierno Local:</b><br>Cabildo, IMPLAN, Dir. de Obras Públicas";
+        ttAca.innerHTML = "<b>Academia:</b><br>Escuelas Locales, Institutos de Capacitación";
+        ttPri.innerHTML = "<b>Sector Privado:</b><br>PyMES Locales, Comercio de Barrio";
+        ttSoc.innerHTML = "<b>Sociedad Civil:</b><br>Comités Vecinales, Jefes de Manzana";
+        ttEnv.innerHTML = "<b>Ambiente/Comunidad:</b><br>Protección Civil Municipal";
+    }
+
+    marcoTree.innerHTML = htmlLeyes;
 }
 
 function showSection(id) {
     document.querySelectorAll('.main-content-panel').forEach(p => p.style.display = 'none');
     var target = document.getElementById(id); if (target) target.style.display = 'block';
     var leftSidebar = document.getElementById('left-sidebar-container');
-    var rightSidebar = document.getElementById('right-sidebar-container');
     if (id === 'inicio') {
         if (leftSidebar) leftSidebar.style.display = 'flex';
-        if (rightSidebar) rightSidebar.style.display = 'flex';
         if (map) setTimeout(() => map.invalidateSize(), 200);
     } else {
         if (leftSidebar) leftSidebar.style.display = 'none';
-        if (rightSidebar) rightSidebar.style.display = 'none';
     }
     document.querySelectorAll('.nav-button').forEach(n => {
         n.classList.remove('active');
@@ -683,4 +804,65 @@ function actualizarLeyenda(breaks, moneda) {
     `;
     div.innerHTML = html;
     overlay.style.display = 'block';
+}
+
+// ==========================================
+// MODAL PENTA-HELICE (DERECHOS Y OBLIGACIONES)
+// ==========================================
+function mostrarModalPenta(actorDef) {
+    if (document.getElementById('penta-modal')) {
+        document.getElementById('penta-modal').remove();
+    }
+
+    var info = { titulo: '', derechos: '', obligaciones: '' };
+
+    if (currentScaleType === 'mundial' || currentScaleType === 'nacional') {
+        if (actorDef === 'gov') { info.titulo = "Gobierno Central"; info.derechos = "Emitir política industrial macro; captar IED."; info.obligaciones = "Orquestar soberanía económica, seguridad nacional y conectividad logística clave."; }
+        else if (actorDef === 'aca') { info.titulo = "Academia e Investigación Macro"; info.derechos = "Acceso al presupuesto y fondos nacionales."; info.obligaciones = "Fomentar innovación dura (patentes, R&D) y formación de calidad (capital humano avanzado)."; }
+        else if (actorDef === 'pri') { info.titulo = "Grandes Corporativos y Transnacionales"; info.derechos = "Garantías del T-MEC, infraestructura portuaria."; info.obligaciones = "Inversiones, encadenamiento territorial transparente y sujeción a normativas federales."; }
+        else if (actorDef === 'soc') { info.titulo = "Sociedad Civil Organizada"; info.derechos = "Participación e influencia en políticas públicas estructuradas."; info.obligaciones = "Auditar la gobernanza y cohesión territorial a nivel país."; }
+        else if (actorDef === 'env') { info.titulo = "Medio Ambiente Federal"; info.derechos = "Amparo bajo tratados internacionales de protección (Acuerdo de París)."; info.obligaciones = "Decreto de Áreas Naturales Protegidas, garantizar soberanía energética hídrica."; }
+    } else if (currentScaleType === 'estatal') {
+        if (actorDef === 'gov') { info.titulo = "Gobierno Estatal"; info.derechos = "Expropiación, desarrollo de planes de infraestructura, atracción de inversión Estatal."; info.obligaciones = "Proveer movilidad regional (sistemas de transporte masivo) y Planes Estatales de AA.HH."; }
+        else if (actorDef === 'aca') { info.titulo = "Universidades Estatales y Tecnológicos"; info.derechos = "Vincular programas teóricos con las armadoras o empresas tractoras."; info.obligaciones = "Ofertar especialidades y educación enfocada a la especialización regional automotriz/SEIT."; }
+        else if (actorDef === 'pri') { info.titulo = "Sector Privado Regional / Clústeres"; info.derechos = "Uso de parques industriales y licitaciones estatales."; info.obligaciones = "Conectar la cadena de proveeduría multinacional con empresas locales del Estado."; }
+        else if (actorDef === 'soc') { info.titulo = "Organizaciones y Sindicatos Locales"; info.derechos = "Negociación de contratos y mejoras sectoriales (salarios dignos y condiciones seguras)."; info.obligaciones = "Mitigar segregación, fortalecer calidad de vida desde el entorno asociativo."; }
+        else if (actorDef === 'env') { info.titulo = "Medio Ambiente y Recursos Estatales"; info.derechos = "Defensa y legislación sobre ecosistemas críticos del Estado (ej. Sierras, bosques)."; info.obligaciones = "Amortiguar el impacto masivo por la alta necesidad hídrica de la agro/industria."; }
+    } else {
+        if (actorDef === 'gov') { info.titulo = "Gobierno Municipal"; info.derechos = "Cobro de predial municipal, delimitación de áreas urbanizables."; info.obligaciones = "Emisión de PMDU y Bandos de Policía; dotar agua potable, alumbrado, seguridad vial."; }
+        else if (actorDef === 'aca') { info.titulo = "Educación Comunitaria y Técnica Local"; info.derechos = "Interacción e integración inmediata con el centro escolar comunitario."; info.obligaciones = "Ser núcleos de cohesión social barrial y dotar capacitaciones básicas para el mercado laboral."; }
+        else if (actorDef === 'pri') { info.titulo = "Comercio Micro / Sector Privado Local"; info.derechos = "Beneficiarse del mercado de consumo de la expansión industrial e infraestructura municipal."; info.obligaciones = "Sujetarse estrictamente a usos de suelo locales (no uso industrial en residencial)."; }
+        else if (actorDef === 'soc') { info.titulo = "Vecinos y Residentes del Polígono"; info.derechos = "Exigir no ser gentrificados; gozo de espacios públicos equipados, vivienda accesible."; info.obligaciones = "Responsabilidad cívica comunitaria directa (pago predial oportuno, orden vecinal)."; }
+        else if (actorDef === 'env') { info.titulo = "Micro-Sustentabilidad y Barrio Verde"; info.derechos = "Disponibilidad de parques barriales y corredores verdes sanos."; info.obligaciones = "Actuar como la primera barrera contra la isla de calor y vulnerabilidad habitacional urbana."; }
+    }
+
+    var modal = document.createElement('div');
+    modal.id = 'penta-modal';
+    modal.style.position = 'fixed'; modal.style.top = '0'; modal.style.left = '0';
+    modal.style.width = '100vw'; modal.style.height = '100vh';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+    modal.style.backdropFilter = 'blur(4px)';
+    modal.style.zIndex = '99999'; modal.style.display = 'flex';
+    modal.style.justifyContent = 'center'; modal.style.alignItems = 'center';
+
+    var box = document.createElement('div');
+    box.className = 'dashboard-box';
+    box.style.width = '550px'; box.style.position = 'relative'; box.style.padding = '30px';
+    box.style.borderTop = '4px solid #00e5ff'; box.style.boxShadow = '0 10px 40px rgba(0,0,0,0.8)';
+    box.innerHTML = `
+        <span onclick="document.getElementById('penta-modal').remove()" style="position:absolute; right:20px; top:15px; cursor:pointer; color:#eee; font-weight:bold; font-size:24px; text-shadow: 0 0 5px rgba(0,0,0,0.5);">✕</span>
+        <h3 style="color:#00e5ff; margin-top:0; text-transform:uppercase; border-bottom:1px solid #333; padding-bottom:10px; font-size:18px;">${info.titulo}</h3>
+        <div style="margin-bottom: 20px; font-family: 'Noto Sans', sans-serif;">
+            <b style="color:#fc9272; font-size:15px; display:block; margin-bottom: 5px;">🫴 Derechos o Facultades:</b>
+            <p style="color:#ddd; font-size:14px; margin:0; line-height:1.6;">${info.derechos}</p>
+        </div>
+        <div style="font-family: 'Noto Sans', sans-serif;">
+            <b style="color:#a1d99b; font-size:15px; display:block; margin-bottom: 5px;">⚖️ Obligaciones / Responsabilidades:</b>
+            <p style="color:#ddd; font-size:14px; margin:0; line-height:1.6;">${info.obligaciones}</p>
+        </div>
+    `;
+
+    modal.onclick = function (e) { if (e.target === modal) modal.remove(); };
+    modal.appendChild(box);
+    document.body.appendChild(modal);
 }

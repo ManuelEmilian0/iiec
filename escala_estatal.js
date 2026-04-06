@@ -372,6 +372,32 @@ function actualizarGraficasVinculacion(nombreEstado) {
             }
         });
     }
+
+    // --- SÍNTESIS DINÁMICA: ESTRATO ---
+    var sintesisEstrato = document.getElementById('sintesis-estrato');
+    if (sintesisEstrato && estratoLabels.length > 0) {
+        var maxVal = 0, topEstrato = '';
+        for (var i = 0; i < estratoLabels.length; i++) {
+            if (estratoValues[i] > maxVal) { maxVal = estratoValues[i]; topEstrato = estratoLabels[i]; }
+        }
+        var totalUnidades = estratoValues.reduce((a, b) => a + b, 0);
+        var porcentaje = ((maxVal / totalUnidades) * 100).toFixed(1);
+        sintesisEstrato.innerHTML = `En <b>${nombreEstado}</b>, la mayor concentración pertenece al estrato <span style="color:#00a2ff; font-weight:bold;">${topEstrato}</span> con <b>${maxVal}</b> establecimientos, que representan el <b>${porcentaje}%</b> de la red de proveeduría vinculada.`;
+        sintesisEstrato.style.display = 'block';
+    } else if (sintesisEstrato) {
+        sintesisEstrato.style.display = 'none';
+    }
+
+    // --- SÍNTESIS DINÁMICA: EMPRESA ---
+    var sintesisEmpresa = document.getElementById('sintesis-empresa');
+    if (sintesisEmpresa && topEmpresas.length > 0) {
+        var topEmpresaData = topEmpresas[0];
+        sintesisEmpresa.innerHTML = `<span style="color:#00a2ff; font-weight:bold;">${topEmpresaData.nombre}</span> destaca como el principal actor corporativo dentro de esta red a nivel estatal, articulando <b>${topEmpresaData.total}</b> unidades económicas.`;
+        sintesisEmpresa.style.display = 'block';
+    } else if (sintesisEmpresa) {
+        sintesisEmpresa.style.display = 'none';
+    }
+
 }
 
 // ==========================================
