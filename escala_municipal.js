@@ -193,6 +193,7 @@ function getColorVulnerabilidad(valorTexto) {
 
 function renderizarMapaAgeb(atributo, labelNombre, nombreEstado) {
     if (agebLayer) map.removeLayer(agebLayer);
+    window.filtroAgebNiveles = new Set(); // Reset filter
 
     agebLayer = L.geoJSON(agebRawData, {
         style: function (feature) {
@@ -292,18 +293,18 @@ function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {
             ${titulo} ${infoButtonHtml}
         </div>
         <div style="width: 100%; padding: 0 5px; box-sizing: border-box; margin-bottom: 15px;">
-            <div style="display: flex; width: 100%; height: 22px; border-radius: 4px; border: 1px solid #555; overflow: hidden; cursor: crosshair; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold; color: #111;">
-                <div style="flex: 1; background-color: #fee5d9;" title="Muy Bajo">${cMB > 0 ? cMB : ''}</div>
-                <div style="flex: 1; background-color: #fcae91;" title="Bajo">${cB > 0 ? cB : ''}</div>
-                <div style="flex: 1; background-color: #fb6a4a;" title="Medio">${cM > 0 ? cM : ''}</div>
-                <div style="flex: 1; background-color: #de2d26; color: #fff;" title="Alto">${cA > 0 ? cA : ''}</div>
-                <div style="flex: 1; background-color: #a50f15; color: #fff;" title="Muy Alto">${cMA > 0 ? cMA : ''}</div>
+            <div style="display: flex; width: 100%; height: 22px; border-radius: 4px; border: 1px solid #555; overflow: hidden; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold; color: #111;">
+                <div class="ageb-legend-item" data-nivel="Muy Bajo" onclick="window.toggleAgebNivel('Muy Bajo')" style="flex: 1; background-color: #fee5d9; cursor:pointer;" title="Click para aislar Muy Bajo">${cMB > 0 ? cMB : ''}</div>
+                <div class="ageb-legend-item" data-nivel="Bajo" onclick="window.toggleAgebNivel('Bajo')" style="flex: 1; background-color: #fcae91; cursor:pointer;" title="Click para aislar Bajo">${cB > 0 ? cB : ''}</div>
+                <div class="ageb-legend-item" data-nivel="Medio" onclick="window.toggleAgebNivel('Medio')" style="flex: 1; background-color: #fb6a4a; cursor:pointer;" title="Click para aislar Medio">${cM > 0 ? cM : ''}</div>
+                <div class="ageb-legend-item" data-nivel="Alto" onclick="window.toggleAgebNivel('Alto')" style="flex: 1; background-color: #de2d26; color: #fff; cursor:pointer;" title="Click para aislar Alto">${cA > 0 ? cA : ''}</div>
+                <div class="ageb-legend-item" data-nivel="Muy Alto" onclick="window.toggleAgebNivel('Muy Alto')" style="flex: 1; background-color: #a50f15; color: #fff; cursor:pointer;" title="Click para aislar Muy Alto">${cMA > 0 ? cMA : ''}</div>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 8px;">
                 <span>Muy Bajo</span><span>Muy Alto</span>
             </div>
         </div>
-        <div style="display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #eee;">
+        <div class="ageb-legend-item" data-nivel="Sin dato" onclick="window.toggleAgebNivel('Sin dato')" style="display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #eee; cursor:pointer; width:max-content; padding:2px;">
             <span style="width: 16px; height: 16px; margin-right: 10px; border-radius: 4px; border: 1px solid #777; background: #444444;" title="Polígonos sin información disponible"></span> Sin dato (${conteo['Sin dato'] || 0})
         </div>
         <div style="margin-top:14px; font-weight:bold; color:#ddd; font-size: 13px; margin-bottom: 8px;">Infraestructura Industrial</div>
@@ -369,3 +370,61 @@ function mostrarImagenInfo(imageName) {
     modal.appendChild(closeBtn);
     document.body.appendChild(modal);
 }
+
+// ==========================================
+// FILTRO INTERACTIVO DE LEYENDA MUNICIPAL
+// ==========================================
+window.filtroAgebNiveles = new Set();
+window.toggleAgebNivel = function(nivelText) {
+    if (window.filtroAgebNiveles.has(nivelText)) {
+        window.filtroAgebNiveles.delete(nivelText);
+    } else {
+        window.filtroAgebNiveles.add(nivelText);
+    }
+    
+    var aplicarFiltro = window.filtroAgebNiveles.size > 0;
+    
+    var selects = document.querySelectorAll("#filter-buttons-container select");
+    var selectIndice = selects.length > 1 ? selects[1] : null;
+    var atributo = selectIndice ? selectIndice.value : 'G_INDICE'; 
+
+    if (agebLayer) {
+        agebLayer.eachLayer(function(layer) {
+            var valCat = layer.feature.properties[atributo] || "Sin dato";
+            var normalizado = "";
+            var v = valCat.toString().trim().toUpperCase();
+            if (v === 'MUY ALTO') normalizado = 'Muy Alto';
+            else if (v === 'ALTO') normalizado = 'Alto';
+            else if (v === 'MEDIO') normalizado = 'Medio';
+            else if (v === 'BAJO') normalizado = 'Bajo';
+            else if (v === 'MUY BAJO') normalizado = 'Muy Bajo';
+            else normalizado = 'Sin dato';
+
+            if (aplicarFiltro && !window.filtroAgebNiveles.has(normalizado)) {
+                // Feature Oculto
+                layer.setStyle({ opacity: 0, fillOpacity: 0, weight: 0 });
+                layer.options.interactive = false;
+            } else {
+                // Feature Visible Default
+                layer.setStyle({
+                    color: "#111", weight: 0.5, opacity: 1,
+                    fillColor: getColorVulnerabilidad(valCat), fillOpacity: 0.85
+                });
+                layer.options.interactive = true;
+            }
+        });
+    }
+
+    // Estilo Visual de la Leyenda
+    var legendItems = document.querySelectorAll('.ageb-legend-item');
+    legendItems.forEach(item => {
+        var nivel = item.getAttribute('data-nivel');
+        if (!aplicarFiltro || window.filtroAgebNiveles.has(nivel)) {
+            item.style.opacity = '1';
+            item.style.filter = 'grayscale(0%)';
+        } else {
+            item.style.opacity = '0.35';
+            item.style.filter = 'grayscale(100%)';
+        }
+    });
+};

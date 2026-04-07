@@ -192,15 +192,30 @@ body {
 
 .dashboard-box::-webkit-scrollbar-thumb,
 .control-box::-webkit-scrollbar-thumb {
-  background: #555;
-  /* Color de la barra */
-  border-radius: 3px;
+  background: #00e5ff;
+  border-radius: 4px;
 }
 
 .dashboard-box::-webkit-scrollbar-thumb:hover,
 .control-box::-webkit-scrollbar-thumb:hover {
-  background: #888;
-  /* Color al pasar el mouse */
+  background: #00b3cc;
+}
+
+/* Scroll global del panel izquierdo muy llamativo */
+#left-sidebar-container::-webkit-scrollbar {
+  width: 8px;
+}
+#left-sidebar-container::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.5);
+  border-radius: 4px;
+}
+#left-sidebar-container::-webkit-scrollbar-thumb {
+  background: #00e5ff;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0,229,255,0.8);
+}
+#left-sidebar-container::-webkit-scrollbar-thumb:hover {
+  background: #00b3cc;
 }
 
 /* Títulos */
@@ -613,13 +628,18 @@ strong {
 
 /* A) Fade-in suave para el cambio de pestañas (Inicio, Marco, Metodología) */
 @keyframes fadeInSuave {
-  from {
+   from {
     opacity: 0;
   }
 
   to {
     opacity: 1;
   }
+}
+
+@keyframes bouncePop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 .active-panel {
@@ -1108,9 +1128,31 @@ path.leaflet-interactive {
 }
 
 .penta-node i {
-  font-size: 16px;
-  margin-bottom: 2px;
+  font-size: 24px;
 }
+
+.penta-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #bbb;
+  width: max-content;
+  text-align: center;
+  pointer-events: none;
+  background: rgba(0,0,0,0.5);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.penta-node:hover .penta-label {
+  color: #fff;
+  text-shadow: 0 0 5px #00e5ff;
+}
+
 
 /* Tooltip on hover for penta-nodes */
 .penta-node .penta-tooltip {
@@ -1206,3 +1248,4 @@ path.leaflet-interactive {
   stroke-width: 1.5;
   stroke-dasharray: 4;
 }
+.top5-marker-pulse { animation: opacityPulse 1.2s infinite alternate; } @keyframes opacityPulse { 0% { opacity: 0.5; fill-opacity: 0.5; } 100% { opacity: 1; fill-opacity: 1; } }

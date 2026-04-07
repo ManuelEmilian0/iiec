@@ -98,8 +98,14 @@ function loadLayer(scaleType) {
 
     var vincContainer = document.getElementById('vinculacion-charts-container');
     if (vincContainer) vincContainer.style.display = 'none';
-    if (estratoChart) { estratoChart.destroy(); estratoChart = null; }
-    if (empresaChart) { empresaChart.destroy(); empresaChart = null; }
+
+    var empContainer = document.getElementById('empresas-chart-container');
+    if (empContainer) empContainer.style.display = 'none';
+
+    if (typeof estratoChart !== "undefined" && estratoChart) { estratoChart.destroy(); estratoChart = null; }
+    if (typeof empresaChart !== "undefined" && empresaChart) { empresaChart.destroy(); empresaChart = null; }
+    if (typeof mainChart !== "undefined" && mainChart) { mainChart.destroy(); mainChart = null; }
+    if (window.nacionalTop5Layer) { map.removeLayer(window.nacionalTop5Layer); window.nacionalTop5Layer = null; }
 
     currentScaleType = scaleType;
 
@@ -109,6 +115,36 @@ function loadLayer(scaleType) {
             map.addLayer(window.armadorasContextoGlobalLayer);
         } else {
             map.removeLayer(window.armadorasContextoGlobalLayer);
+        }
+    }
+
+    // Mostrar las armadoras reales (triángulos) a escala nacional
+    if (scaleType === 'nacional') {
+        if (window.armadorasNacionalTriangulosLayer) {
+            if (!map.hasLayer(window.armadorasNacionalTriangulosLayer)) {
+                map.addLayer(window.armadorasNacionalTriangulosLayer);
+            }
+        } else {
+            fetch('armadoras.geojson').then(r => r.json()).then(data => {
+                window.armadorasRawData = data; // Cache
+                var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
+                var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
+                
+                window.armadorasNacionalTriangulosLayer = L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.marker(latlng, { icon: triangleIcon });
+                    },
+                    onEachFeature: function (feature, layer) {
+                        var armName = feature.properties.Empresa || feature.properties.Nombre || 'Armadora';
+                        var armEst = feature.properties.Estado || feature.properties.ESTADO || '';
+                        layer.bindPopup(`<b style="color:#00e5ff;">${armName}</b><br><span style="font-size:11px; color:#aaa;">Armadora Automotriz</span><br><span style="font-size:11px; color:#ccc;">${armEst}</span>`, { className: 'custom-popup' });
+                    }
+                }).addTo(map);
+            }).catch(e => console.error("Error cargando armadoras.geojson:", e));
+        }
+    } else {
+        if (window.armadorasNacionalTriangulosLayer && map.hasLayer(window.armadorasNacionalTriangulosLayer)) {
+            map.removeLayer(window.armadorasNacionalTriangulosLayer);
         }
     }
 
@@ -130,6 +166,10 @@ function loadLayer(scaleType) {
     // Actualizar Panel Derecho Dinámico
     if (typeof actualizarPanelDerecho === "function") {
         actualizarPanelDerecho(scaleType);
+    }
+
+    if (typeof mostrarInstruccionEscala === "function") {
+        mostrarInstruccionEscala(scaleType);
     }
 
     // Delegar lógica a los otros módulos (escala_estatal.js y escala_municipal.js)
@@ -166,6 +206,7 @@ function loadLayer(scaleType) {
         filename = "nacional.geojson";
         zoomCoords = [23.6345, -102.5528]; zoomLevel = 5;
         if (filterBox) filterBox.style.display = 'flex';
+        if (typeof cargarYRenderizarEmpresasCSV === "function") cargarYRenderizarEmpresasCSV();
     }
 
     fetch(filename)
@@ -571,6 +612,10 @@ function setupUI() {
                 <span>Simbología</span> <span id="legend-arrow" class="drop-arrow">▼</span>
             </h4>
             <div id="legend-content" class="dropdown-content show"><small style="color:#aaa">Seleccione una escala</small></div>
+            <div id="opacity-control" class="dropdown-content show" style="border-top:1px solid rgba(255,255,255,0.1); margin-top:10px; padding-top:10px;">
+                <label style="font-size:11px; color:#ddd; font-weight:bold; display:block; margin-bottom:5px; text-transform:uppercase;">Opacidad de Capas</label>
+                <input type="range" min="0.0" max="1" step="0.05" value="1" style="width:100%; cursor:pointer; pointer-events:auto;" oninput="actualizarTransparenciaGlobal(this.value)" />
+            </div>
         `;
         leftContainer.appendChild(legendBox);
     }
@@ -612,12 +657,13 @@ function setupUI() {
                         <line x1="50%" y1="50%" x2="25%" y2="85%"></line>
                         <line x1="50%" y1="50%" x2="15%" y2="40%"></line>
                     </svg>
+                    <div style="font-size:11px; color:#aaa; text-align:center; position:absolute; top:-15px; width:100%; font-style:italic;">Selecciona uno.</div>
                     
-                    <div class="penta-node node-gov" id="ph-gov" onclick="mostrarModalPenta('gov')"><i>🏛️</i>Gob<div class="penta-tooltip" id="ph-tt-gov">Gobierno</div></div>
-                    <div class="penta-node node-aca" id="ph-aca" onclick="mostrarModalPenta('aca')"><i>🎓</i>Aca<div class="penta-tooltip" id="ph-tt-aca">Academia</div></div>
-                    <div class="penta-node node-pri" id="ph-pri" onclick="mostrarModalPenta('pri')"><i>🏢</i>Pri<div class="penta-tooltip" id="ph-tt-pri">S. Privado</div></div>
-                    <div class="penta-node node-soc" id="ph-soc" onclick="mostrarModalPenta('soc')"><i>👥</i>Soc<div class="penta-tooltip" id="ph-tt-soc">Soc. Civil</div></div>
-                    <div class="penta-node node-env" id="ph-env" onclick="mostrarModalPenta('env')"><i>🌱</i>Amb<div class="penta-tooltip" id="ph-tt-env">Ambiente</div></div>
+                    <div class="penta-node node-gov" id="ph-gov" onclick="mostrarModalPenta('gov')"><i>🏛️</i><span class="penta-label">Gobierno</span><div class="penta-tooltip" id="ph-tt-gov">Gobierno</div></div>
+                    <div class="penta-node node-aca" id="ph-aca" onclick="mostrarModalPenta('aca')"><i>🎓</i><span class="penta-label">Academia</span><div class="penta-tooltip" id="ph-tt-aca">Academia</div></div>
+                    <div class="penta-node node-pri" id="ph-pri" onclick="mostrarModalPenta('pri')"><i>🏢</i><span class="penta-label">S. Privado</span><div class="penta-tooltip" id="ph-tt-pri">S. Privado</div></div>
+                    <div class="penta-node node-soc" id="ph-soc" onclick="mostrarModalPenta('soc')"><i>👥</i><span class="penta-label">Soc. Civil</span><div class="penta-tooltip" id="ph-tt-soc">Soc. Civil</div></div>
+                    <div class="penta-node node-env" id="ph-env" onclick="mostrarModalPenta('env')"><i>🌱</i><span class="penta-label">Ambiente</span><div class="penta-tooltip" id="ph-tt-env">Ambiente</div></div>
                 </div>
             </div>
         `;
@@ -634,6 +680,16 @@ function setupUI() {
             <div id="stats-content" class="dropdown-content show">
                 <div style="height:240px; position:relative; width: 100%;"><canvas id="myChart"></canvas></div>
                 <div id="dynamic-summary" class="dynamic-summary-box"></div>
+                
+                <!-- GRÁFICAS MUNDIAL/NACIONAL -->
+                <div id="empresas-chart-container" style="display:none;">
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                    <h4 class="panel-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Top de empresas con mayor rendimiento en activos en millones de pesos</h4>
+                    <div style="height:260px; position:relative;"><canvas id="empresasLineChart"></canvas></div>
+                    <div id="sintesis-empresasLine" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                </div>
+
+                <!-- GRÁFICAS ESTATAL -->
                 <div id="vinculacion-charts-container" style="display:none;">
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distribución por Estrato</h4>
@@ -866,3 +922,304 @@ function mostrarModalPenta(actorDef) {
     modal.appendChild(box);
     document.body.appendChild(modal);
 }
+
+// ==========================================
+// CONTROL DE TRANSPARENCIA GENERAL
+// ==========================================
+window.actualizarTransparenciaGlobal = function (val) {
+    if (typeof map !== 'undefined' && map !== null) {
+        if (map.getPane('overlayPane')) map.getPane('overlayPane').style.opacity = val;
+        if (map.getPane('markerPane')) map.getPane('markerPane').style.opacity = val;
+        if (map.getPane('tooltipPane')) map.getPane('tooltipPane').style.opacity = val;
+    }
+};
+
+// ==========================================
+// TOOLTIP INTERACTIVO (POP-UP TUTORIAL)
+// ==========================================
+window.mostrarInstruccionEscala = function (escala) {
+    if (document.getElementById('escala-instruccion-pop')) {
+        document.getElementById('escala-instruccion-pop').remove();
+    }
+
+    var cajaFiltros = document.getElementById('filter-container-box');
+    if (!cajaFiltros) return;
+
+    var msj = "";
+    if (escala === 'mundial') msj = "Comienza seleccionando un <b>Sector</b>.";
+    if (escala === 'nacional') msj = "Selecciona un <b>Sector</b> para explorarlo.";
+    if (escala === 'estatal') msj = "Selecciona un <b>Clúster Sectorial</b>.";
+    if (escala === 'municipio') msj = "Elige una <b>Entidad</b> para estudiar su vulnerabilidad.";
+
+    var pop = document.createElement('div');
+    pop.id = 'escala-instruccion-pop';
+    pop.innerHTML = msj;
+    pop.style.position = 'absolute';
+    pop.style.top = '-30px';
+    pop.style.right = '20px';
+    pop.style.background = '#00e5ff';
+    pop.style.color = '#111';
+    pop.style.padding = '8px 12px';
+    pop.style.borderRadius = '8px';
+    pop.style.fontWeight = 'bold';
+    pop.style.fontSize = '12px';
+    pop.style.boxShadow = '0 4px 15px rgba(0,229,255,0.6)';
+    pop.style.zIndex = '9999';
+    pop.style.animation = 'fadeInSuave 0.5s ease-out, bouncePop 2s infinite';
+    pop.style.cursor = 'pointer';
+
+    pop.innerHTML += `<div style="position:absolute; bottom:-6px; right:20px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #00e5ff;"></div>`;
+
+    pop.onclick = function () { pop.remove(); };
+
+    cajaFiltros.style.position = 'relative';
+    cajaFiltros.appendChild(pop);
+
+    setTimeout(() => { if (document.getElementById('escala-instruccion-pop')) pop.remove(); }, 6000);
+};
+
+// ==========================================
+// GRÁFICA TEMPORAL TOP 5 EMPRESAS (NACIONAL)
+// ==========================================
+window.empresasCSVDataCache = null;
+
+window.cargarYRenderizarEmpresasCSV = function () {
+    var chartContainer = document.getElementById('empresas-chart-container');
+    if (chartContainer) chartContainer.style.display = 'block';
+
+    if (window.empresasCSVDataCache) {
+        procesarDatosEmpresas(window.empresasCSVDataCache);
+    } else {
+        fetch('empresas.csv')
+            .then(res => res.text())
+            .then(csvText => {
+                window.empresasCSVDataCache = parsearCSVEmpresas(csvText);
+                procesarDatosEmpresas(window.empresasCSVDataCache);
+            })
+            .catch(err => console.error("Error cargando empresas.csv:", err));
+    }
+};
+
+window.parsearCSVEmpresas = function (str) {
+    var lineas = str.trim().split('\n');
+    var resultado = [];
+    var headers = lineas[0].split(',');
+
+    for (var i = 1; i < lineas.length; i++) {
+        var obj = {};
+        var currentline = lineas[i].split(',');
+        for (var j = 0; j < headers.length; j++) {
+            if (headers[j]) {
+                obj[headers[j].trim()] = currentline[j] ? currentline[j].trim() : null;
+            }
+        }
+        resultado.push(obj);
+    }
+    return resultado;
+};
+
+window.procesarDatosEmpresas = function (datos) {
+    var ingresosPorEmpresa = {};
+    datos.forEach(d => {
+        var nombre = d['Empresa'];
+        if (!nombre) return;
+        var ingreso = parseFloat(d['Ingresos_Millones']) || 0;
+        if (!ingresosPorEmpresa[nombre]) ingresosPorEmpresa[nombre] = 0;
+        ingresosPorEmpresa[nombre] += ingreso;
+    });
+
+    var top5Nombres = Object.keys(ingresosPorEmpresa)
+        .sort((a, b) => ingresosPorEmpresa[b] - ingresosPorEmpresa[a])
+        .slice(0, 5);
+
+    var aniosSet = new Set();
+    datos.forEach(d => { if (d['Año']) aniosSet.add(d['Año']); });
+    var anios = Array.from(aniosSet).sort((a, b) => parseInt(a) - parseInt(b));
+
+    var datasetsClasificados = [];
+    var coloresLineas = ['#00e5ff', '#ff3366', '#d59f0f', '#00e676', '#d500f9'];
+
+    top5Nombres.forEach((empresaNombre, index) => {
+        var dataValues = [];
+        anios.forEach(anio => {
+            var registro = datos.find(d => d['Empresa'] === empresaNombre && d['Año'] === anio);
+            if (registro) {
+                dataValues.push(parseFloat(registro['Ingresos_Millones']) || 0);
+            } else {
+                dataValues.push(null);
+            }
+        });
+
+        datasetsClasificados.push({
+            label: empresaNombre,
+            data: dataValues,
+            borderColor: coloresLineas[index % coloresLineas.length],
+            backgroundColor: coloresLineas[index % coloresLineas.length],
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#222'
+        });
+    });
+
+    const canvasObj = document.getElementById('empresasLineChart');
+    if (!canvasObj) return;
+    const ctx = canvasObj.getContext('2d');
+
+    if (window.empresasLineChartInstance) {
+        window.empresasLineChartInstance.destroy();
+    }
+
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    window.empresasLineChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: anios,
+            datasets: datasetsClasificados
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { color: '#ccc', font: { size: 10 }, boxWidth: 12 }
+                },
+                datalabels: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(20,20,20,0.95)',
+                    titleColor: '#00e5ff',
+                    bodyColor: '#fff',
+                    borderColor: '#555',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed.y !== null) {
+                                label += '$' + context.parsed.y.toLocaleString('es-MX') + ' M';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                y: {
+                    ticks: {
+                        color: '#aaa',
+                        callback: function (value) { return '$' + value; }
+                    },
+                    grid: { color: '#333', borderDash: [2, 2] }
+                }
+            }
+        }
+    });
+
+    if (top5Nombres.length > 0) {
+        var winnerName = top5Nombres[0];
+        var winnerRecord = datos.filter(d => d['Empresa'] === winnerName).sort((a, b) => parseFloat(b['Ingresos_Millones']) - parseFloat(a['Ingresos_Millones']))[0];
+        var maxWinnerIngreso = window.Intl ? new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 }).format(winnerRecord['Ingresos_Millones']) : winnerRecord['Ingresos_Millones'];
+        var winnerModel = winnerRecord['Vía de desarrollo'] || "Alta Tecnología";
+
+        var sintesisDiv = document.getElementById('sintesis-empresasLine');
+        if (sintesisDiv) {
+            sintesisDiv.innerHTML = `El dominio corporativo a escala nacional está encabezado históricamente por <b style="color:#00e5ff;">${winnerName}</b>, alcanzando picos de <b>$${maxWinnerIngreso} Millones</b>. Esto cimienta firmemente la ruta de <span style="text-shadow: 1px 1px 2px #000;">${winnerModel}</span> dentro de la red industrial y de flujos interregionales mostrada en el mapa.`;
+            sintesisDiv.style.display = 'block';
+        }
+
+        // --- LÓGICA DE ILUMINACIÓN TOP 5 EN EL MAPA ---
+        if (typeof window.iluminarTop5Nacional === 'function') {
+            window.iluminarTop5Nacional(top5Nombres, coloresLineas);
+        }
+    }
+};
+
+window.nacionalTop5Layer = null;
+
+window.iluminarTop5Nacional = function (top5Nombres, colores) {
+    if (window.nacionalTop5Layer) {
+        map.removeLayer(window.nacionalTop5Layer);
+        window.nacionalTop5Layer = null;
+    }
+
+    var normalizar = (str) => {
+        if (!str) return "";
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    };
+
+    var top5Norm = top5Nombres.map(n => normalizar(n));
+
+    var cargarLayer = function (data) {
+        var top5Features = data.features.filter(f => {
+            var n1 = normalizar(f.properties['Nombre de empresa'] || "");
+            var n2 = normalizar(f.properties['Razón Social'] || "");
+            return top5Norm.some(t => {
+                if (t === "AAM MAQUILADORA MEXICO" && (n1.includes("AAM MAQUILADORA") || n2.includes("AAM MAQUILADORA") || n2.includes("METALDYNE"))) return true;
+                if (t === "ACTIA DE MEXICO" && (n1.includes("ACTIA") || n2.includes("ACTIA"))) return true;
+                return (n1 && n1.includes(t)) || (n2 && n2.includes(t)) || (t && t.includes(n1) && n1.length > 3);
+            });
+        });
+
+        window.nacionalTop5Layer = L.geoJSON(top5Features, {
+            pointToLayer: function (feature, latlng) {
+                var n1 = normalizar(feature.properties['Nombre de empresa'] || "");
+                var n2 = normalizar(feature.properties['Razón Social'] || "");
+                
+                var index = top5Norm.findIndex(t => {
+                   if (t === "AAM MAQUILADORA MEXICO" && (n1.includes("AAM MAQUILADORA") || n2.includes("AAM MAQUILADORA") || n2.includes("METALDYNE"))) return true;
+                   if (t === "ACTIA DE MEXICO" && (n1.includes("ACTIA") || n2.includes("ACTIA"))) return true;
+                   return (n1 && n1.includes(t)) || (n2 && n2.includes(t)) || (t && t.includes(n1) && n1.length > 3);
+                });
+                
+                var colorHex = (index !== -1 && colores[index]) ? colores[index] : '#fff';
+
+                var estratoStr = (feature.properties['Estrato'] || '').toString().toLowerCase();
+                var size = 4;
+                if (estratoStr.includes('0 a 5') || estratoStr.includes('6 a 10')) size = 5;
+                if (estratoStr.includes('11 a 30') || estratoStr.includes('31 a 50')) size = 7;
+                if (estratoStr.includes('51 a 100') || estratoStr.includes('101 a 250')) size = 10;
+                if (estratoStr.includes('251 y más')) size = 14;
+
+                return L.circleMarker(latlng, {
+                    radius: size,
+                    fillColor: colorHex,
+                    color: '#1a1a1a',
+                    weight: 1.5,
+                    opacity: 1,
+                    fillOpacity: 0.9,
+                    className: 'top5-marker-pulse'
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                var nombre = feature.properties['Nombre de empresa'] || feature.properties['Razón Social'] || 'Unidad Económica';
+                var estrato = feature.properties['Estrato'] || 'Desconocido';
+                var mpo = feature.properties['Municipio'] || '';
+                var ent = feature.properties['Entidad'] || '';
+                layer.bindPopup(`<div style="text-align:center;">
+                                    <b style="color:#00e5ff; font-size:14px;">${nombre}</b><br>
+                                    <span style="font-size:11px; color:#ddd;">Top 5 Nacional</span><br>
+                                    <span style="font-size:11px; color:#aaa;">${mpo}, ${ent}</span><br>
+                                    <span style="font-size:11px; color:#aaa;">Estrato: ${estrato}</span>
+                                 </div>`);
+            }
+        });
+
+        window.nacionalTop5Layer.addTo(map);
+    };
+
+    if (window.denueRawData) {
+        cargarLayer(window.denueRawData);
+    } else {
+        fetch('denue.geojson').then(r => r.json()).then(data => {
+            window.denueRawData = data;
+            cargarLayer(data);
+        }).catch(e => console.error("Error al cargar denue.geojson para el top 5:", e));
+    }
+};

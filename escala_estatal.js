@@ -148,22 +148,26 @@ function filtrarPorEstado(nombreEstado) {
     }
 
     if (denueEstado.length > 0) {
+        denueEstado.sort((a, b) => getRadioEstrato(b.properties.Estrato) - getRadioEstrato(a.properties.Estrato));
         currentGeoJSONLayer = L.geoJSON(denueEstado, {
             pointToLayer: function (feature, latlng) {
                 var sector = feature.properties.Conjunto || feature.properties['Industrias agrupadas'] || "Otros"; if (sector === "Actividades SEIT") sector = "Servicios SEIT";
-                return L.circleMarker(latlng, { radius: 5, fillColor: getColorConjunto(sector), color: "#ffffff", weight: 0.8, opacity: 0, fillOpacity: 0 });
+                var radio = getRadioEstrato(feature.properties.Estrato);
+                return L.circleMarker(latlng, { radius: radio, fillColor: getColorConjunto(sector), color: "#ffffff", weight: 0.8, opacity: 0, fillOpacity: 0 });
             },
             onEachFeature: function (feature, layer) {
                 animDenue.push(layer);
-                layer.bindPopup(`<b>${feature.properties.Nombre || feature.properties.Empresa || feature.properties['Nombre de empresa']}</b><br><small>${feature.properties.Conjunto || feature.properties['Industrias agrupadas'] || 'Otros'}</small>`);
+                layer.bindPopup(`<b>${feature.properties.Nombre || feature.properties.Empresa || feature.properties['Nombre de empresa']}</b><br><small>${feature.properties.Conjunto || feature.properties['Industrias agrupadas'] || 'Otros'}</small><br><small>Estrato: ${normalizarEstrato(feature.properties.Estrato)}</small>`);
             }
         }).addTo(map);
     }
 
     if (armadorasEstado.length > 0) {
+        var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
+        var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
         armadorasLayer = L.geoJSON(armadorasEstado, {
             pointToLayer: function (feature, latlng) {
-                return L.circleMarker(latlng, { radius: 12, fillColor: "#00e5ff", color: "#fff", weight: 3, opacity: 0, fillOpacity: 0 });
+                return L.marker(latlng, { icon: triangleIcon, opacity: 0 });
             },
             onEachFeature: function (feature, layer) { animArmadoras.push(layer); }
         }).addTo(map);
@@ -179,7 +183,8 @@ function filtrarPorEstado(nombreEstado) {
         setTimeout(() => {
             animIso15.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.8, color: getColorIsocrona(15), fillColor: getColorIsocrona(15) }));
             animArmadoras.forEach(l => {
-                l.setStyle({ opacity: 1, fillOpacity: 1 });
+                if (l.setStyle) l.setStyle({ opacity: 1, fillOpacity: 1 });
+                if (l.setOpacity) l.setOpacity(1);
                 l.bindTooltip(l.feature.properties.NOMBRE || l.feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] });
             });
             denue1.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
@@ -212,8 +217,10 @@ function filtrarPorEstado(nombreEstado) {
 function dibujarArmadorasPuntos(features) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (!features || features.length === 0) return;
+    var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
+    var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
     armadorasLayer = L.geoJSON(features, {
-        pointToLayer: function (feature, latlng) { return L.circleMarker(latlng, { radius: 12, fillColor: "#00e5ff", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1 }); },
+        pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: triangleIcon, opacity: 1 }); },
         onEachFeature: function (feature, layer) { layer.bindTooltip(feature.properties.NOMBRE || feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] }); }
     }).addTo(map);
 }
@@ -274,13 +281,13 @@ function normalizarEstrato(estrato) {
     if (!estrato) return "Sin dato";
     var s = estrato.toString().trim().replace(/\s+$/, '');
     var upper = s.toUpperCase();
-    if (upper === 'MICRO' || s === '0 a 5 personas') return 'Micro (0-5)';
-    if (upper === 'PEQUEÑA' || s === '6 a 10 personas') return 'Pequeña (6-10)';
-    if (s === '11 a 30 personas') return 'Pequeña (11-30)';
-    if (s === '31 a 50 personas') return 'Mediana (31-50)';
-    if (upper === 'MEDIANA' || s === '51 a 100 personas') return 'Mediana (51-100)';
-    if (s === '101 a 250 personas') return 'Grande (101-250)';
-    if (upper === 'GRANDE' || s === '251 y más personas') return 'Grande (251+)';
+    if (upper === 'MICRO' || s === '0 a 5 personas') return 'Micro (0-5 personas ocupadas)';
+    if (upper === 'PEQUEÑA' || s === '6 a 10 personas') return 'Pequeña (6-10 personas ocupadas)';
+    if (s === '11 a 30 personas') return 'Pequeña (11-30 personas ocupadas)';
+    if (s === '31 a 50 personas') return 'Mediana (31-50 personas ocupadas)';
+    if (upper === 'MEDIANA' || s === '51 a 100 personas') return 'Mediana (51-100 personas ocupadas)';
+    if (s === '101 a 250 personas') return 'Grande (101-250 personas ocupadas)';
+    if (upper === 'GRANDE' || s === '251 y más personas') return 'Grande (251 y más personas ocupadas)';
     return s || 'Sin dato';
 }
 
@@ -301,7 +308,7 @@ function actualizarGraficasVinculacion(nombreEstado) {
     var conteoEstrato = {};
     featuresEstado.forEach(f => { var est = normalizarEstrato(f.properties.Estrato); conteoEstrato[est] = (conteoEstrato[est] || 0) + 1; });
 
-    var ordenEstratos = ['Micro (0-5)', 'Pequeña (6-10)', 'Pequeña (11-30)', 'Mediana (31-50)', 'Mediana (51-100)', 'Grande (101-250)', 'Grande (251+)', 'Sin dato'];
+    var ordenEstratos = ['Micro (0-5 personas ocupadas)', 'Pequeña (6-10 personas ocupadas)', 'Pequeña (11-30 personas ocupadas)', 'Mediana (31-50 personas ocupadas)', 'Mediana (51-100 personas ocupadas)', 'Grande (101-250 personas ocupadas)', 'Grande (251 y más personas ocupadas)', 'Sin dato'];
     var estratoLabels = [], estratoValues = [];
     ordenEstratos.forEach(key => { if (conteoEstrato[key] > 0) { estratoLabels.push(key); estratoValues.push(conteoEstrato[key]); } });
     Object.keys(conteoEstrato).forEach(key => { if (!ordenEstratos.includes(key) && conteoEstrato[key] > 0) { estratoLabels.push(key); estratoValues.push(conteoEstrato[key]); } });
@@ -344,7 +351,7 @@ function actualizarGraficasVinculacion(nombreEstado) {
     var estratosPresentes = new Set();
     topEmpresas.forEach(e => Object.keys(empresaEstrato[e.nombre]).forEach(est => estratosPresentes.add(est)));
 
-    var coloresBarrasEstrato = { 'Micro (0-5)': '#fee5d9', 'Pequeña (6-10)': '#fcbba1', 'Pequeña (11-30)': '#fc9272', 'Mediana (31-50)': '#fb6a4a', 'Mediana (51-100)': '#ef3b2c', 'Grande (101-250)': '#cb181d', 'Grande (251+)': '#99000d', 'Sin dato': '#555555' };
+    var coloresBarrasEstrato = { 'Micro (0-5 personas ocupadas)': '#fee5d9', 'Pequeña (6-10 personas ocupadas)': '#fcbba1', 'Pequeña (11-30 personas ocupadas)': '#fc9272', 'Mediana (31-50 personas ocupadas)': '#fb6a4a', 'Mediana (51-100 personas ocupadas)': '#ef3b2c', 'Grande (101-250 personas ocupadas)': '#cb181d', 'Grande (251 y más personas ocupadas)': '#99000d', 'Sin dato': '#555555' };
     var datasets = [];
     ordenEstratos.forEach(est => {
         if (estratosPresentes.has(est)) datasets.push({ label: est, data: topEmpresas.map(e => empresaEstrato[e.nombre][est] || 0), backgroundColor: coloresBarrasEstrato[est] || '#888', borderColor: '#333', borderWidth: 0.5 });
@@ -403,6 +410,15 @@ function actualizarGraficasVinculacion(nombreEstado) {
 // ==========================================
 // UTILIDADES ESTATALES
 // ==========================================
+function getRadioEstrato(estrato) {
+    var e = normalizarEstrato(estrato);
+    if (e.includes('Micro')) return 4;
+    if (e.includes('Pequeña')) return 6;
+    if (e.includes('Mediana')) return 9;
+    if (e.includes('Grande')) return 13;
+    return 4;
+}
+
 function getColorConjunto(conjunto) {
     const c = (conjunto || '').toString().trim();
     if (c.includes('Automo')) return '#ff3333';
@@ -424,16 +440,44 @@ function actualizarLeyendaIsocronas() {
     if (!div || !overlay) return;
 
     div.innerHTML = `
-        <div style="margin-bottom:8px; font-weight:bold; color:#00e5ff">Tiempo en Auto</div>
+        <div style="margin: 4px 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Tiempo en Auto</div>
         <div class="legend-item"><span class="legend-color" style="background:rgba(0, 255, 0, 0.8); border:1px solid #00ff00"></span> 0 - 15 Minutos</div>
         <div class="legend-item"><span class="legend-color" style="background:rgba(255, 255, 0, 0.6); border:1px solid #ffff00"></span> 15 - 30 Minutos</div>
         <div class="legend-item"><span class="legend-color" style="background:rgba(255, 69, 0, 0.3); border:1px solid #ff4500"></span> 30 - 60 Minutos</div>
-        <div style="margin:10px 0 5px 0; font-weight:bold; color:#ddd">Proveedores</div>
-        <div class="legend-item"><span class="legend-color" style="background:#ff3333; border:1px solid #fff; border-radius:50%"></span> Automotriz</div>
-        <div class="legend-item"><span class="legend-color" style="background:#2196f3; border:1px solid #fff; border-radius:50%"></span> Electrónica</div>
-        <div class="legend-item"><span class="legend-color" style="background:#9c27b0; border:1px solid #fff; border-radius:50%"></span> Servicios SEIT</div>
-        <div class="legend-item"><span class="legend-color" style="background:#ffc107; border:1px solid #fff; border-radius:50%"></span> Eléctrica</div>
-        <div style="margin-top:8px" class="legend-item"><span class="legend-color" style="background:#00e5ff; border-radius:50%; border:2px solid white"></span> Planta Armadora</div>
+        
+        <div style="display:flex; justify-content:space-between; margin-top:10px; gap: 10px;">
+            <div style="flex:1;">
+                <div style="margin:0 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Proveedores</div>
+                <div class="legend-item"><span class="legend-color" style="background:#ff3333; border:1px solid #fff; border-radius:50%"></span> Automotriz</div>
+                <div class="legend-item"><span class="legend-color" style="background:#2196f3; border:1px solid #fff; border-radius:50%"></span> Electrónica</div>
+                <div class="legend-item"><span class="legend-color" style="background:#9c27b0; border:1px solid #fff; border-radius:50%"></span> Servicios SEIT</div>
+                <div class="legend-item"><span class="legend-color" style="background:#ffc107; border:1px solid #fff; border-radius:50%"></span> Eléctrica</div>
+            </div>
+            <div style="flex:1;">
+                <div style="margin:0 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Tamaño de Empresa</div>
+                <div class="legend-item" style="display:flex; align-items:center; margin-bottom:4px;">
+                    <div style="width:26px; display:flex; justify-content:center;"><span style="display:inline-block; width:8px; height:8px; background:#bbb; border-radius:50%"></span></div>
+                    <span style="font-size:11px; color:#ccc;">Micro (0-5 personas ocupadas)</span>
+                </div>
+                <div class="legend-item" style="display:flex; align-items:center; margin-bottom:4px;">
+                    <div style="width:26px; display:flex; justify-content:center;"><span style="display:inline-block; width:12px; height:12px; background:#bbb; border-radius:50%"></span></div>
+                    <span style="font-size:11px; color:#ccc;">Pequeña (6-30 personas ocupadas)</span>
+                </div>
+                <div class="legend-item" style="display:flex; align-items:center; margin-bottom:4px;">
+                    <div style="width:26px; display:flex; justify-content:center;"><span style="display:inline-block; width:18px; height:18px; background:#bbb; border-radius:50%"></span></div>
+                    <span style="font-size:11px; color:#ccc;">Mediana (31-100 personas ocupadas)</span>
+                </div>
+                <div class="legend-item" style="display:flex; align-items:center; margin-bottom:4px;">
+                    <div style="width:26px; display:flex; justify-content:center;"><span style="display:inline-block; width:26px; height:26px; background:#bbb; border-radius:50%"></span></div>
+                    <span style="font-size:11px; color:#ccc;">Grande (101 y más personas ocupadas)</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:10px; display:flex; align-items:center; justify-content:center; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:8px;"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>
+            <span style="color:#fff; font-weight:bold; font-size:12px;">Planta Armadora</span>
+        </div>
     `;
     overlay.style.display = 'block';
 }
