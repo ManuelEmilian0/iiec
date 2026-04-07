@@ -102,6 +102,9 @@ function loadLayer(scaleType) {
     var empContainer = document.getElementById('empresas-chart-container');
     if (empContainer) empContainer.style.display = 'none';
 
+    var finOverlay = document.getElementById('fin-overlay');
+    if (finOverlay) finOverlay.style.display = 'none';
+
     if (typeof estratoChart !== "undefined" && estratoChart) { estratoChart.destroy(); estratoChart = null; }
     if (typeof empresaChart !== "undefined" && empresaChart) { empresaChart.destroy(); empresaChart = null; }
     if (typeof mainChart !== "undefined" && mainChart) { mainChart.destroy(); mainChart = null; }
@@ -129,7 +132,7 @@ function loadLayer(scaleType) {
                 window.armadorasRawData = data; // Cache
                 var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
                 var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
-                
+
                 window.armadorasNacionalTriangulosLayer = L.geoJSON(data, {
                     pointToLayer: function (feature, latlng) {
                         return L.marker(latlng, { icon: triangleIcon });
@@ -681,14 +684,6 @@ function setupUI() {
                 <div style="height:240px; position:relative; width: 100%;"><canvas id="myChart"></canvas></div>
                 <div id="dynamic-summary" class="dynamic-summary-box"></div>
                 
-                <!-- GRÁFICAS MUNDIAL/NACIONAL -->
-                <div id="empresas-chart-container" style="display:none;">
-                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
-                    <h4 class="panel-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Top de empresas con mayor rendimiento en activos en millones de pesos</h4>
-                    <div style="height:260px; position:relative;"><canvas id="empresasLineChart"></canvas></div>
-                    <div id="sintesis-empresasLine" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
-                </div>
-
                 <!-- GRÁFICAS ESTATAL -->
                 <div id="vinculacion-charts-container" style="display:none;">
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
@@ -703,6 +698,46 @@ function setupUI() {
             </div>
         `;
         leftContainer.appendChild(statsBox);
+    }
+
+    if (!document.getElementById('fin-overlay')) {
+        var finBox = document.createElement('div');
+        finBox.id = 'fin-overlay'; finBox.className = 'dashboard-box'; finBox.style.display = 'none';
+        finBox.innerHTML = `
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('fin-content', 'fin-arrow')" title="Ocultar/Mostrar Indicadores">
+                <span id="fin-title-text" style="font-size:13px; font-weight:bold;">Indicadores Financieros</span> <span id="fin-arrow" class="drop-arrow">▼</span>
+            </h4>
+            <div id="fin-content" class="dropdown-content show">
+                <!-- GRÁFICAS MUNDIAL/NACIONAL -->
+                <div id="empresas-chart-container" style="display:none;">
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0; display:none;">
+                    <div id="indicador-container-box" style="margin-bottom:10px; position:relative;">
+                        <select id="fin-indicator-select" style="background:#222; color:#fff; border:1px solid #555; border-radius:4px; padding:5px; width:100%; font-size:11px;" onchange="if(window.cambiarIndicadorFinanciero) window.cambiarIndicadorFinanciero()">
+                            <option value="Activos_Millones" selected>Activos (Millones pesos)</option>
+                            <option value="Capital_Accs_Millones">Capital Accs (Millones)</option>
+                            <option value="Ingresos_Millones">Ingresos (Millones)</option>
+                            <option value="Ingreso_%_cambio_Año_Anterior">Ingreso % cambio Año Anterior</option>
+                            <option value="Utilidad_Millones">Utilidad (Millones)</option>
+                            <option value="Utilidad_%_Ventas">Utilidad % Ventas</option>
+                            <option value="Utilidad_%_Año_Anterior">Utilidad % Año Anterior</option>
+                            <option value="Utilidad_%_Activos">Utilidad % Activos</option>
+                            <option value="Valor_Mercado_Millones">Valor Mercado (Millones)</option>
+                            <option value="Cambio_%_Valor_Mercado">Cambio % Valor Mercado</option>
+                            <option value="Empleados">Empleados</option>
+                            <option value="Ventas_empleado">Ventas por empleado</option>
+                            <option value="Resultados_Empleado">Resultados Empleado</option>
+                            <option value="ROE">ROE</option>
+                            <option value="Rotación_Activos">Rotación Activos</option>
+                            <option value="Multiplicador_Capital">Multiplicador Capital</option>
+                        </select>
+                    </div>
+                    <h4 class="panel-title" id="empresas-chart-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Top de empresas con mayor rendimiento</h4>
+                    <div style="height:260px; position:relative;"><canvas id="empresasLineChart"></canvas></div>
+                    <div id="sintesis-empresasLine" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                </div>
+            </div>
+        `;
+        leftContainer.appendChild(finBox);
     }
 
     // Se ha movido el contenido a leftContainer
@@ -978,23 +1013,69 @@ window.mostrarInstruccionEscala = function (escala) {
     setTimeout(() => { if (document.getElementById('escala-instruccion-pop')) pop.remove(); }, 6000);
 };
 
+window.mostrarInstruccionIndicador = function () {
+    if (document.getElementById('indicador-instruccion-pop')) {
+        document.getElementById('indicador-instruccion-pop').remove();
+    }
+
+    var cajaIndicador = document.getElementById('indicador-container-box');
+    if (!cajaIndicador) return;
+
+    var pop = document.createElement('div');
+    pop.id = 'indicador-instruccion-pop';
+    pop.innerHTML = "Comienza seleccionando un <b>indicador financiero</b>.";
+    pop.style.position = 'absolute';
+    pop.style.top = '-32px';
+    pop.style.right = '0px';
+    pop.style.background = '#00e5ff';
+    pop.style.color = '#111';
+    pop.style.padding = '6px 10px';
+    pop.style.borderRadius = '8px';
+    pop.style.fontWeight = 'bold';
+    pop.style.fontSize = '11px';
+    pop.style.boxShadow = '0 4px 15px rgba(0,229,255,0.6)';
+    pop.style.zIndex = '9999';
+    pop.style.animation = 'fadeInSuave 0.5s ease-out, bouncePop 2s infinite';
+    pop.style.cursor = 'pointer';
+
+    pop.innerHTML += `<div style="position:absolute; bottom:-5px; right:15px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:5px solid #00e5ff;"></div>`;
+
+    pop.onclick = function () { pop.remove(); };
+    cajaIndicador.appendChild(pop);
+
+    setTimeout(() => { if (document.getElementById('indicador-instruccion-pop')) pop.remove(); }, 8000);
+};
+
 // ==========================================
 // GRÁFICA TEMPORAL TOP 5 EMPRESAS (NACIONAL)
 // ==========================================
 window.empresasCSVDataCache = null;
 
+window.cambiarIndicadorFinanciero = function () {
+    if (window.empresasCSVDataCache) {
+        var selector = document.getElementById('fin-indicator-select');
+        var indicador = selector ? selector.value : 'Activos_Millones';
+        window.procesarDatosEmpresas(window.empresasCSVDataCache, indicador);
+    }
+};
+
 window.cargarYRenderizarEmpresasCSV = function () {
     var chartContainer = document.getElementById('empresas-chart-container');
     if (chartContainer) chartContainer.style.display = 'block';
 
+    var finOverlay = document.getElementById('fin-overlay');
+    if (finOverlay) finOverlay.style.display = 'block';
+
     if (window.empresasCSVDataCache) {
-        procesarDatosEmpresas(window.empresasCSVDataCache);
+        window.cambiarIndicadorFinanciero();
+        window.mostrarInstruccionIndicador();
     } else {
         fetch('empresas.csv')
             .then(res => res.text())
             .then(csvText => {
                 window.empresasCSVDataCache = parsearCSVEmpresas(csvText);
-                procesarDatosEmpresas(window.empresasCSVDataCache);
+                window.cambiarIndicadorFinanciero();
+                window.mostrarInstruccionIndicador();
             })
             .catch(err => console.error("Error cargando empresas.csv:", err));
     }
@@ -1018,18 +1099,26 @@ window.parsearCSVEmpresas = function (str) {
     return resultado;
 };
 
-window.procesarDatosEmpresas = function (datos) {
-    var ingresosPorEmpresa = {};
+window.procesarDatosEmpresas = function (datos, indicador = 'Activos_Millones') {
+    var selector = document.getElementById('fin-indicator-select');
+    var indicadorText = selector && selector.options[selector.selectedIndex] ? selector.options[selector.selectedIndex].text : indicador;
+
+    var titleEl = document.getElementById('empresas-chart-title');
+    if (titleEl) {
+        titleEl.innerHTML = `Top de empresas por: ${indicadorText}`;
+    }
+
+    var valoresPorEmpresa = {};
     datos.forEach(d => {
         var nombre = d['Empresa'];
         if (!nombre) return;
-        var ingreso = parseFloat(d['Ingresos_Millones']) || 0;
-        if (!ingresosPorEmpresa[nombre]) ingresosPorEmpresa[nombre] = 0;
-        ingresosPorEmpresa[nombre] += ingreso;
+        var valor = parseFloat(d[indicador]) || 0;
+        if (!valoresPorEmpresa[nombre]) valoresPorEmpresa[nombre] = 0;
+        valoresPorEmpresa[nombre] += valor;
     });
 
-    var top5Nombres = Object.keys(ingresosPorEmpresa)
-        .sort((a, b) => ingresosPorEmpresa[b] - ingresosPorEmpresa[a])
+    var top5Nombres = Object.keys(valoresPorEmpresa)
+        .sort((a, b) => valoresPorEmpresa[b] - valoresPorEmpresa[a])
         .slice(0, 5);
 
     var aniosSet = new Set();
@@ -1044,7 +1133,7 @@ window.procesarDatosEmpresas = function (datos) {
         anios.forEach(anio => {
             var registro = datos.find(d => d['Empresa'] === empresaNombre && d['Año'] === anio);
             if (registro) {
-                dataValues.push(parseFloat(registro['Ingresos_Millones']) || 0);
+                dataValues.push(parseFloat(registro[indicador]) || 0);
             } else {
                 dataValues.push(null);
             }
@@ -1102,7 +1191,8 @@ window.procesarDatosEmpresas = function (datos) {
                             let label = context.dataset.label || '';
                             if (label) label += ': ';
                             if (context.parsed.y !== null) {
-                                label += '$' + context.parsed.y.toLocaleString('es-MX') + ' M';
+                                let valString = context.parsed.y.toLocaleString('es-MX', { maximumFractionDigits: 2 });
+                                label += indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital' ? valString : '$' + valString;
                             }
                             return label;
                         }
@@ -1114,7 +1204,7 @@ window.procesarDatosEmpresas = function (datos) {
                 y: {
                     ticks: {
                         color: '#aaa',
-                        callback: function (value) { return '$' + value; }
+                        callback: function (value) { return indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital' ? value : '$' + value; }
                     },
                     grid: { color: '#333', borderDash: [2, 2] }
                 }
@@ -1124,13 +1214,19 @@ window.procesarDatosEmpresas = function (datos) {
 
     if (top5Nombres.length > 0) {
         var winnerName = top5Nombres[0];
-        var winnerRecord = datos.filter(d => d['Empresa'] === winnerName).sort((a, b) => parseFloat(b['Ingresos_Millones']) - parseFloat(a['Ingresos_Millones']))[0];
-        var maxWinnerIngreso = window.Intl ? new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 }).format(winnerRecord['Ingresos_Millones']) : winnerRecord['Ingresos_Millones'];
+        var winnerRecord = datos.filter(d => d['Empresa'] === winnerName).sort((a, b) => (parseFloat(b[indicador]) || 0) - (parseFloat(a[indicador]) || 0))[0];
+        var maxWinnerValRaw = parseFloat(winnerRecord[indicador]) || 0;
+        var maxWinnerVal = window.Intl ? new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(maxWinnerValRaw) : maxWinnerValRaw;
+
+        var isPercentage = indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital';
+        var valDisplay = isPercentage ? `${maxWinnerVal}` : `$${maxWinnerVal}`;
+
         var winnerModel = winnerRecord['Vía de desarrollo'] || "Alta Tecnología";
+        var winnerInd = winnerRecord['Industria'] || "su sector";
 
         var sintesisDiv = document.getElementById('sintesis-empresasLine');
         if (sintesisDiv) {
-            sintesisDiv.innerHTML = `El dominio corporativo a escala nacional está encabezado históricamente por <b style="color:#00e5ff;">${winnerName}</b>, alcanzando picos de <b>$${maxWinnerIngreso} Millones</b>. Esto cimienta firmemente la ruta de <span style="text-shadow: 1px 1px 2px #000;">${winnerModel}</span> dentro de la red industrial y de flujos interregionales mostrada en el mapa.`;
+            sintesisDiv.innerHTML = `Liderando en la industria de <b>${winnerInd}</b>, la empresa <b style="color:#00e5ff;">${winnerName}</b> encabeza la métrica de <b>${indicadorText}</b> con un valor destacado de <b>${valDisplay}</b>. Esto fortalece su posición bajo la ruta de <span style="text-shadow: 1px 1px 2px #000; color:#fff; font-weight:bold;">${winnerModel}</span> dentro de los nodos industriales geolocalizados.`;
             sintesisDiv.style.display = 'block';
         }
 
@@ -1171,13 +1267,13 @@ window.iluminarTop5Nacional = function (top5Nombres, colores) {
             pointToLayer: function (feature, latlng) {
                 var n1 = normalizar(feature.properties['Nombre de empresa'] || "");
                 var n2 = normalizar(feature.properties['Razón Social'] || "");
-                
+
                 var index = top5Norm.findIndex(t => {
-                   if (t === "AAM MAQUILADORA MEXICO" && (n1.includes("AAM MAQUILADORA") || n2.includes("AAM MAQUILADORA") || n2.includes("METALDYNE"))) return true;
-                   if (t === "ACTIA DE MEXICO" && (n1.includes("ACTIA") || n2.includes("ACTIA"))) return true;
-                   return (n1 && n1.includes(t)) || (n2 && n2.includes(t)) || (t && t.includes(n1) && n1.length > 3);
+                    if (t === "AAM MAQUILADORA MEXICO" && (n1.includes("AAM MAQUILADORA") || n2.includes("AAM MAQUILADORA") || n2.includes("METALDYNE"))) return true;
+                    if (t === "ACTIA DE MEXICO" && (n1.includes("ACTIA") || n2.includes("ACTIA"))) return true;
+                    return (n1 && n1.includes(t)) || (n2 && n2.includes(t)) || (t && t.includes(n1) && n1.length > 3);
                 });
-                
+
                 var colorHex = (index !== -1 && colores[index]) ? colores[index] : '#fff';
 
                 var estratoStr = (feature.properties['Estrato'] || '').toString().toLowerCase();

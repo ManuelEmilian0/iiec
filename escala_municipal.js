@@ -273,7 +273,7 @@ function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {
     if (tituloLimpio === 'Vulnerabilidad en Hogar' || tituloLimpio === 'Vulnerabilidad en el hogar') {
         imageName = 'Vuln_hogar.png';
     } else if (tituloLimpio === 'Deficiencias en Infraestructura' || tituloLimpio === 'Deficiencia de infraestructura') {
-        imageName = 'Vuln_infraestructura.png';
+        imageName = 'Vuln_Urbana.png';
     } else if (tituloLimpio === 'Sin Oportunidades' || tituloLimpio === 'Sin oportunidades') {
         imageName = 'Vuln_oportunidades.png';
     }
@@ -335,18 +335,55 @@ function mostrarImagenInfo(imageName) {
     modal.style.cursor = 'pointer';
     modal.style.animation = 'fadeInSuave 0.3s ease-in-out forwards';
 
-    var img = document.createElement('img');
-    img.src = imageName;
-    img.style.maxWidth = '90%';
-    img.style.maxHeight = '90%';
-    img.style.borderRadius = '8px';
-    img.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.5)';
-    img.style.cursor = 'default';
+    var contentWrapper = document.createElement('div');
+    contentWrapper.style.display = 'flex';
+    contentWrapper.style.flexDirection = 'column';
+    contentWrapper.style.alignItems = 'center';
+    contentWrapper.style.maxWidth = '900px';
+    contentWrapper.style.maxHeight = '95vh';
+    contentWrapper.style.overflowY = 'auto';
+    contentWrapper.style.padding = '20px';
+    contentWrapper.style.cursor = 'default';
 
-    // Prevent closing when clicking the image itself
-    img.onclick = function (e) {
+    // Prevent closing when clicking inside the content
+    contentWrapper.onclick = function (e) {
         e.stopPropagation();
     };
+
+    var img = document.createElement('img');
+    img.src = imageName;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '65vh';
+    img.style.borderRadius = '8px';
+    img.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.5)';
+    contentWrapper.appendChild(img);
+
+    var textResumen = "";
+    var conclusion = "La combinación de estos indicadores produjo un Índice de Vulnerabilidad Global que distingue con precisión los territorios consolidados con cualidades a atender.";
+
+    if (imageName === 'Vuln_hogar.png') {
+        textResumen = "La Físico-Espacial igual a “Vulnerabilidad en Hogar” refleja las condiciones materiales y de ocupación del territorio. Se construyó a partir de variables como: nuevas áreas de crecimiento urbano, la pavimentación, el alumbrado público, la densidad de vivienda, las viviendas deshabitadas y el hacinamiento. Los resultados de esta vulnerabilidad evidencian procesos de dispersión y vaciamiento urbano que afectan la eficiencia territorial. También mayores riesgos, asociados a carencias en infraestructura doméstica, inseguridad y pérdida de cohesión social.<br><br><b>" + conclusion + "</b>";
+    } else if (imageName === 'Vuln_Urbana.png') {
+        textResumen = "La Urbana igual a “Deficiencia en Infraestructura” se compone en tres variables ponderadas: Vivienda sin drenaje, asociadas a riesgos sanitarios y contaminación ambiental, vivienda sin agua entubada, refleja la desigualdad en el acceso al recurso más esencial para la salud pública y el bienestar doméstico y vivienda sin electricidad que representa la carencia más crítica, limita la integración productiva, educativa y social de los hogares.<br><br><b>" + conclusion + "</b>";
+    } else if (imageName === 'Vuln_oportunidades.png') {
+        textResumen = "La dimensión Socioeconómica igual a “Sin oportunidades” se calculó a partir de la ponderación de siete variables, se identificaron zonas con alta densidad poblacional, nivel de ingresos, población con dependencia económica, población sin afiliación a servicios de salud, población desocupada, población con discapacidad y bajo grado promedio de escolaridad. Permitió identificar áreas con mayor fragilidad social y económica.<br><br><b>" + conclusion + "</b>";
+    }
+
+    if (textResumen) {
+        var textDiv = document.createElement('div');
+        textDiv.innerHTML = textResumen;
+        textDiv.style.marginTop = '20px';
+        textDiv.style.color = '#ddd';
+        textDiv.style.fontSize = '14.5px';
+        textDiv.style.lineHeight = '1.6';
+        textDiv.style.textAlign = 'justify';
+        textDiv.style.backgroundColor = 'rgba(20,20,20,0.9)';
+        textDiv.style.padding = '18px';
+        textDiv.style.borderRadius = '8px';
+        textDiv.style.borderLeft = '4px solid #00e5ff';
+        textDiv.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+        contentWrapper.appendChild(textDiv);
+    }
 
     modal.onclick = function () {
         modal.remove();
@@ -366,7 +403,7 @@ function mostrarImagenInfo(imageName) {
         modal.remove();
     };
 
-    modal.appendChild(img);
+    modal.appendChild(contentWrapper);
     modal.appendChild(closeBtn);
     document.body.appendChild(modal);
 }
@@ -375,21 +412,21 @@ function mostrarImagenInfo(imageName) {
 // FILTRO INTERACTIVO DE LEYENDA MUNICIPAL
 // ==========================================
 window.filtroAgebNiveles = new Set();
-window.toggleAgebNivel = function(nivelText) {
+window.toggleAgebNivel = function (nivelText) {
     if (window.filtroAgebNiveles.has(nivelText)) {
         window.filtroAgebNiveles.delete(nivelText);
     } else {
         window.filtroAgebNiveles.add(nivelText);
     }
-    
+
     var aplicarFiltro = window.filtroAgebNiveles.size > 0;
-    
+
     var selects = document.querySelectorAll("#filter-buttons-container select");
     var selectIndice = selects.length > 1 ? selects[1] : null;
-    var atributo = selectIndice ? selectIndice.value : 'G_INDICE'; 
+    var atributo = selectIndice ? selectIndice.value : 'G_INDICE';
 
     if (agebLayer) {
-        agebLayer.eachLayer(function(layer) {
+        agebLayer.eachLayer(function (layer) {
             var valCat = layer.feature.properties[atributo] || "Sin dato";
             var normalizado = "";
             var v = valCat.toString().trim().toUpperCase();

@@ -26,6 +26,7 @@
 <body>
     <!-- SPLASH SCREEN / PORTADA -->
     <div id="splash-screen">
+        <canvas id="splash-canvas"></canvas>
         <div class="splash-overlay"></div>
         <div class="splash-content">
             <div class="splash-logos">
@@ -49,11 +50,138 @@
     </div>
 
     <script>
+        // Lógica para Canvas Interactivo (Sistema de Partículas Constelación)
+        const canvas = document.getElementById('splash-canvas');
+        let ctx = null;
+        let particlesArray = [];
+        let splashAnimId;
+        const colors = ['#0277bd', '#d59f0f']; // Azul y Dorado
+        const mouse = { x: null, y: null, radius: 75 };
+
+        if (canvas) {
+            ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            window.addEventListener('mousemove', function(event) {
+                mouse.x = event.x;
+                mouse.y = event.y;
+            });
+            window.addEventListener('mouseout', function() {
+                mouse.x = undefined;
+                mouse.y = undefined;
+            });
+            window.addEventListener('resize', function() {
+                if (canvas) {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    initParticles();
+                }
+            });
+
+            class Particle {
+                constructor(x, y, directionX, directionY, size, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.directionX = directionX;
+                    this.directionY = directionY;
+                    this.size = size;
+                    this.color = color;
+                }
+                draw() {
+                    // Solo mantenemos la representación para conectar las líneas (nodos invisibles)
+                }
+                update() {
+                    if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                    if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx*dx + dy*dy);
+
+                    if (distance < mouse.radius) {
+                        let forceDirectionX = dx / distance;
+                        let forceDirectionY = dy / distance;
+                        let maxDistance = mouse.radius;
+                        let force = (maxDistance - distance) / maxDistance;
+                        let directionX = forceDirectionX * force * 5;
+                        let directionY = forceDirectionY * force * 5;
+                        
+                        this.x -= directionX;
+                        this.y -= directionY;
+                    }
+
+                    // Movimiento aleatorio constante
+                    this.x += this.directionX;
+                    this.y += this.directionY;
+                }
+            }
+
+            function initParticles() {
+                particlesArray = [];
+                let numberOfParticles = (canvas.height * canvas.width) / 10000;
+                for (let i = 0; i < numberOfParticles; i++) {
+                    let size = 1;
+                    let x = (Math.random() * innerWidth);
+                    let y = (Math.random() * innerHeight);
+                    // Mayor velocidad aleatoria sin restricción de vuelta a origen
+                    let directionX = (Math.random() * 2) - 1;
+                    let directionY = (Math.random() * 2) - 1;
+                    let color = colors[Math.floor(Math.random() * colors.length)];
+                    particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+                }
+            }
+
+            function animateParticles() {
+                if (!canvas) return;
+                splashAnimId = requestAnimationFrame(animateParticles);
+                ctx.clearRect(0, 0, innerWidth, innerHeight);
+                for (let i = 0; i < particlesArray.length; i++) {
+                    particlesArray[i].update();
+                }
+                connectParticles();
+
+                // Dibujar buffer (radio de influencia) del cursor al 30% de transparencia
+                if (mouse.x && mouse.y) {
+                    ctx.beginPath();
+                    ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI * 2, false);
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.2)'; // Rojo a 20%
+                    ctx.fill();
+                }
+            }
+
+            function connectParticles() {
+                let opacityValue = 1;
+                for (let a = 0; a < particlesArray.length; a++) {
+                    for (let b = a; b < particlesArray.length; b++) {
+                        let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                            + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                        
+                        if (distance < (canvas.width/7) * (canvas.height/7)) {
+                            opacityValue = 1 - (distance / 20000);
+                            let isBlue = particlesArray[a].color === colors[0];
+                            ctx.strokeStyle = isBlue ? `rgba(2, 119, 189, ${opacityValue})` : `rgba(213, 159, 15, ${opacityValue})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                            ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            initParticles();
+            animateParticles();
+        }
+
+        // Fin de la lógica animada
+
         function iniciarGeovisualizador() {
             const splash = document.getElementById('splash-screen');
             if (splash) {
                 splash.style.opacity = '0';
                 setTimeout(() => {
+                    if (window.splashAnimId) cancelAnimationFrame(window.splashAnimId);
                     splash.remove();
                 }, 600);
             }
@@ -275,15 +403,18 @@
                     <br>
                     <p><strong>Elaborado por:</strong></p>
                     <p>
-                        <strong>Manuel Emiliano Moreno Pérez</strong><br>
+                        <strong><a href="https://manuelemilian0.github.io/perfil_profesional/" class="portfolio-link"
+                                target="_blank" rel="noopener noreferrer">Manuel Emiliano Moreno Pérez</a></strong><br>
                         emisliano974@gmail.com<br>
                     </p>
                     <p>
-                        <strong>Ismael Kaleet Luna Aguilar</strong><br>
+                        <strong><a href="https://ia309745-ops.github.io/Perfil_profesional/" class="portfolio-link"
+                                target="_blank" rel="noopener noreferrer">Ismael Kaleet Luna Aguilar</a></strong><br>
                         ia309745@gmail.com<br>
                     </p>
                     <p>
-                        <strong><a href="https://portafoliodario.vercel.app/" class="portfolio-link">Dario Molina
+                        <strong><a href="https://portafoliodario.vercel.app/" class="portfolio-link" target="_blank"
+                                rel="noopener noreferrer">Dario Molina
                                 Figueroa</a></strong><br>
                         dariom5457@gmail.com<br>
                     </p>

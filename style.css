@@ -205,15 +205,18 @@ body {
 #left-sidebar-container::-webkit-scrollbar {
   width: 8px;
 }
+
 #left-sidebar-container::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
 }
+
 #left-sidebar-container::-webkit-scrollbar-thumb {
   background: #00e5ff;
   border-radius: 4px;
-  box-shadow: 0 0 8px rgba(0,229,255,0.8);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
 }
+
 #left-sidebar-container::-webkit-scrollbar-thumb:hover {
   background: #00b3cc;
 }
@@ -628,7 +631,7 @@ strong {
 
 /* A) Fade-in suave para el cambio de pestañas (Inicio, Marco, Metodología) */
 @keyframes fadeInSuave {
-   from {
+  from {
     opacity: 0;
   }
 
@@ -638,8 +641,15 @@ strong {
 }
 
 @keyframes bouncePop {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .active-panel {
@@ -896,15 +906,22 @@ path.leaflet-interactive {
   width: 100vw;
   height: 100vh;
   z-index: 9999;
-  background-image: url('portada.jpg');
-  background-size: cover;
-  background-position: center;
-  background-color: #000;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
-  /* Vuelto a centrar arriba */
   justify-content: center;
   transition: opacity 0.6s ease-out;
+  overflow: hidden;
+}
+
+#splash-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .splash-overlay {
@@ -913,9 +930,9 @@ path.leaflet-interactive {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.40);
-  /* 40% transparencia pedida */
+  background-color: transparent;
   z-index: 1;
+  pointer-events: none;
 }
 
 .splash-content {
@@ -924,14 +941,14 @@ path.leaflet-interactive {
   text-align: center;
   max-width: 900px;
   padding: 35px 40px;
-  /* Reducción ligera del padding */
   color: #fff;
   border-radius: 12px;
-  background: rgba(20, 20, 20, 0.65);
-  /* Ventana interna levemente opaca */
-  backdrop-filter: blur(8px);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
   animation: splashFadeInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  pointer-events: auto;
 }
 
 @keyframes splashFadeInUp {
@@ -961,7 +978,7 @@ path.leaflet-interactive {
 
 .splash-title {
   font-size: 38px;
-  font-weight: 700;
+  font-weight: 800;
   color: #fff;
   text-transform: uppercase;
   margin-bottom: 25px;
@@ -971,7 +988,7 @@ path.leaflet-interactive {
 
 .splash-mission {
   font-size: 16px;
-  color: #ddd;
+  color: #fff;
   line-height: 1.7;
   margin-bottom: 40px;
   text-align: justify;
@@ -1143,7 +1160,7 @@ path.leaflet-interactive {
   width: max-content;
   text-align: center;
   pointer-events: none;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   padding: 1px 4px;
   border-radius: 4px;
 }
@@ -1248,4 +1265,19 @@ path.leaflet-interactive {
   stroke-width: 1.5;
   stroke-dasharray: 4;
 }
-.top5-marker-pulse { animation: opacityPulse 1.2s infinite alternate; } @keyframes opacityPulse { 0% { opacity: 0.5; fill-opacity: 0.5; } 100% { opacity: 1; fill-opacity: 1; } }
+
+.top5-marker-pulse {
+  animation: opacityPulse 1.2s infinite alternate;
+}
+
+@keyframes opacityPulse {
+  0% {
+    opacity: 0.5;
+    fill-opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+    fill-opacity: 1;
+  }
+}
