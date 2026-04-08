@@ -210,7 +210,7 @@ function filtrarPorEstado(nombreEstado) {
         } else { ejecutarAnimacion(); }
     } catch (e) { ejecutarAnimacion(); }
 
-    actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado);
+    actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado, isocronasEstado);
     actualizarLeyendaIsocronas();
 }
 
@@ -225,7 +225,7 @@ function dibujarArmadorasPuntos(features) {
     }).addTo(map);
 }
 
-function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
+function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado, isocronasEstado) {
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
 
@@ -267,7 +267,7 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado) {
         }
     });
 
-    actualizarGraficasVinculacion(nombreEstado);
+    actualizarGraficasVinculacion(nombreEstado, isocronasEstado);
 }
 
 // ==========================================
@@ -291,7 +291,7 @@ function normalizarEstrato(estrato) {
     return s || 'Sin dato';
 }
 
-function actualizarGraficasVinculacion(nombreEstado) {
+function actualizarGraficasVinculacion(nombreEstado, isocronasEstado) {
     var container = document.getElementById('vinculacion-charts-container');
     if (!container || !vinculacionRawData || !vinculacionRawData.features) { if (container) container.style.display = 'none'; return; }
 
@@ -403,6 +403,147 @@ function actualizarGraficasVinculacion(nombreEstado) {
         sintesisEmpresa.style.display = 'block';
     } else if (sintesisEmpresa) {
         sintesisEmpresa.style.display = 'none';
+    }
+
+    // --- NUEVA GRÁFICA: DISTANCIA DE CLÚSTERES (ISOCRONAS) ---
+    var isocronaChartCanvas = document.getElementById('isocronaChart');
+    if (isocronaChartCanvas && isocronasEstado && isocronasEstado.length > 0) {
+        var datosPorIsocrona = { '0-15 min': {}, '15-30 min': {}, '30-60 min': {}, 'Más de 60 min': {} };
+        var tiposSet = new Set();
+
+        featuresEstado.forEach(f => {
+            var pt;
+            try { pt = turf.point(f.geometry.coordinates); } catch(e) { return; }
+            var tipo = f.properties.Conjunto || f.properties['Industrias agrupadas'] || "Otros";
+            if (tipo === "Actividades SEIT") tipo = "Servicios SEIT";
+            tiposSet.add(tipo);
+
+            var mins = 999;
+            for(let i=0; i<isocronasEstado.length; i++) {
+                var iso = isocronasEstado[i];
+                try {
+                    // Turf requiere un Feature<Polygon|MultiPolygon> para booleanPointInPolygon
+                    if (turf.booleanPointInPolygon(pt, iso)) {
+                        let minIso = parseInt(iso.properties.AA_MINS || 999);
+                        if (minIso < mins) mins = minIso;
+                    }
+                } catch(e) {}
+            }
+
+            var isocronaStr = 'Más de 60 min';
+            if (mins <= 15) isocronaStr = '0-15 min';
+            else if (mins <= 30) isocronaStr = '15-30 min';
+            else if (mins <= 60) isocronaStr = '30-60 min';
+
+            datosPorIsocrona[isocronaStr][tipo] = (datosPorIsocrona[isocronaStr][tipo] || 0) + 1;
+        });
+
+        var tiposArray = Array.from(tiposSet).sort();
+        var labelsIso = ['0-15 min', '15-30 min', '30-60 min'];
+        var datasetsIso = [];
+
+        tiposArray.forEach(tipo => {
+            datasetsIso.push({
+                label: tipo,
+                data: labelsIso.map(lbl => datosPorIsocrona[lbl][tipo] || 0),
+                backgroundColor: getColorConjunto(tipo),
+                borderColor: '#333',
+                borderWidth: 0.5
+            });
+        });
+
+        if (typeof isocronaChart !== "undefined" && isocronaChart) isocronaChart.destroy();
+        isocronaChart = new Chart(isocronaChartCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labelsIso,
+                datasets: datasetsIso
+            },
+            plugins: [ChartDataLabels, {
+                id: 'topTotals',
+                afterDatasetsDraw: function(chart) {
+                    var ctx = chart.ctx;
+                    chart.data.labels.forEach((label, index) => {
+                        var total = 0;
+                        var lastMeta = null;
+                        chart.data.datasets.forEach((dataset, i) => {
+                            var meta = chart.getDatasetMeta(i);
+                            if (!meta.hidden) {
+                                var val = dataset.data[index];
+                                if (val > 0) {
+                                    total += val;
+                                    lastMeta = meta;
+                                }
+                            }
+                        });
+                        if (total > 0 && lastMeta) {
+                            var element = lastMeta.data[index];
+                            if (element) {
+                                ctx.save();
+                                ctx.fillStyle = '#18d4e6';
+                                ctx.font = 'bold 12px sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.shadowColor = '#000';
+                                ctx.shadowBlur = 3;
+                                ctx.fillText(total, element.x, element.y - 4);
+                                ctx.restore();
+                            }
+                        }
+                    });
+                }
+            }],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { color: '#aaa', font: { size: 10 } },
+                        grid: { color: '#444' }
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: { color: '#ddd', font: { size: 10 } },
+                        grid: { color: '#444' },
+                        title: { display: true, text: 'Unidades Económicas', color: '#aaa', font: { size: 11 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { color: '#ccc', font: { size: 9 }, boxWidth: 10, padding: 5 } },
+                    datalabels: {
+                        display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
+                        color: '#fff', font: { weight: 'bold', size: 9 },
+                        textShadowBlur: 2, textShadowColor: '#000',
+                        formatter: function(value) { return value > 0 ? value : ''; }
+                    }
+                }
+            }
+        });
+
+        var sintesisIsocrona = document.getElementById('sintesis-isocrona');
+        if (sintesisIsocrona) {
+            var totalEnRango15 = 0;
+            var maxTipo15 = { nombre: '', cant: 0 };
+            
+            tiposArray.forEach(t => {
+                let c = datosPorIsocrona['0-15 min'][t] || 0;
+                totalEnRango15 += c;
+                if (c > maxTipo15.cant) { maxTipo15.cant = c; maxTipo15.nombre = t; }
+            });
+
+            if (totalEnRango15 > 0) {
+                sintesisIsocrona.innerHTML = `A nivel interestatal, resaltan <b>${totalEnRango15}</b> unidades económicas en el núcleo más inmediato (0-15 min) que abastecen a la armadora, predominando el sector <b>${maxTipo15.nombre}</b>.`;
+                sintesisIsocrona.style.display = 'block';
+            } else {
+                sintesisIsocrona.innerHTML = `No se detectaron unidades económicas en el núcleo inmediato de 0-15 min.`;
+                sintesisIsocrona.style.display = 'block';
+            }
+        }
+    } else if (document.getElementById('isocronaChart')) {
+        if (typeof isocronaChart !== "undefined" && isocronaChart) isocronaChart.destroy();
+        var sintesisIsocrona = document.getElementById('sintesis-isocrona');
+        if (sintesisIsocrona) sintesisIsocrona.style.display = 'none';
     }
 
 }

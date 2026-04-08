@@ -309,7 +309,9 @@ function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {
         </div>
         <div style="margin-top:14px; font-weight:bold; color:#ddd; font-size: 13px; margin-bottom: 8px;">Infraestructura Industrial</div>
         <div style="display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #eee;">
-            <span style="width: 16px; height: 16px; margin-right: 10px; border-radius: 50%; border: 2px solid white; background: #00e5ff;"></span> Planta Armadora
+            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:8px;">
+                <polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/>
+            </svg> Planta Armadora
         </div>
     `;
     div.innerHTML = html;

@@ -19,6 +19,7 @@ var currentScaleType = '';
 var mainChart = null;
 var estratoChart = null;
 var empresaChart = null;
+var isocronaChart = null;
 var fuenteControl = null;
 
 const RampaRojos = ['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'];
@@ -107,6 +108,7 @@ function loadLayer(scaleType) {
 
     if (typeof estratoChart !== "undefined" && estratoChart) { estratoChart.destroy(); estratoChart = null; }
     if (typeof empresaChart !== "undefined" && empresaChart) { empresaChart.destroy(); empresaChart = null; }
+    if (typeof isocronaChart !== "undefined" && isocronaChart) { isocronaChart.destroy(); isocronaChart = null; }
     if (typeof mainChart !== "undefined" && mainChart) { mainChart.destroy(); mainChart = null; }
     if (window.nacionalTop5Layer) { map.removeLayer(window.nacionalTop5Layer); window.nacionalTop5Layer = null; }
 
@@ -623,6 +625,77 @@ function setupUI() {
         leftContainer.appendChild(legendBox);
     }
 
+    if (!document.getElementById('stats-overlay')) {
+        var statsBox = document.createElement('div');
+        statsBox.id = 'stats-overlay'; statsBox.className = 'dashboard-box'; statsBox.style.display = 'none';
+        statsBox.innerHTML = `
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('stats-content', 'stats-arrow')" title="Ocultar/Mostrar Análisis" style="align-items:center;">
+                <span id="stats-title-text">Análisis de Datos</span> <span id="stats-arrow" class="drop-arrow">▼</span>
+            </h4>
+            <div id="stats-content" class="dropdown-content show">
+                <div style="height:240px; position:relative; width: 100%;"><canvas id="myChart"></canvas></div>
+                <div id="dynamic-summary" class="dynamic-summary-box"></div>
+                
+                <!-- GRÁFICAS ESTATAL -->
+                <div id="vinculacion-charts-container" style="display:none;">
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                    <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distribución por Estrato</h4>
+                    <div style="height:240px; position:relative;"><canvas id="estratoChart"></canvas></div>
+                    <div id="sintesis-estrato" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                    <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Unidades Económicas por Empresa</h4>
+                    <div style="height:400px; position:relative;"><canvas id="empresaChart"></canvas></div>
+                    <div id="sintesis-empresa" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                    <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distancia de Clústeres (Isocronas)</h4>
+                    <div style="height:300px; position:relative;"><canvas id="isocronaChart"></canvas></div>
+                    <div id="sintesis-isocrona" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                </div>
+            </div>
+        `;
+        leftContainer.appendChild(statsBox);
+    }
+
+    if (!document.getElementById('fin-overlay')) {
+        var finBox = document.createElement('div');
+        finBox.id = 'fin-overlay'; finBox.className = 'dashboard-box'; finBox.style.display = 'none';
+        finBox.innerHTML = `
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('fin-content', 'fin-arrow')" title="Ocultar/Mostrar Indicadores">
+                <span id="fin-title-text" style="font-size:13px; font-weight:bold;">Indicadores Financieros</span> <span id="fin-arrow" class="drop-arrow">▼</span>
+            </h4>
+            <div id="fin-content" class="dropdown-content show">
+                <!-- GRÁFICAS MUNDIAL/NACIONAL -->
+                <div id="empresas-chart-container" style="display:none;">
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0; display:none;">
+                    <div id="indicador-container-box" style="margin-bottom:10px; position:relative;">
+                        <select id="fin-indicator-select" style="background:#222; color:#fff; border:1px solid #555; border-radius:4px; padding:5px; width:100%; font-size:11px;" onchange="if(window.cambiarIndicadorFinanciero) window.cambiarIndicadorFinanciero()">
+                            <option value="Activos_Millones" selected>Activos (Millones pesos)</option>
+                            <option value="Capital_Accs_Millones">Capital Accs (Millones)</option>
+                            <option value="Ingresos_Millones">Ingresos (Millones)</option>
+                            <option value="Ingreso_%_cambio_Año_Anterior">Ingreso % cambio Año Anterior</option>
+                            <option value="Utilidad_Millones">Utilidad (Millones)</option>
+                            <option value="Utilidad_%_Ventas">Utilidad % Ventas</option>
+                            <option value="Utilidad_%_Año_Anterior">Utilidad % Año Anterior</option>
+                            <option value="Utilidad_%_Activos">Utilidad % Activos</option>
+                            <option value="Valor_Mercado_Millones">Valor Mercado (Millones)</option>
+                            <option value="Cambio_%_Valor_Mercado">Cambio % Valor Mercado</option>
+                            <option value="Empleados">Empleados</option>
+                            <option value="Ventas_empleado">Ventas por empleado</option>
+                            <option value="Resultados_Empleado">Resultados Empleado</option>
+                            <option value="ROE">ROE</option>
+                            <option value="Rotación_Activos">Rotación Activos</option>
+                            <option value="Multiplicador_Capital">Multiplicador Capital</option>
+                        </select>
+                    </div>
+                    <h4 class="panel-title" id="empresas-chart-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Top de empresas con mayor rendimiento</h4>
+                    <div style="height:260px; position:relative;"><canvas id="empresasLineChart"></canvas></div>
+                    <div id="sintesis-empresasLine" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                </div>
+            </div>
+        `;
+        leftContainer.appendChild(finBox);
+    }
+
     if (!document.getElementById('marco-legal-box')) {
         // Marco Legal Multiescalar
         var marcoBox = document.createElement('div');
@@ -671,73 +744,6 @@ function setupUI() {
             </div>
         `;
         leftContainer.appendChild(pentaBox);
-    }
-
-    if (!document.getElementById('stats-overlay')) {
-        var statsBox = document.createElement('div');
-        statsBox.id = 'stats-overlay'; statsBox.className = 'dashboard-box'; statsBox.style.display = 'none';
-        statsBox.innerHTML = `
-            <h4 class="panel-title toggleable" onclick="toggleDropdown('stats-content', 'stats-arrow')" title="Ocultar/Mostrar Análisis" style="align-items:center;">
-                <span id="stats-title-text">Análisis de Datos</span> <span id="stats-arrow" class="drop-arrow">▼</span>
-            </h4>
-            <div id="stats-content" class="dropdown-content show">
-                <div style="height:240px; position:relative; width: 100%;"><canvas id="myChart"></canvas></div>
-                <div id="dynamic-summary" class="dynamic-summary-box"></div>
-                
-                <!-- GRÁFICAS ESTATAL -->
-                <div id="vinculacion-charts-container" style="display:none;">
-                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
-                    <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distribución por Estrato</h4>
-                    <div style="height:240px; position:relative;"><canvas id="estratoChart"></canvas></div>
-                    <div id="sintesis-estrato" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
-                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
-                    <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Unidades Económicas por Empresa</h4>
-                    <div style="height:400px; position:relative;"><canvas id="empresaChart"></canvas></div>
-                    <div id="sintesis-empresa" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
-                </div>
-            </div>
-        `;
-        leftContainer.appendChild(statsBox);
-    }
-
-    if (!document.getElementById('fin-overlay')) {
-        var finBox = document.createElement('div');
-        finBox.id = 'fin-overlay'; finBox.className = 'dashboard-box'; finBox.style.display = 'none';
-        finBox.innerHTML = `
-            <h4 class="panel-title toggleable" onclick="toggleDropdown('fin-content', 'fin-arrow')" title="Ocultar/Mostrar Indicadores">
-                <span id="fin-title-text" style="font-size:13px; font-weight:bold;">Indicadores Financieros</span> <span id="fin-arrow" class="drop-arrow">▼</span>
-            </h4>
-            <div id="fin-content" class="dropdown-content show">
-                <!-- GRÁFICAS MUNDIAL/NACIONAL -->
-                <div id="empresas-chart-container" style="display:none;">
-                    <hr style="border:0; border-top:1px solid #444; margin:12px 0; display:none;">
-                    <div id="indicador-container-box" style="margin-bottom:10px; position:relative;">
-                        <select id="fin-indicator-select" style="background:#222; color:#fff; border:1px solid #555; border-radius:4px; padding:5px; width:100%; font-size:11px;" onchange="if(window.cambiarIndicadorFinanciero) window.cambiarIndicadorFinanciero()">
-                            <option value="Activos_Millones" selected>Activos (Millones pesos)</option>
-                            <option value="Capital_Accs_Millones">Capital Accs (Millones)</option>
-                            <option value="Ingresos_Millones">Ingresos (Millones)</option>
-                            <option value="Ingreso_%_cambio_Año_Anterior">Ingreso % cambio Año Anterior</option>
-                            <option value="Utilidad_Millones">Utilidad (Millones)</option>
-                            <option value="Utilidad_%_Ventas">Utilidad % Ventas</option>
-                            <option value="Utilidad_%_Año_Anterior">Utilidad % Año Anterior</option>
-                            <option value="Utilidad_%_Activos">Utilidad % Activos</option>
-                            <option value="Valor_Mercado_Millones">Valor Mercado (Millones)</option>
-                            <option value="Cambio_%_Valor_Mercado">Cambio % Valor Mercado</option>
-                            <option value="Empleados">Empleados</option>
-                            <option value="Ventas_empleado">Ventas por empleado</option>
-                            <option value="Resultados_Empleado">Resultados Empleado</option>
-                            <option value="ROE">ROE</option>
-                            <option value="Rotación_Activos">Rotación Activos</option>
-                            <option value="Multiplicador_Capital">Multiplicador Capital</option>
-                        </select>
-                    </div>
-                    <h4 class="panel-title" id="empresas-chart-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Top de empresas con mayor rendimiento</h4>
-                    <div style="height:260px; position:relative;"><canvas id="empresasLineChart"></canvas></div>
-                    <div id="sintesis-empresasLine" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
-                </div>
-            </div>
-        `;
-        leftContainer.appendChild(finBox);
     }
 
     // Se ha movido el contenido a leftContainer
@@ -884,16 +890,27 @@ function actualizarLeyenda(breaks, moneda) {
     var coloresCSS = RampaRojos.join(', ');
 
     var html = `
-        <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">Valor (${moneda})</div>
-        <div style="width: 100%; padding: 0 5px; box-sizing: border-box;">
-            <div style="width: 100%; height: 35px; background: linear-gradient(to right, ${coloresCSS}); clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 60%);"></div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 5px;">
-                <span>$${f(valorMinimo)}</span>
-                <span>> $${f(valorMaximo)}</span>
+        <div id="legend-flujos">
+            <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">Valor (${moneda})</div>
+            <div style="width: 100%; padding: 0 5px; box-sizing: border-box;">
+                <div style="width: 100%; height: 35px; background: linear-gradient(to right, ${coloresCSS}); clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 60%);"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 5px;">
+                    <span>$${f(valorMinimo)}</span>
+                    <span>> $${f(valorMaximo)}</span>
+                </div>
             </div>
         </div>
+        <div id="legend-nodos-locales" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; display:none;"></div>
     `;
+
     div.innerHTML = html;
+
+    if (currentScaleType === 'nacional') {
+        if (window.top5NombresCache && window.coloresLineasCache) {
+            window.actualizarLeyendaNodosNacionales(window.top5NombresCache, window.coloresLineasCache);
+        }
+    }
+
     overlay.style.display = 'block';
 }
 
@@ -1237,6 +1254,63 @@ window.procesarDatosEmpresas = function (datos, indicador = 'Activos_Millones') 
     }
 };
 
+window.top5NombresCache = null;
+window.coloresLineasCache = null;
+
+window.actualizarLeyendaNodosNacionales = function(top5Nombres, colores) {
+    if (currentScaleType !== 'nacional') return;
+    
+    window.top5NombresCache = top5Nombres;
+    window.coloresLineasCache = colores;
+    
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if (!div || !overlay) return;
+    
+    var divNodos = document.getElementById('legend-nodos-locales');
+    if (!divNodos) {
+        var ext = document.getElementById('legend-flujos');
+        if (!ext) {
+            div.innerHTML = `<div id="legend-flujos" style="display:none;"></div><div id="legend-nodos-locales" style="margin-top:5px; padding-top:5px;"></div>`;
+        } else {
+            div.innerHTML += `<div id="legend-nodos-locales" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;"></div>`;
+        }
+        divNodos = document.getElementById('legend-nodos-locales');
+    }
+    
+    if (!divNodos) return;
+    
+    var htmlItems = '';
+    if (top5Nombres && top5Nombres.length > 0) {
+        top5Nombres.forEach((nombre, index) => {
+            var color = colores[index] || '#fff';
+            htmlItems += `
+                <div style="display:flex; align-items:center; margin-bottom:5px;">
+                    <div style="width:16px; height:16px; margin-right:8px; display:flex; justify-content:center; align-items:center;">
+                        <div style="width:10px; height:10px; background:${color}; border-radius:50%; border:1px solid #1a1a1a; box-shadow: 0 0 5px ${color};"></div>
+                    </div>
+                    <span style="font-size:11px; color:#ddd;" title="${nombre}">${nombre.length > 30 ? nombre.substring(0,30)+'...' : nombre}</span>
+                </div>
+            `;
+        });
+    }
+
+    divNodos.innerHTML = `
+        <div style="margin-bottom: 8px; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase;">Nodos Locales</div>
+        <div style="display:flex; align-items:center; margin-bottom:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:8px;">
+                <polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/>
+            </svg>
+            <span style="font-size:11px; color:#ccc;">Planta Armadora Automotriz</span>
+        </div>
+        <div style="margin-bottom: 6px; font-weight:bold; color:#aaa; font-size:10px; text-transform:uppercase;">Mayor Rendimiento (Top 5)</div>
+        ${htmlItems}
+    `;
+    
+    divNodos.style.display = 'block';
+    overlay.style.display = 'block';
+};
+
 window.nacionalTop5Layer = null;
 
 window.iluminarTop5Nacional = function (top5Nombres, colores) {
@@ -1308,6 +1382,7 @@ window.iluminarTop5Nacional = function (top5Nombres, colores) {
         });
 
         window.nacionalTop5Layer.addTo(map);
+        window.actualizarLeyendaNodosNacionales(top5Nombres, colores);
     };
 
     if (window.denueRawData) {
