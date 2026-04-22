@@ -1290,3 +1290,77 @@ path.leaflet-interactive {
     fill-opacity: 1;
   }
 }
+
+/* =========================================
+   10. GALERÍA DE MAPAS BASE (CUSTOM CONTROL)
+   ========================================= */
+.basemap-gallery-container {
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+/* Se reutiliza el icono nativo de leaflet-control-layers-toggle (el recuadro con líneas) */
+.basemap-toggle-btn {
+  width: 36px;
+  height: 36px;
+  background-color: transparent;
+}
+
+.basemap-toggle-btn:hover {
+  background-color: #444;
+  border-radius: 4px;
+}
+
+.basemap-gallery-panel {
+  display: none; /* Se cambia a grid en JS */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px;
+  position: absolute;
+  top: 0;
+  right: 40px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid #555;
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  width: 160px;
+}
+
+.basemap-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  padding: 4px;
+  transition: all 0.2s;
+  background: #222;
+}
+
+.basemap-item:hover {
+  border-color: #555;
+  background: #333;
+}
+
+.basemap-item.active {
+  border-color: #00e5ff;
+  background: #004080;
+}
+
+.basemap-thumb {
+  width: 60px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 2px;
+  margin-bottom: 5px;
+  border: 1px solid #444;
+}
+
+.basemap-label {
+  font-size: 10px;
+  color: #ddd;
+  text-align: center;
+  font-weight: bold;
+}

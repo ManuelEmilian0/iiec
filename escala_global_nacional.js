@@ -49,15 +49,78 @@ function initMap() {
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '&copy; Esri &mdash; Source: Esri', maxZoom: 19
     });
+    var googleMaps = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: '&copy; Google'
+    });
 
     satelite.addTo(map);
 
-    var mapasBase = {
-        "Satélite (Esri)": satelite,
-        "Mapa Oscuro (Carto)": cartoDark,
-        "Mapa Claro (Carto)": cartoLight
+    // ==========================================
+    // GALERÍA DE MAPAS BASE CUSTOM
+    // ==========================================
+    var basemapGalleryControl = L.control({ position: 'topright' });
+    basemapGalleryControl.onAdd = function (map) {
+        // Use standard leaflet layers classes to get the default icon
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-layers basemap-gallery-container');
+        
+        var toggleBtn = L.DomUtil.create('a', 'leaflet-control-layers-toggle basemap-toggle-btn', container);
+        toggleBtn.href = '#';
+        toggleBtn.title = 'Galería de Mapas Base';
+        // Remove innerHTML to let CSS background-image show the default icon
+        
+        var galleryPanel = L.DomUtil.create('div', 'basemap-gallery-panel', container);
+        galleryPanel.style.display = 'none';
+
+        var basemaps = [
+            { name: "Satélite", layer: satelite, thumb: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/4/6/3" },
+            { name: "Oscuro", layer: cartoDark, thumb: "https://a.basemaps.cartocdn.com/dark_all/4/6/3.png" },
+            { name: "Claro", layer: cartoLight, thumb: "https://a.basemaps.cartocdn.com/light_all/4/6/3.png" },
+            { name: "Google Maps", layer: googleMaps, thumb: "https://mt1.google.com/vt/lyrs=m&x=3&y=6&z=4" }
+        ];
+
+        var currentActiveLayer = satelite;
+
+        basemaps.forEach(function(bm) {
+            var item = L.DomUtil.create('div', 'basemap-item', galleryPanel);
+            if (bm.layer === currentActiveLayer) item.classList.add('active');
+            
+            var img = L.DomUtil.create('img', 'basemap-thumb', item);
+            img.src = bm.thumb;
+            
+            var label = L.DomUtil.create('span', 'basemap-label', item);
+            label.innerText = bm.name;
+
+            L.DomEvent.on(item, 'click', function() {
+                if (currentActiveLayer !== bm.layer) {
+                    map.removeLayer(currentActiveLayer);
+                    map.addLayer(bm.layer);
+                    currentActiveLayer = bm.layer;
+                    
+                    var allItems = galleryPanel.querySelectorAll('.basemap-item');
+                    allItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                }
+                galleryPanel.style.display = 'none'; // Auto cerrar al seleccionar
+            });
+        });
+
+        L.DomEvent.on(toggleBtn, 'click', function(e) {
+            L.DomEvent.stopPropagation(e);
+            L.DomEvent.preventDefault(e);
+            galleryPanel.style.display = galleryPanel.style.display === 'none' ? 'grid' : 'none';
+        });
+
+        // Cerrar galería si se hace clic en el mapa
+        map.on('click', function() {
+            galleryPanel.style.display = 'none';
+        });
+
+        L.DomEvent.disableClickPropagation(container);
+        return container;
     };
-    L.control.layers(mapasBase, null, { position: 'topright' }).addTo(map);
+    basemapGalleryControl.addTo(map);
 
     // ==========================================
     // CONTROL DE DESCARGAS (Left of Layers)
