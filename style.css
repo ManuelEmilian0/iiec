@@ -591,13 +591,22 @@ strong {
   background: transparent;
   border: none;
   box-shadow: none;
-  color: #00a2ff;
-  /* Cyan neón */
-  font-weight: 900;
-  font-size: 14px;
-  /* Un poco más grande */
-  text-shadow: 2px 2px 3px #000;
-  /* Sombra para leerse sobre el mapa oscuro */
+  color: rgba(0, 162, 255, 0.7);
+  font-weight: 800;
+  font-size: 11px;
+  text-shadow: 1px 1px 2px #000;
+  font-family: sans-serif;
+}
+
+/* Etiqueta para Destino de Intercambios */
+.etiqueta-destino {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #fff;
+  font-weight: bold;
+  font-size: 10px;
+  text-shadow: 1px 1px 3px #000;
   font-family: sans-serif;
 }
 

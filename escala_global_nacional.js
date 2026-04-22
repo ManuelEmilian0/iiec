@@ -35,20 +35,72 @@ document.addEventListener('DOMContentLoaded', function () {
 function initMap() {
     if (map !== undefined && map !== null) { map.remove(); }
 
-    map = L.map('map', { minZoom: 2, maxZoom: 18, zoomControl: false }).setView([20, 0], 2);
+    map = L.map('map', { minZoom: 2, maxZoom: 18, zoomControl: false });
+    // Encuadre inicial exacto (América hasta Europa/África)
+    map.fitBounds([[-55, -130], [75, 60]]);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19
+    });
+    var cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19
     });
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '&copy; Esri &mdash; Source: Esri', maxZoom: 19
     });
 
-    cartoDark.addTo(map);
+    satelite.addTo(map);
 
-    var mapasBase = { "Mapa Oscuro (Carto)": cartoDark, "Satélite (Esri)": satelite };
+    var mapasBase = {
+        "Satélite (Esri)": satelite,
+        "Mapa Oscuro (Carto)": cartoDark,
+        "Mapa Claro (Carto)": cartoLight
+    };
     L.control.layers(mapasBase, null, { position: 'topright' }).addTo(map);
+
+    // ==========================================
+    // CONTROL DE DESCARGAS (Left of Layers)
+    // ==========================================
+    var downloadControl = L.control({ position: 'topright' });
+    downloadControl.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        div.innerHTML = `
+            <div id="download-menu" class="download-menu-container">
+                <button class="auth-hidden auth-required-btn" onclick="descargarGeoJSON()" style="display:none;" title="Requiere iniciar sesión">⬇️ Descargar GeoJSON</button>
+            </div>
+        `;
+        L.DomEvent.disableClickPropagation(div);
+        return div;
+    };
+    downloadControl.addTo(map);
+
+    // Funciones globales de exportación
+    window.tomarCapturaPantalla = function() {
+        // html2canvas toma el body completo (dashboard + mapa)
+        html2canvas(document.body, {
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#1a1a1a'
+        }).then(function(canvas) {
+            var link = document.createElement('a');
+            link.download = 'dashboard_' + currentScaleType + '.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+    };
+
+    window.descargarGeoJSON = function() {
+        var filename = currentScaleType + '.geojson';
+        // En nacional, los puntos base son armadoras.geojson, pero también hay nacional.geojson
+        if(currentScaleType === 'nacional') filename = 'nacional.geojson';
+        var link = document.createElement('a');
+        link.href = filename;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     // Control de Fuente dinamico
     fuenteControl = L.control({ position: 'bottomright' });
@@ -68,6 +120,9 @@ function initMap() {
     showSection('inicio');
 
     setTimeout(() => { loadLayer('mundial'); }, 500);
+
+    // Asegurar que el estado de autenticación se aplique al control recién creado
+    if (typeof checkAuthUI === "function") checkAuthUI();
 }
 
 // ==========================================
@@ -86,9 +141,6 @@ function loadLayer(scaleType) {
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) {
         statsDiv.style.display = 'none';
-        // Restaurar el botón de captura por defecto al cambiar de escala
-        var screenshotBtn = statsDiv.querySelector('.screenshot-btn');
-        if (screenshotBtn) screenshotBtn.style.display = 'flex';
     }
 
     var legendDiv = document.getElementById('legend-overlay');
@@ -97,11 +149,24 @@ function loadLayer(scaleType) {
     var summaryDiv = document.getElementById('dynamic-summary');
     if (summaryDiv) summaryDiv.style.display = 'none';
 
+    var summaryGlobalDiv = document.getElementById('dynamic-summary-global');
+    if (summaryGlobalDiv) summaryGlobalDiv.style.display = 'none';
+
     var vincContainer = document.getElementById('vinculacion-charts-container');
     if (vincContainer) vincContainer.style.display = 'none';
 
     var empContainer = document.getElementById('empresas-chart-container');
     if (empContainer) empContainer.style.display = 'none';
+
+    var tgc = document.getElementById('topGlobalChartContainer');
+    if (tgc) tgc.style.display = 'none';
+    var tgt = document.getElementById('topGlobalChartTitle');
+    if (tgt) tgt.style.display = 'none';
+    var tghr = document.getElementById('topGlobalChartHr');
+    if (tghr) tghr.style.display = 'none';
+    var mct = document.getElementById('myChartTitle');
+    if (mct) mct.style.display = 'none';
+    if (window.topGlobalChartInstance) { window.topGlobalChartInstance.destroy(); window.topGlobalChartInstance = null; }
 
     var finOverlay = document.getElementById('fin-overlay');
     if (finOverlay) finOverlay.style.display = 'none';
@@ -140,7 +205,7 @@ function loadLayer(scaleType) {
                         return L.marker(latlng, { icon: triangleIcon });
                     },
                     onEachFeature: function (feature, layer) {
-                        var armName = feature.properties.Empresa || feature.properties.Nombre || 'Armadora';
+                        var armName = feature.properties.Empresa || feature.properties.NOMBRE || feature.properties.Nombre || 'Armadora';
                         var armEst = feature.properties.Estado || feature.properties.ESTADO || '';
                         layer.bindPopup(`<b style="color:#00e5ff;">${armName}</b><br><span style="font-size:11px; color:#aaa;">Armadora Automotriz</span><br><span style="font-size:11px; color:#ccc;">${armEst}</span>`, { className: 'custom-popup' });
                     }
@@ -250,7 +315,16 @@ function iniciarFiltroMundial_Paso1(data) {
     selectIndustria.onchange = function () {
         var industriaSel = this.value;
         var datosFiltrados = data.features.filter(f => f.properties.Industria === industriaSel);
-        var origenes = [...new Set(datosFiltrados.map(f => f.properties.Pais_Orige))].sort();
+
+        var sumasPorOrigen = {};
+        datosFiltrados.forEach(f => {
+            var origen = f.properties.Pais_Orige;
+            var valor = f.properties.Valor || 0;
+            if (!sumasPorOrigen[origen]) sumasPorOrigen[origen] = 0;
+            sumasPorOrigen[origen] += valor;
+        });
+
+        var origenes = Object.keys(sumasPorOrigen).sort((a, b) => sumasPorOrigen[b] - sumasPorOrigen[a]);
 
         selectOrigen.innerHTML = `<option value="" disabled selected>-- País --</option>`;
         origenes.forEach(item => {
@@ -258,6 +332,16 @@ function iniciarFiltroMundial_Paso1(data) {
         });
         selectOrigen.style.display = 'block';
         if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+
+        var top5Origenes = origenes.slice(0, 5).map(origen => {
+            return {
+                properties: {
+                    Pais_Orige: origen,
+                    Valor: sumasPorOrigen[origen]
+                }
+            };
+        });
+        actualizarGraficaTop5Global(top5Origenes, industriaSel);
     };
 
     selectOrigen.onchange = function () {
@@ -279,6 +363,7 @@ function iniciarFiltroNacional_Paso1(data) {
     // 1. CLASIFICADOR: Identifica a qué grupo pertenece cada texto de subsector
     function obtenerGrupo(subsectorTexto) {
         let sub = (subsectorTexto || "").toUpperCase();
+        if (sub.includes("PROCESAMIENTO ELECTRONICO") || sub.includes("PROCESAMIENTO ELECTRÓNICO")) return "SERVICIOS SEIT";
         if (sub.includes("ELÉCTRIC") || sub.includes("ELECTRIC") || sub.includes("335")) return "ELÉCTRICA";
         if (sub.includes("ELECTRÓNIC") || sub.includes("ELECTRONIC") || sub.includes("334")) return "ELECTRÓNICA";
         if (sub.includes("INFORM") || sub.includes("TELECOM") || sub.includes("SEIT") || sub.includes("51")) return "SERVICIOS SEIT";
@@ -324,9 +409,8 @@ function iniciarFiltroNacional_Paso1(data) {
     selectSubsector.onchange = function () {
         var subsectorSel = this.value;
 
-        // Buscamos qué estados tienen datos para este subsector específico
-        var datosFiltrados = data.features.filter(f => (f.properties.SUBSECTO_3 === subsectorSel || f.properties.SUBSECTO_2 === subsectorSel));
-        var estados = [...new Set(datosFiltrados.map(f => f.properties.Edo_V))].sort();
+        // Mostrar todos los estados sin filtrar por subsector
+        var estados = [...new Set(data.features.map(f => f.properties.Edo_V))].filter(Boolean).sort();
 
         selectEstado.innerHTML = `<option value="" disabled selected>-- Entidad Federativa --</option>`;
         estados.forEach(item => { selectEstado.innerHTML += `<option value="${item}">${item}</option>`; });
@@ -405,6 +489,22 @@ function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino
 
             fg.addLayer(polyline);
 
+            var destCoord = coords[0];
+            var marker = L.circleMarker(destCoord, {
+                radius: 4,
+                fillColor: RampaRojos[clase],
+                color: "#fff",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 1
+            }).addTo(fg);
+
+            marker.bindTooltip(p[campoDestino], {
+                permanent: true,
+                direction: 'right',
+                className: 'etiqueta-destino'
+            }).openTooltip();
+
             setTimeout(() => {
                 if (polyline._path) {
                     var length = polyline._path.getTotalLength();
@@ -437,6 +537,90 @@ function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino
 // ==========================================
 // UTILIDADES GRÁFICAS GLOBAL/NACIONAL
 // ==========================================
+function actualizarGraficaTop5Global(top5Origenes, industriaSel) {
+    if (typeof Chart === 'undefined') return;
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var titulo = document.getElementById('stats-title-text');
+    if (titulo) {
+        titulo.innerHTML = `Top 5 Exportadores Mundiales<br><small style='color:#aaa; font-size:11px'>Millones de Dólares (MDD)</small>`;
+    }
+
+    var chartTitle = document.getElementById('topGlobalChartTitle');
+    if (chartTitle) chartTitle.style.display = 'block';
+
+    var chartContainer = document.getElementById('topGlobalChartContainer');
+    if (chartContainer) chartContainer.style.display = 'block';
+
+    var hr = document.getElementById('topGlobalChartHr');
+    if (hr) hr.style.display = 'block';
+
+    const canvas = document.getElementById('topGlobalChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    var summaryDiv = document.getElementById('dynamic-summary-global');
+    if (summaryDiv && top5Origenes.length > 0) {
+        var topPais = top5Origenes[0].properties.Pais_Orige;
+        var topValor = (top5Origenes[0].properties.Valor || 0).toLocaleString('es-MX');
+        summaryDiv.innerHTML = `A nivel global, <b>${topPais}</b> lidera las exportaciones en el sector de <b>${industriaSel}</b> con un total de <b>$${topValor} MDD</b> enviados a todo el mundo.`;
+        summaryDiv.style.display = 'block';
+    } else if (summaryDiv) {
+        summaryDiv.style.display = 'none';
+    }
+
+    let labels = top5Origenes.map(f => f.properties.Pais_Orige);
+    let dataValues = top5Origenes.map(f => f.properties.Valor);
+
+    let coloresGradiente = ['#a50f15', '#de2d26', '#fb6a4a', '#fcae91', '#fee5d9'];
+    let bgColors = dataValues.map((val, idx) => coloresGradiente[idx] || '#fee5d9');
+
+    if (window.topGlobalChartInstance) window.topGlobalChartInstance.destroy();
+
+    window.topGlobalChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `Valor Total`,
+                data: dataValues,
+                backgroundColor: bgColors,
+                borderColor: '#333',
+                borderWidth: 1
+            }]
+        },
+        plugins: [ChartDataLabels],
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    color: '#fff',
+                    anchor: 'end',
+                    align: 'right',
+                    font: { weight: 'bold', size: 11 },
+                    formatter: function (value) {
+                        return value.toLocaleString('es-MX');
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#aaa' },
+                    grid: { color: '#444' }
+                },
+                y: {
+                    ticks: { color: '#fff' },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
 function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) {
     if (typeof Chart === 'undefined') return;
     var statsDiv = document.getElementById('stats-overlay');
@@ -444,9 +628,18 @@ function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) 
 
     var titulo = document.getElementById('stats-title-text');
     if (titulo) {
-        if (currentScaleType === 'mundial') titulo.innerHTML = "Top 5 Intercambio Mundial<br><small style='color:#aaa; font-size:11px'>Millones de Dólares (MDD)</small>";
-        else if (currentScaleType === 'nacional') titulo.innerHTML = "Top Intercambio por Estado<br><small style='color:#aaa; font-size:11px'>Millones de Pesos (MDP)</small>";
+        if (currentScaleType === 'nacional') titulo.innerHTML = "Top Intercambio por Estado<br><small style='color:#aaa; font-size:11px'>Millones de Pesos (MDP)</small>";
+        else if (currentScaleType === 'mundial') titulo.innerHTML = "Análisis de Intercambio";
     }
+
+    var chartTitle = document.getElementById('myChartTitle');
+    if (chartTitle) {
+        chartTitle.innerHTML = currentScaleType === 'mundial' ? 'Top 5 Destinos' : 'Top Destinos';
+        chartTitle.style.display = 'block';
+    }
+
+    var chartContainer = document.getElementById('myChartContainer');
+    if (chartContainer) chartContainer.style.display = 'block';
 
     const canvas = document.getElementById('myChart');
     if (!canvas) return;
@@ -466,6 +659,15 @@ function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) 
             var industria = p.Industria || "este sector";
             var paisDestino = p[campoEtiqueta];
             var topValor = (p[campoValor] || 0).toLocaleString('es-MX');
+
+            var totalExportGlobal = features.reduce((sum, f) => sum + (f.properties[campoValor] || 0), 0);
+            var totalExportGlobalFormatted = totalExportGlobal.toLocaleString('es-MX');
+
+            var summaryGlobalDiv = document.getElementById('dynamic-summary-global');
+            if (summaryGlobalDiv) {
+                summaryGlobalDiv.innerHTML = `El total de exportación a nivel global de <b>${paisOrigen}</b> en el sector de <b>${industria}</b> asciende a <b>$${totalExportGlobalFormatted} MDD</b>.`;
+                summaryGlobalDiv.style.display = 'block';
+            }
 
             summaryDiv.innerHTML = `<b>${paisOrigen}</b> es el principal proveedor internacional en el sector de <b>${industria}</b>, exportando <b>$${topValor} MDD</b> hacia <b>${paisDestino}</b>, destinados directamente a abastecer a su <span style="color:#00a2ff; font-weight:900; text-transform:uppercase; text-shadow: 1px 1px 2px #000;">Industria Automotriz</span>.`;
             summaryDiv.style.display = 'block';
@@ -633,7 +835,12 @@ function setupUI() {
                 <span id="stats-title-text">Análisis de Datos</span> <span id="stats-arrow" class="drop-arrow">▼</span>
             </h4>
             <div id="stats-content" class="dropdown-content show">
-                <div style="height:240px; position:relative; width: 100%;"><canvas id="myChart"></canvas></div>
+                <h4 class="panel-title" id="topGlobalChartTitle" style="font-size:12px; margin-bottom:8px; display:none;">Top 5 Exportadores Mundiales</h4>
+                <div style="height:240px; position:relative; width: 100%; display:none;" id="topGlobalChartContainer"><canvas id="topGlobalChart"></canvas></div>
+                <div id="dynamic-summary-global" class="dynamic-summary-box" style="margin-top:10px; margin-bottom:15px; display:none;"></div>
+                <hr id="topGlobalChartHr" style="border:0; border-top:1px solid #444; margin:12px 0; display:none;">
+                <h4 class="panel-title" id="myChartTitle" style="font-size:12px; margin-bottom:8px; display:none;">Top Destinos</h4>
+                <div style="height:240px; position:relative; width: 100%; display:none;" id="myChartContainer"><canvas id="myChart"></canvas></div>
                 <div id="dynamic-summary" class="dynamic-summary-box"></div>
                 
                 <!-- GRÁFICAS ESTATAL -->
@@ -661,7 +868,7 @@ function setupUI() {
         finBox.id = 'fin-overlay'; finBox.className = 'dashboard-box'; finBox.style.display = 'none';
         finBox.innerHTML = `
             <h4 class="panel-title toggleable" onclick="toggleDropdown('fin-content', 'fin-arrow')" title="Ocultar/Mostrar Indicadores">
-                <span id="fin-title-text" style="font-size:13px; font-weight:bold;">Indicadores Financieros</span> <span id="fin-arrow" class="drop-arrow">▼</span>
+                <span id="fin-title-text" style="font-size:13px; font-weight:bold;">Indicadores Financieros Globales</span> <span id="fin-arrow" class="drop-arrow">▼</span>
             </h4>
             <div id="fin-content" class="dropdown-content show">
                 <!-- GRÁFICAS MUNDIAL/NACIONAL -->
@@ -687,7 +894,7 @@ function setupUI() {
                             <option value="Multiplicador_Capital">Multiplicador Capital</option>
                         </select>
                     </div>
-                    <h4 class="panel-title" id="empresas-chart-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Top de empresas con mayor rendimiento</h4>
+                    <h4 class="panel-title" id="empresas-chart-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Empresas con mayor rendimiento del indicador que se seleccione</h4>
                     <div style="height:260px; position:relative;"><canvas id="empresasLineChart"></canvas></div>
                     <div id="sintesis-empresasLine" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
                 </div>
@@ -767,7 +974,9 @@ function actualizarPanelDerecho(escala) {
     var htmlLeyes = "";
 
     if (escala === 'mundial') {
-        htmlLeyes += '<a href="https://www.gob.mx/t-mec" target="_blank" class="legal-card level-mundial">📜 T-MEC<br><small>Tratado entre México, EE.UU. y Canadá</small></a>';
+        htmlLeyes += '<a href="https://www.wto.org/spanish/docs_s/legal_s/legal_s.htm" target="_blank" class="legal-card level-mundial">🌐 Acuerdos de la OMC<br><small>Comercio Internacional</small></a>';
+        htmlLeyes += '<a href="https://www.who.int/es/about/governance/constitution" target="_blank" class="legal-card level-mundial">⚕️ Constitución de la OMS<br><small>Salud Global</small></a>';
+        htmlLeyes += '<a href="https://www.nato.int/cps/en/natohq/index.htm" target="_blank" class="legal-card level-mundial">🛡️ OTAN<br><small>Seguridad Internacional</small></a>';
         htmlLeyes += '<a href="https://www.un.org/sustainabledevelopment/es/objetivos-de-desarrollo-sostenible/" target="_blank" class="legal-card level-mundial">🌎 Objetivos de Desarrollo Sostenible<br><small>Agenda 2030 (ONU)</small></a>';
 
         ttGov.innerHTML = "<b>Gobierno Nacional:</b><br>Secretaría de Relaciones Exteriores, Economía";
@@ -777,6 +986,7 @@ function actualizarPanelDerecho(escala) {
         ttEnv.innerHTML = "<b>Ambiente:</b><br>Tratados Climáticos Globales";
 
     } else if (escala === 'nacional') {
+        htmlLeyes += '<a href="https://www.gob.mx/t-mec" target="_blank" class="legal-card level-nacional">🤝 T-MEC<br><small>Tratado entre México, EE.UU. y Canadá</small></a>';
         htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf" target="_blank" class="legal-card level-nacional">⚖️ Constitución Política de los E.U.M.<br><small>Artículos 25, 26, 27 y 115</small></a>';
         htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGAHOTDU_011220.pdf" target="_blank" class="legal-card level-nacional">📘 Ley General de Asentamientos Humanos<br><small>LGAHOTDU</small></a>';
         htmlLeyes += '<a href="https://www.dof.gob.mx/nota_detalle.php?codigo=5643444&fecha=22/02/2022" target="_blank" class="legal-card level-nacional">📗 NOM-001-SEDATU-2021<br><small>Espacios Públicos</small></a>';
@@ -1257,16 +1467,16 @@ window.procesarDatosEmpresas = function (datos, indicador = 'Activos_Millones') 
 window.top5NombresCache = null;
 window.coloresLineasCache = null;
 
-window.actualizarLeyendaNodosNacionales = function(top5Nombres, colores) {
+window.actualizarLeyendaNodosNacionales = function (top5Nombres, colores) {
     if (currentScaleType !== 'nacional') return;
-    
+
     window.top5NombresCache = top5Nombres;
     window.coloresLineasCache = colores;
-    
+
     var overlay = document.getElementById('legend-overlay');
     var div = document.getElementById('legend-content');
     if (!div || !overlay) return;
-    
+
     var divNodos = document.getElementById('legend-nodos-locales');
     if (!divNodos) {
         var ext = document.getElementById('legend-flujos');
@@ -1277,9 +1487,9 @@ window.actualizarLeyendaNodosNacionales = function(top5Nombres, colores) {
         }
         divNodos = document.getElementById('legend-nodos-locales');
     }
-    
+
     if (!divNodos) return;
-    
+
     var htmlItems = '';
     if (top5Nombres && top5Nombres.length > 0) {
         top5Nombres.forEach((nombre, index) => {
@@ -1289,7 +1499,7 @@ window.actualizarLeyendaNodosNacionales = function(top5Nombres, colores) {
                     <div style="width:16px; height:16px; margin-right:8px; display:flex; justify-content:center; align-items:center;">
                         <div style="width:10px; height:10px; background:${color}; border-radius:50%; border:1px solid #1a1a1a; box-shadow: 0 0 5px ${color};"></div>
                     </div>
-                    <span style="font-size:11px; color:#ddd;" title="${nombre}">${nombre.length > 30 ? nombre.substring(0,30)+'...' : nombre}</span>
+                    <span style="font-size:11px; color:#ddd;" title="${nombre}">${nombre.length > 30 ? nombre.substring(0, 30) + '...' : nombre}</span>
                 </div>
             `;
         });
@@ -1306,7 +1516,7 @@ window.actualizarLeyendaNodosNacionales = function(top5Nombres, colores) {
         <div style="margin-bottom: 6px; font-weight:bold; color:#aaa; font-size:10px; text-transform:uppercase;">Mayor Rendimiento (Top 5)</div>
         ${htmlItems}
     `;
-    
+
     divNodos.style.display = 'block';
     overlay.style.display = 'block';
 };

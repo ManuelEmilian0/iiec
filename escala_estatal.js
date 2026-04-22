@@ -133,21 +133,38 @@ function filtrarPorEstado(nombreEstado) {
     if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
     if (armadorasLayer) map.removeLayer(armadorasLayer);
 
-    var animIso15 = [], animIso30 = [], animIso60 = [];
-    var animDenue = [], animArmadoras = [];
+    window.animIso15 = []; window.animIso30 = []; window.animIso60 = [];
+    window.animDenue = []; window.animArmadoras = [];
 
     if (isocronasEstado.length > 0) {
         isocronasLayer = L.geoJSON(isocronasEstado, {
             style: function () { return { opacity: 0, fillOpacity: 0, weight: 1.5, className: 'sin-interaccion' }; },
             onEachFeature: function (feature, layer) {
                 var mins = parseInt(feature.properties.AA_MINS || 0);
-                if (mins <= 15) animIso15.push(layer); else if (mins <= 30) animIso30.push(layer); else animIso60.push(layer);
+                if (mins <= 15) window.animIso15.push(layer); else if (mins <= 30) window.animIso30.push(layer); else window.animIso60.push(layer);
             }
         }).addTo(map);
         isocronasLayer.bringToBack();
     }
 
     if (denueEstado.length > 0) {
+        // Pre-clasificar denueEstado
+        denueEstado.forEach(f => {
+            var pt;
+            try { pt = turf.point(f.geometry.coordinates); } catch(e) { return; }
+            var mins = 999;
+            for(let i=0; i<isocronasEstado.length; i++) {
+                var iso = isocronasEstado[i];
+                try {
+                    if (turf.booleanPointInPolygon(pt, iso)) {
+                        let minIso = parseInt(iso.properties.AA_MINS || 999);
+                        if (minIso < mins) mins = minIso;
+                    }
+                } catch(e) {}
+            }
+            f.properties._isocrona = mins;
+        });
+        
         denueEstado.sort((a, b) => getRadioEstrato(b.properties.Estrato) - getRadioEstrato(a.properties.Estrato));
         currentGeoJSONLayer = L.geoJSON(denueEstado, {
             pointToLayer: function (feature, latlng) {
@@ -156,7 +173,8 @@ function filtrarPorEstado(nombreEstado) {
                 return L.circleMarker(latlng, { radius: radio, fillColor: getColorConjunto(sector), color: "#ffffff", weight: 0.8, opacity: 0, fillOpacity: 0 });
             },
             onEachFeature: function (feature, layer) {
-                animDenue.push(layer);
+                layer.feature._isocrona = feature.properties._isocrona || 999;
+                window.animDenue.push(layer);
                 layer.bindPopup(`<b>${feature.properties.Nombre || feature.properties.Empresa || feature.properties['Nombre de empresa']}</b><br><small>${feature.properties.Conjunto || feature.properties['Industrias agrupadas'] || 'Otros'}</small><br><small>Estrato: ${normalizarEstrato(feature.properties.Estrato)}</small>`);
             }
         }).addTo(map);
@@ -169,33 +187,37 @@ function filtrarPorEstado(nombreEstado) {
             pointToLayer: function (feature, latlng) {
                 return L.marker(latlng, { icon: triangleIcon, opacity: 0 });
             },
-            onEachFeature: function (feature, layer) { animArmadoras.push(layer); }
+            onEachFeature: function (feature, layer) { window.animArmadoras.push(layer); }
         }).addTo(map);
     }
 
     function ejecutarAnimacion() {
-        animDenue.sort(() => Math.random() - 0.5);
-        let tercio = Math.floor(animDenue.length / 3);
-        let denue1 = animDenue.slice(0, tercio);
-        let denue2 = animDenue.slice(tercio, tercio * 2);
-        let denue3 = animDenue.slice(tercio * 2);
+        var ad = window.animDenue;
+        if(ad) ad.sort(() => Math.random() - 0.5);
+        let tercio = Math.floor(ad.length / 3);
+        let denue1 = ad.slice(0, tercio);
+        let denue2 = ad.slice(tercio, tercio * 2);
+        let denue3 = ad.slice(tercio * 2);
 
         setTimeout(() => {
-            animIso15.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.8, color: getColorIsocrona(15), fillColor: getColorIsocrona(15) }));
-            animArmadoras.forEach(l => {
+            window.animIso15.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.8, color: getColorIsocrona(15), fillColor: getColorIsocrona(15) }));
+            window.animArmadoras.forEach(l => {
                 if (l.setStyle) l.setStyle({ opacity: 1, fillOpacity: 1 });
                 if (l.setOpacity) l.setOpacity(1);
                 l.bindTooltip(l.feature.properties.NOMBRE || l.feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] });
             });
             denue1.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
+            if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();
         }, 100);
         setTimeout(() => {
-            animIso30.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.4, color: getColorIsocrona(30), fillColor: getColorIsocrona(30) }));
+            window.animIso30.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.4, color: getColorIsocrona(30), fillColor: getColorIsocrona(30) }));
             denue2.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
+            if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();
         }, 800);
         setTimeout(() => {
-            animIso60.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.25, color: getColorIsocrona(60), fillColor: getColorIsocrona(60) }));
+            window.animIso60.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.25, color: getColorIsocrona(60), fillColor: getColorIsocrona(60) }));
             denue3.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
+            if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();
         }, 1500);
     }
 
@@ -582,9 +604,19 @@ function actualizarLeyendaIsocronas() {
 
     div.innerHTML = `
         <div style="margin: 4px 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Tiempo en Auto</div>
-        <div class="legend-item"><span class="legend-color" style="background:rgba(0, 255, 0, 0.8); border:1px solid #00ff00"></span> 0 - 15 Minutos</div>
-        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 255, 0, 0.6); border:1px solid #ffff00"></span> 15 - 30 Minutos</div>
-        <div class="legend-item"><span class="legend-color" style="background:rgba(255, 69, 0, 0.3); border:1px solid #ff4500"></span> 30 - 60 Minutos</div>
+        
+        <label style="color:#fff; font-size:12px; display:flex; align-items:center; gap:5px; cursor:pointer; margin-bottom:4px;">
+            <input type="checkbox" id="chk-iso-15" checked onchange="if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas()"> <span class="legend-color" style="background:rgba(0, 255, 0, 0.8); border:1px solid #00ff00"></span> 0 - 15 Minutos
+        </label>
+        <label style="color:#fff; font-size:12px; display:flex; align-items:center; gap:5px; cursor:pointer; margin-bottom:4px;">
+            <input type="checkbox" id="chk-iso-30" checked onchange="if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas()"> <span class="legend-color" style="background:rgba(255, 255, 0, 0.6); border:1px solid #ffff00"></span> 15 - 30 Minutos
+        </label>
+        <label style="color:#fff; font-size:12px; display:flex; align-items:center; gap:5px; cursor:pointer; margin-bottom:4px;">
+            <input type="checkbox" id="chk-iso-60" checked onchange="if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas()"> <span class="legend-color" style="background:rgba(255, 69, 0, 0.3); border:1px solid #ff4500"></span> 30 - 60 Minutos
+        </label>
+        <label style="color:#fff; font-size:12px; display:flex; align-items:center; gap:5px; cursor:pointer; margin-bottom:4px;">
+            <input type="checkbox" id="chk-iso-out" checked onchange="if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas()"> <span class="legend-color" style="background:transparent; border:1px dashed #aaa"></span> Fuera de Isócronas
+        </label>
         
         <div style="display:flex; justify-content:space-between; margin-top:10px; gap: 10px;">
             <div style="flex:1;">
@@ -622,3 +654,32 @@ function actualizarLeyendaIsocronas() {
     `;
     overlay.style.display = 'block';
 }
+
+// Global function to handle toggling isochrones visibility and their points
+window.actualizarVisibilidadIsocronas = function() {
+    var show15 = document.getElementById('chk-iso-15') ? document.getElementById('chk-iso-15').checked : true;
+    var show30 = document.getElementById('chk-iso-30') ? document.getElementById('chk-iso-30').checked : true;
+    var show60 = document.getElementById('chk-iso-60') ? document.getElementById('chk-iso-60').checked : true;
+    var showOut = document.getElementById('chk-iso-out') ? document.getElementById('chk-iso-out').checked : true;
+
+    if (window.animIso15) window.animIso15.forEach(l => l.setStyle({ opacity: show15 ? 1 : 0, fillOpacity: show15 ? 0.8 : 0 }));
+    if (window.animIso30) window.animIso30.forEach(l => l.setStyle({ opacity: show30 ? 1 : 0, fillOpacity: show30 ? 0.4 : 0 }));
+    if (window.animIso60) window.animIso60.forEach(l => l.setStyle({ opacity: show60 ? 1 : 0, fillOpacity: show60 ? 0.25 : 0 }));
+
+    if (window.animDenue) {
+        window.animDenue.forEach(l => {
+            var mins = l.feature._isocrona || 999;
+            var visible = false;
+            if (mins <= 15 && show15) visible = true;
+            else if (mins > 15 && mins <= 30 && show30) visible = true;
+            else if (mins > 30 && mins <= 60 && show60) visible = true;
+            else if (mins > 60 && showOut) visible = true;
+
+            if (visible) {
+                l.setStyle({ opacity: 1, fillOpacity: 0.9 });
+            } else {
+                l.setStyle({ opacity: 0, fillOpacity: 0 });
+            }
+        });
+    }
+};

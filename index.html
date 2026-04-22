@@ -194,6 +194,8 @@
             <button class="nav-button" onclick="showSection('marco')">Marco Teórico</button>
             <button class="nav-button" onclick="showSection('metodologia')">Metodología</button>
             <button class="nav-button" onclick="showSection('contacto')">Contacto</button>
+            <div style="flex-grow: 1;"></div>
+            <button class="nav-button" id="top-login-btn" style="background:#0277bd; color:#fff;" onclick="openLoginModal()">Iniciar Sesión</button>
         </div>
     </div>
 
@@ -424,6 +426,21 @@
 
     </div>
 
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+            <h2 style="margin-top:0; color:#fff;">Iniciar Sesión</h2>
+            <form onsubmit="handleLogin(event)">
+                <input type="email" id="login-email" placeholder="Correo Electrónico" required class="modal-input"><br>
+                <input type="password" id="login-password" placeholder="Contraseña" required class="modal-input"><br>
+                <div id="login-error" style="color:#ff5252; font-size:12px; display:none; margin-bottom:10px;"></div>
+                <button type="submit" class="modal-submit-btn">Ingresar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
     <script src="escala_global_nacional.js"></script>
     <script src="escala_estatal.js"></script>
     <script src="escala_municipal.js"></script>
