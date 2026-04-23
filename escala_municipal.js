@@ -247,12 +247,204 @@ function renderizarMapaAgeb(atributo, labelNombre, nombreEstado) {
 
     actualizarLeyendaAgebCategorica(labelNombre, conteo);
 
-    // Ocultar el panel de estadísticas en la escala municipal ya que no hay gráficos
-    var statsDiv = document.getElementById('stats-overlay');
-    if (statsDiv) statsDiv.style.display = 'none';
-
     var summaryDiv = document.getElementById('dynamic-summary');
     if (summaryDiv) summaryDiv.style.display = 'none';
+
+    actualizarGraficasMunicipal(nombreEstado, atributo);
+}
+
+function actualizarGraficasMunicipal(nombreEstado, atributo) {
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var titleDiv = document.getElementById('stats-title-text');
+    if (titleDiv) titleDiv.innerHTML = `<span style="font-size:18px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br><span style="font-size:13px; color:#ddd">Resumen Demográfico</span>`;
+
+    var topGlobalContainer = document.getElementById('topGlobalChartContainer');
+    if (topGlobalContainer) topGlobalContainer.style.display = 'none';
+    var topGlobalTitle = document.getElementById('topGlobalChartTitle');
+    if (topGlobalTitle) topGlobalTitle.style.display = 'none';
+    var topGlobalHr = document.getElementById('topGlobalChartHr');
+    if (topGlobalHr) topGlobalHr.style.display = 'none';
+    var myChartContainer = document.getElementById('myChartContainer');
+    if (myChartContainer) myChartContainer.style.display = 'none';
+    var myChartTitle = document.getElementById('myChartTitle');
+    if (myChartTitle) myChartTitle.style.display = 'none';
+    var vinculacionContainer = document.getElementById('vinculacion-charts-container');
+    if (vinculacionContainer) vinculacionContainer.style.display = 'none';
+
+    var municipalContainer = document.getElementById('municipal-charts-container');
+    if (municipalContainer) municipalContainer.style.display = 'block';
+
+    var summaryDivGlobal = document.getElementById('dynamic-summary-global');
+    if (summaryDivGlobal) summaryDivGlobal.style.display = 'none';
+    var summaryDiv = document.getElementById('dynamic-summary');
+    if (summaryDiv) summaryDiv.style.display = 'none';
+
+    if (!agebRawData || !agebRawData.features) return;
+
+    // Chart 1: Población Total por Tipo de Vulnerabilidad
+    var pobPorVuln = { 'Muy Bajo': 0, 'Bajo': 0, 'Medio': 0, 'Alto': 0, 'Muy Alto': 0, 'Sin dato': 0 };
+    
+    // Chart 2: Estructura Poblacional
+    var totalPob = 0;
+    var totalDisc = 0;
+    var totalEdu = 0;
+    var totalEco = 0;
+
+    agebRawData.features.forEach(f => {
+        var p = f.properties;
+        var valCat = p[atributo] || "Sin dato";
+        var v = valCat.toString().trim().toUpperCase();
+        var nivel = "Sin dato";
+        if (v === 'MUY ALTO') nivel = 'Muy Alto';
+        else if (v === 'ALTO') nivel = 'Alto';
+        else if (v === 'MEDIO') nivel = 'Medio';
+        else if (v === 'BAJO') nivel = 'Bajo';
+        else if (v === 'MUY BAJO') nivel = 'Muy Bajo';
+
+        var pobFeature = parseFloat(p.POB1_x) || 0;
+        if (pobPorVuln[nivel] !== undefined) {
+            pobPorVuln[nivel] += pobFeature;
+        }
+
+        totalPob += pobFeature;
+        totalDisc += parseFloat(p.DISC1) || 0;
+        totalEdu += parseFloat(p.EDU46) || 0;
+        totalEco += parseFloat(p.ECO4) || 0;
+    });
+
+    var canvasVuln = document.getElementById('vulnChart');
+    if (canvasVuln) {
+        var ctxVuln = canvasVuln.getContext('2d');
+        if (window.vulnChartInstance) window.vulnChartInstance.destroy();
+
+        var labelsVuln = ['Muy Bajo', 'Bajo', 'Medio', 'Alto', 'Muy Alto'];
+        var dataVuln = labelsVuln.map(l => pobPorVuln[l]);
+        var colorsVuln = ['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'];
+
+        window.vulnChartInstance = new Chart(ctxVuln, {
+            type: 'bar',
+            data: {
+                labels: labelsVuln,
+                datasets: [{
+                    label: 'Población',
+                    data: dataVuln,
+                    backgroundColor: colorsVuln,
+                    borderColor: '#333',
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#fff',
+                        align: 'right',
+                        anchor: 'end',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: function(value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#aaa', callback: function(val){return (val/1000).toFixed(0)+'k'} }, grid: { color: '#444' } },
+                    y: { ticks: { color: '#fff', font: {size: 10} }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    var canvasPob = document.getElementById('pobChart');
+    if (canvasPob) {
+        var ctxPob = canvasPob.getContext('2d');
+        if (window.pobChartInstance) window.pobChartInstance.destroy();
+
+        var labelsPob = ['Pob. Total', 'Pob. Ocupada', 'Pob. Especializada', 'Pob. Discapacidad'];
+        var dataPob = [totalPob, totalEco, totalEdu, totalDisc];
+        var colorsPob = ['#2196f3', '#4caf50', '#ff9800', '#f44336'];
+
+        window.pobChartInstance = new Chart(ctxPob, {
+            type: 'bar',
+            data: {
+                labels: labelsPob,
+                datasets: [{
+                    label: 'Habitantes',
+                    data: dataPob,
+                    backgroundColor: colorsPob,
+                    borderColor: '#333',
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#fff',
+                        align: 'right',
+                        anchor: 'end',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: function(value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#aaa', callback: function(val){return (val/1000).toFixed(0)+'k'} }, grid: { color: '#444' } },
+                    y: { ticks: { color: '#fff', font: {size: 10} }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // --- SÍNTESIS VULNERABILIDAD ---
+    var sintesisVuln = document.getElementById('sintesis-vuln');
+    if (sintesisVuln) {
+        var maxVulnVal = 0;
+        var maxVulnNivel = '';
+        for (let i = 0; i < labelsVuln.length; i++) {
+            if (dataVuln[i] > maxVulnVal) {
+                maxVulnVal = dataVuln[i];
+                maxVulnNivel = labelsVuln[i];
+            }
+        }
+        if (totalPob > 0 && maxVulnVal > 0) {
+            var pctVuln = ((maxVulnVal / totalPob) * 100).toFixed(1);
+            sintesisVuln.innerHTML = `De una población total de <b>${totalPob.toLocaleString('en-US')}</b> habitantes, la mayor concentración se encuentra en el nivel de vulnerabilidad <span style="color:#00a2ff; font-weight:bold;">${maxVulnNivel}</span> con <b>${maxVulnVal.toLocaleString('en-US')}</b> personas, representando el <b>${pctVuln}%</b> del total.`;
+            sintesisVuln.style.display = 'block';
+        } else {
+            sintesisVuln.style.display = 'none';
+        }
+    }
+
+    // --- SÍNTESIS ESTRUCTURA POBLACIONAL ---
+    var sintesisPob = document.getElementById('sintesis-pob');
+    if (sintesisPob) {
+        if (totalPob > 0) {
+            var subData = [
+                { nombre: 'Ocupada', val: totalEco },
+                { nombre: 'Especializada', val: totalEdu },
+                { nombre: 'con Discapacidad', val: totalDisc }
+            ];
+            subData.sort((a, b) => b.val - a.val);
+            var maxPob = subData[0];
+            
+            if (maxPob.val > 0) {
+                var pctPob = ((maxPob.val / totalPob) * 100).toFixed(1);
+                sintesisPob.innerHTML = `Dentro de la estructura demográfica, resalta la población <span style="color:#00a2ff; font-weight:bold;">${maxPob.nombre}</span> con <b>${maxPob.val.toLocaleString('en-US')}</b> habitantes, abarcando el <b>${pctPob}%</b> de la población total.`;
+                sintesisPob.style.display = 'block';
+            } else {
+                sintesisPob.style.display = 'none';
+            }
+        } else {
+            sintesisPob.style.display = 'none';
+        }
+    }
 }
 
 function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {

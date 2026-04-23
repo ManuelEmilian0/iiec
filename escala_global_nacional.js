@@ -64,12 +64,12 @@ function initMap() {
     basemapGalleryControl.onAdd = function (map) {
         // Use standard leaflet layers classes to get the default icon
         var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-layers basemap-gallery-container');
-        
+
         var toggleBtn = L.DomUtil.create('a', 'leaflet-control-layers-toggle basemap-toggle-btn', container);
         toggleBtn.href = '#';
         toggleBtn.title = 'Galería de Mapas Base';
         // Remove innerHTML to let CSS background-image show the default icon
-        
+
         var galleryPanel = L.DomUtil.create('div', 'basemap-gallery-panel', container);
         galleryPanel.style.display = 'none';
 
@@ -82,22 +82,22 @@ function initMap() {
 
         var currentActiveLayer = satelite;
 
-        basemaps.forEach(function(bm) {
+        basemaps.forEach(function (bm) {
             var item = L.DomUtil.create('div', 'basemap-item', galleryPanel);
             if (bm.layer === currentActiveLayer) item.classList.add('active');
-            
+
             var img = L.DomUtil.create('img', 'basemap-thumb', item);
             img.src = bm.thumb;
-            
+
             var label = L.DomUtil.create('span', 'basemap-label', item);
             label.innerText = bm.name;
 
-            L.DomEvent.on(item, 'click', function() {
+            L.DomEvent.on(item, 'click', function () {
                 if (currentActiveLayer !== bm.layer) {
                     map.removeLayer(currentActiveLayer);
                     map.addLayer(bm.layer);
                     currentActiveLayer = bm.layer;
-                    
+
                     var allItems = galleryPanel.querySelectorAll('.basemap-item');
                     allItems.forEach(i => i.classList.remove('active'));
                     item.classList.add('active');
@@ -106,14 +106,14 @@ function initMap() {
             });
         });
 
-        L.DomEvent.on(toggleBtn, 'click', function(e) {
+        L.DomEvent.on(toggleBtn, 'click', function (e) {
             L.DomEvent.stopPropagation(e);
             L.DomEvent.preventDefault(e);
             galleryPanel.style.display = galleryPanel.style.display === 'none' ? 'grid' : 'none';
         });
 
         // Cerrar galería si se hace clic en el mapa
-        map.on('click', function() {
+        map.on('click', function () {
             galleryPanel.style.display = 'none';
         });
 
@@ -139,13 +139,13 @@ function initMap() {
     downloadControl.addTo(map);
 
     // Funciones globales de exportación
-    window.tomarCapturaPantalla = function() {
+    window.tomarCapturaPantalla = function () {
         // html2canvas toma el body completo (dashboard + mapa)
         html2canvas(document.body, {
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#1a1a1a'
-        }).then(function(canvas) {
+        }).then(function (canvas) {
             var link = document.createElement('a');
             link.download = 'dashboard_' + currentScaleType + '.png';
             link.href = canvas.toDataURL("image/png");
@@ -153,10 +153,10 @@ function initMap() {
         });
     };
 
-    window.descargarGeoJSON = function() {
+    window.descargarGeoJSON = function () {
         var filename = currentScaleType + '.geojson';
         // En nacional, los puntos base son armadoras.geojson, pero también hay nacional.geojson
-        if(currentScaleType === 'nacional') filename = 'nacional.geojson';
+        if (currentScaleType === 'nacional') filename = 'nacional.geojson';
         var link = document.createElement('a');
         link.href = filename;
         link.download = filename;
@@ -217,6 +217,9 @@ function loadLayer(scaleType) {
 
     var vincContainer = document.getElementById('vinculacion-charts-container');
     if (vincContainer) vincContainer.style.display = 'none';
+
+    var muniContainer = document.getElementById('municipal-charts-container');
+    if (muniContainer) muniContainer.style.display = 'none';
 
     var empContainer = document.getElementById('empresas-chart-container');
     if (empContainer) empContainer.style.display = 'none';
@@ -921,6 +924,17 @@ function setupUI() {
                     <div style="height:300px; position:relative;"><canvas id="isocronaChart"></canvas></div>
                     <div id="sintesis-isocrona" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
                 </div>
+                <!-- GRÁFICAS MUNICIPAL -->
+                <div id="municipal-charts-container" style="display:none;">
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                    <h4 class="panel-title" id="titulo-vuln" style="font-size:12px; margin-bottom:8px;">Distribución de Población por Nivel de Vulnerabilidad</h4>
+                    <div style="height:240px; position:relative;"><canvas id="vulnChart"></canvas></div>
+                    <div id="sintesis-vuln" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                    <h4 class="panel-title" id="titulo-pob" style="font-size:12px; margin-bottom:8px;">Indicadores de Estructura Poblacional</h4>
+                    <div style="height:240px; position:relative;"><canvas id="pobChart"></canvas></div>
+                    <div id="sintesis-pob" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                </div>
             </div>
         `;
         leftContainer.appendChild(statsBox);
@@ -1450,9 +1464,6 @@ window.procesarDatosEmpresas = function (datos, indicador = 'Activos_Millones') 
     if (window.empresasLineChartInstance) {
         window.empresasLineChartInstance.destroy();
     }
-
-    var statsDiv = document.getElementById('stats-overlay');
-    if (statsDiv) statsDiv.style.display = 'block';
 
     window.empresasLineChartInstance = new Chart(ctx, {
         type: 'line',

@@ -368,7 +368,17 @@ function actualizarGraficasVinculacion(nombreEstado, isocronasEstado) {
 
     var empresasTotales = Object.keys(empresaEstrato).map(emp => ({ nombre: emp, total: Object.values(empresaEstrato[emp]).reduce((a, b) => a + b, 0) }));
     empresasTotales.sort((a, b) => b.total - a.total);
-    var topEmpresas = empresasTotales.slice(0, 20);
+    
+    var sinNombreIndex = empresasTotales.findIndex(e => e.nombre.toUpperCase() === 'SIN NOMBRE');
+    var sinNombreData = null;
+    if (sinNombreIndex !== -1) {
+        sinNombreData = empresasTotales.splice(sinNombreIndex, 1)[0];
+    }
+    
+    var topEmpresas = empresasTotales.slice(0, 19);
+    if (sinNombreData) {
+        topEmpresas.push(sinNombreData);
+    }
 
     var estratosPresentes = new Set();
     topEmpresas.forEach(e => Object.keys(empresaEstrato[e.nombre]).forEach(est => estratosPresentes.add(est)));
@@ -421,7 +431,15 @@ function actualizarGraficasVinculacion(nombreEstado, isocronasEstado) {
     var sintesisEmpresa = document.getElementById('sintesis-empresa');
     if (sintesisEmpresa && topEmpresas.length > 0) {
         var topEmpresaData = topEmpresas[0];
-        sintesisEmpresa.innerHTML = `<span style="color:#00a2ff; font-weight:bold;">${topEmpresaData.nombre}</span> destaca como el principal actor corporativo dentro de esta red a nivel estatal, articulando <b>${topEmpresaData.total}</b> unidades económicas.`;
+        if (topEmpresaData.nombre.toUpperCase() === 'SIN NOMBRE') {
+             sintesisEmpresa.innerHTML = `Existen <b>${topEmpresaData.total}</b> unidades económicas sin un nombre registrado.`;
+        } else {
+             var textoExtra = "";
+             if (sinNombreData && sinNombreData.total > 0) {
+                 textoExtra = ` Adicionalmente, existen <b>${sinNombreData.total}</b> unidades económicas sin un nombre registrado.`;
+             }
+             sintesisEmpresa.innerHTML = `<span style="color:#00a2ff; font-weight:bold;">${topEmpresaData.nombre}</span> destaca como el principal actor corporativo dentro de esta red a nivel estatal, articulando <b>${topEmpresaData.total}</b> unidades económicas.${textoExtra}`;
+        }
         sintesisEmpresa.style.display = 'block';
     } else if (sintesisEmpresa) {
         sintesisEmpresa.style.display = 'none';
