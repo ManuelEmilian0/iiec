@@ -92,6 +92,62 @@ function iniciarLogicaMunicipio() {
     container.appendChild(selectEstado);
     container.appendChild(selectIndice);
 
+    // ==========================================
+    // HERRAMIENTA DE DIBUJO (PARTICIPATIVA)
+    // ==========================================
+    if (map.pm) {
+        // Habilitar controles de dibujo de Leaflet-Geoman
+        map.pm.addControls({
+            position: 'topright',
+            drawCircle: false,
+            drawCircleMarker: false,
+            drawText: false,
+            cutPolygon: false,
+            editMode: true,
+            dragMode: true,
+            removalMode: true
+        });
+
+        // Asegurarse de que no haya múltiples listeners
+        map.off('pm:create');
+
+        map.on('pm:create', function (e) {
+            var layer = e.layer;
+
+            // Extraer la geometría en formato GeoJSON de forma legible
+            var geojsonObj = layer.toGeoJSON().geometry;
+            var geojsonStr = JSON.stringify(geojsonObj);
+
+            // Reemplaza esta URL con tu enlace completo de Google Forms o MS Forms
+            var formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfrjJrtuq0PMRqzGjPuu1YiTlI_sr9jQcaeKUu88pv89NlVCg/viewform?usp=publish-editor';
+
+            var popupContent = `
+                <div style="font-family:'Noto Sans'; font-size:13px; min-width: 250px;">
+                    <strong style="color:#0277bd; font-size:14px; display:flex; align-items:center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right:6px;"><path fill="currentColor" d="M12 2L2 22h20L12 2zm0 3.83L18.17 19H5.83L12 5.83z"/></svg> 
+                        Geometría Participativa
+                    </strong>
+                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
+                    
+                    <p style="margin: 5px 0; color:#ddd; font-size:12px;">Copia las coordenadas y pégalas en el formulario Excel:</p>
+                    <textarea id="coord-textarea" style="width: 100%; height: 50px; background: #222; color: #00e5ff; border: 1px solid #444; border-radius: 4px; font-size: 11px; padding: 4px; resize: none; margin-bottom: 5px;" readonly>${geojsonStr}</textarea>
+                    
+                    <button onclick="document.getElementById('coord-textarea').select(); document.execCommand('copy'); alert('¡Coordenadas copiadas al portapapeles!');" style="width: 100%; background: #444; color: #fff; border: 1px solid #666; padding: 5px; border-radius: 4px; cursor: pointer; margin-bottom: 10px; font-size: 12px; transition: background 0.2s;">📋 Copiar Coordenadas</button>
+                    
+                    <hr style="border:0; border-top:1px solid #555; margin:10px 0;">
+                    <button onclick="window.open('${formUrl}', '_blank');" style="width: 100%; background: #0277bd; color: #fff; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s;" onmouseover="this.style.background='#01579b'" onmouseout="this.style.background='#0277bd'">📊 Abrir Formulario / Excel</button>
+                </div>
+            `;
+
+            layer.bindPopup(popupContent, { minWidth: 260 }).openPopup();
+
+            // Cambiar color de la capa dibujada
+            if (layer.setStyle) {
+                layer.setStyle({ color: '#00e5ff', fillColor: '#00e5ff', fillOpacity: 0.3, weight: 3 });
+            }
+        });
+    }
+
     var legendContent = document.getElementById('legend-content');
     if (legendContent) legendContent.innerHTML = "<small>Seleccione un estado primero</small>";
 }
@@ -285,7 +341,7 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
 
     // Chart 1: Población Total por Tipo de Vulnerabilidad
     var pobPorVuln = { 'Muy Bajo': 0, 'Bajo': 0, 'Medio': 0, 'Alto': 0, 'Muy Alto': 0, 'Sin dato': 0 };
-    
+
     // Chart 2: Estructura Poblacional
     var totalPob = 0;
     var totalDisc = 0;
@@ -347,12 +403,12 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                         align: 'right',
                         anchor: 'end',
                         font: { weight: 'bold', size: 10 },
-                        formatter: function(value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
+                        formatter: function (value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
                     }
                 },
                 scales: {
-                    x: { ticks: { color: '#aaa', callback: function(val){return (val/1000).toFixed(0)+'k'} }, grid: { color: '#444' } },
-                    y: { ticks: { color: '#fff', font: {size: 10} }, grid: { display: false } }
+                    x: { ticks: { color: '#aaa', callback: function (val) { return (val / 1000).toFixed(0) + 'k' } }, grid: { color: '#444' } },
+                    y: { ticks: { color: '#fff', font: { size: 10 } }, grid: { display: false } }
                 }
             }
         });
@@ -391,12 +447,12 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                         align: 'right',
                         anchor: 'end',
                         font: { weight: 'bold', size: 10 },
-                        formatter: function(value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
+                        formatter: function (value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
                     }
                 },
                 scales: {
-                    x: { ticks: { color: '#aaa', callback: function(val){return (val/1000).toFixed(0)+'k'} }, grid: { color: '#444' } },
-                    y: { ticks: { color: '#fff', font: {size: 10} }, grid: { display: false } }
+                    x: { ticks: { color: '#aaa', callback: function (val) { return (val / 1000).toFixed(0) + 'k' } }, grid: { color: '#444' } },
+                    y: { ticks: { color: '#fff', font: { size: 10 } }, grid: { display: false } }
                 }
             }
         });
@@ -433,7 +489,7 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
             ];
             subData.sort((a, b) => b.val - a.val);
             var maxPob = subData[0];
-            
+
             if (maxPob.val > 0) {
                 var pctPob = ((maxPob.val / totalPob) * 100).toFixed(1);
                 sintesisPob.innerHTML = `Dentro de la estructura demográfica, resalta la población <span style="color:#00a2ff; font-weight:bold;">${maxPob.nombre}</span> con <b>${maxPob.val.toLocaleString('en-US')}</b> habitantes, abarcando el <b>${pctPob}%</b> de la población total.`;

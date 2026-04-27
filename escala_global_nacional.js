@@ -200,6 +200,13 @@ function loadLayer(scaleType) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
     if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
+    
+    // Remover controles de dibujo si existen
+    if (map.pm) { 
+        map.pm.removeControls(); 
+        map.pm.disableDraw();
+        map.pm.disableGlobalEditMode();
+    }
 
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) {
