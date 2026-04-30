@@ -200,10 +200,10 @@ function loadLayer(scaleType) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
     if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
-    
+
     // Remover controles de dibujo si existen
-    if (map.pm) { 
-        map.pm.removeControls(); 
+    if (map.pm) {
+        map.pm.removeControls();
         map.pm.disableDraw();
         map.pm.disableGlobalEditMode();
     }
@@ -318,7 +318,7 @@ function loadLayer(scaleType) {
     // Delegar lógica a los otros módulos (escala_estatal.js y escala_municipal.js)
     if (scaleType === 'estatal') {
         if (filterBox) {
-            filterBox.style.display = 'flex';
+            filterBox.style.display = 'block';
             document.getElementById('filter-buttons-container').innerHTML = "";
             document.getElementById('filter-title').innerText = "Cargando...";
         }
@@ -328,7 +328,7 @@ function loadLayer(scaleType) {
 
     if (scaleType === 'municipio') {
         if (filterBox) {
-            filterBox.style.display = 'flex';
+            filterBox.style.display = 'block';
             document.getElementById('filter-buttons-container').innerHTML = "";
             document.getElementById('filter-title').innerText = "Cargando...";
         }
@@ -344,11 +344,11 @@ function loadLayer(scaleType) {
     if (scaleType === 'mundial') {
         filename = "mundial.geojson";
         zoomCoords = [20, 0]; zoomLevel = 2;
-        if (filterBox) filterBox.style.display = 'flex';
+        if (filterBox) filterBox.style.display = 'block';
     } else if (scaleType === 'nacional') {
         filename = "nacional.geojson";
         zoomCoords = [23.6345, -102.5528]; zoomLevel = 5;
-        if (filterBox) filterBox.style.display = 'flex';
+        if (filterBox) filterBox.style.display = 'block';
         if (typeof cargarYRenderizarEmpresasCSV === "function") cargarYRenderizarEmpresasCSV();
     }
 
@@ -428,12 +428,66 @@ function iniciarFiltroMundial_Paso1(data) {
     container.appendChild(selectOrigen);
 }
 
+const FINANZAS_FEDERALES_2025 = {
+    "Aguascalientes": { R28: 10691, R33: 13593 },
+    "Baja California": { R28: 29331, R33: 23325 },
+    "Baja California Sur": { R28: 6514, R33: 9695 },
+    "Campeche": { R28: 7887, R33: 10143 },
+    "Coahuila": { R28: 23264, R33: 23372 },
+    "Colima": { R28: 5723, R33: 7750 },
+    "Chiapas": { R28: 41099, R33: 62561 },
+    "Chihuahua": { R28: 29801, R33: 29187 },
+    "Ciudad de México": { R28: 96602, R33: 19220 },
+    "Durango": { R28: 13199, R33: 18906 },
+    "Guanajuato": { R28: 43938, R33: 40159 },
+    "Guerrero": { R28: 23632, R33: 47937 },
+    "Hidalgo": { R28: 20948, R33: 31474 },
+    "Jalisco": { R28: 66595, R33: 49230 },
+    "México": { R28: 138995, R33: 93509 },
+    "Michoacán": { R28: 32783, R33: 41692 },
+    "Morelos": { R28: 13707, R33: 16447 },
+    "Nayarit": { R28: 9028, R33: 11861 },
+    "Nuevo León": { R28: 48768, R33: 33831 },
+    "Oaxaca": { R28: 28826, R33: 53648 },
+    "Puebla": { R28: 44732, R33: 47071 },
+    "Querétaro": { R28: 18078, R33: 16987 },
+    "Quintana Roo": { R28: 14381, R33: 13969 },
+    "San Luis Potosí": { R28: 20015, R33: 25832 },
+    "Sinaloa": { R28: 22304, R33: 23517 },
+    "Sonora": { R28: 22860, R33: 20226 },
+    "Tabasco": { R28: 23847, R33: 19097 },
+    "Tamaulipas": { R28: 25631, R33: 27201 },
+    "Tlaxcala": { R28: 9994, R33: 13227 },
+    "Veracruz": { R28: 58515, R33: 69105 },
+    "Yucatán": { R28: 17118, R33: 18424 },
+    "Zacatecas": { R28: 11530, R33: 16212 }
+};
+
+let estadosPolygonsGeoJSON = null;
+
 function iniciarFiltroNacional_Paso1(data) {
     var container = document.getElementById('filter-buttons-container');
     container.innerHTML = "";
+
+    var modoWrapper = document.createElement("div");
+    modoWrapper.style.marginBottom = "15px";
+    modoWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Modo de Análisis:</small>`;
+
+    var selectModo = document.createElement("select");
+    selectModo.className = "dynamic-filter-select";
+    selectModo.innerHTML = `
+        <option value="flujos">Intercambios (Flujos Industriales)</option>
+        <option value="finanzas">Finanzas Públicas (Dependencia Federal)</option>
+    `;
+    modoWrapper.appendChild(selectModo);
+
+    var flujosContainer = document.createElement("div");
+    var finanzasContainer = document.createElement("div");
+    finanzasContainer.style.display = "none";
+
     document.getElementById('filter-title').innerText = "Intercambios Nacionales";
 
-    // 1. CLASIFICADOR: Identifica a qué grupo pertenece cada texto de subsector
+    // --- FLUJOS LOGIC ---
     function obtenerGrupo(subsectorTexto) {
         let sub = (subsectorTexto || "").toUpperCase();
         if (sub.includes("PROCESAMIENTO ELECTRONICO") || sub.includes("PROCESAMIENTO ELECTRÓNICO")) return "SERVICIOS SEIT";
@@ -443,13 +497,9 @@ function iniciarFiltroNacional_Paso1(data) {
         return "OTROS";
     }
 
-    // Extraemos todos los subsectores únicos de la base de datos
     var todosLosSubsectores = [...new Set(data.features.map(f => f.properties.SUBSECTO_3 || f.properties.SUBSECTO_2 || ""))];
-
-    // Sacamos los 3 Grandes Grupos
     var opcionesGrupo = [...new Set(todosLosSubsectores.map(sub => obtenerGrupo(sub)))].filter(g => g !== "OTROS").sort();
 
-    // --- CREAMOS LAS 3 CAJAS DESPLEGABLES ---
     var selectGrupo = document.createElement("select");
     selectGrupo.className = "dynamic-filter-select";
     selectGrupo.innerHTML = `<option value="" disabled selected>-- Grupo Industrial --</option>`;
@@ -457,54 +507,306 @@ function iniciarFiltroNacional_Paso1(data) {
 
     var selectSubsector = document.createElement("select");
     selectSubsector.className = "dynamic-filter-select";
-    selectSubsector.style.display = 'none'; // Oculto al inicio
+    selectSubsector.style.display = 'none';
 
     var selectEstado = document.createElement("select");
     selectEstado.className = "dynamic-filter-select";
-    selectEstado.style.display = 'none'; // Oculto al inicio
+    selectEstado.style.display = 'none';
 
-    // --- EVENTO 1: Al elegir el GRUPO ---
     selectGrupo.onchange = function () {
         var grupoSel = this.value;
-
-        // Buscamos qué subsectores pertenecen a este grupo
         var subsectoresDelGrupo = todosLosSubsectores.filter(sub => obtenerGrupo(sub) === grupoSel).sort();
-
         selectSubsector.innerHTML = `<option value="" disabled selected>-- Subsector --</option>`;
         subsectoresDelGrupo.forEach(item => { selectSubsector.innerHTML += `<option value="${item}">${item}</option>`; });
-
-        selectSubsector.style.display = 'block'; // Mostramos paso 2
-        selectEstado.style.display = 'none';     // Ocultamos paso 3 por si el usuario se regresó
+        selectSubsector.style.display = 'block';
+        selectEstado.style.display = 'none';
         if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
     };
 
-    // --- EVENTO 2: Al elegir el SUBSECTOR ---
     selectSubsector.onchange = function () {
-        var subsectorSel = this.value;
-
-        // Mostrar todos los estados sin filtrar por subsector
         var estados = [...new Set(data.features.map(f => f.properties.Edo_V))].filter(Boolean).sort();
-
         selectEstado.innerHTML = `<option value="" disabled selected>-- Entidad Federativa --</option>`;
         estados.forEach(item => { selectEstado.innerHTML += `<option value="${item}">${item}</option>`; });
-
-        selectEstado.style.display = 'block'; // Mostramos paso 3
+        selectEstado.style.display = 'block';
         if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
     };
 
-    // --- EVENTO 3: Al elegir el ESTADO (Renderizamos mapa) ---
     selectEstado.onchange = function () {
         var subsectorSel = selectSubsector.value;
         var estadoSel = this.value;
-
         var finalData = data.features.filter(f => (f.properties.SUBSECTO_3 === subsectorSel || f.properties.SUBSECTO_2 === subsectorSel) && f.properties.Edo_V === estadoSel);
         renderizarMapaFlujos(finalData, 'VALOR', 'MDP', 'EDO_C');
     };
 
-    // Inyectamos las 3 cajas al panel
-    container.appendChild(selectGrupo);
-    container.appendChild(selectSubsector);
-    container.appendChild(selectEstado);
+    var flujosTitle = document.createElement("div");
+    flujosTitle.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Parámetros de Intercambio:</small>`;
+    flujosContainer.appendChild(flujosTitle);
+
+    flujosContainer.appendChild(selectGrupo);
+    flujosContainer.appendChild(selectSubsector);
+    flujosContainer.appendChild(selectEstado);
+
+    // --- FINANZAS LOGIC ---
+    var finanzasWrapper = document.createElement("div");
+    finanzasWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Fondo Federal (2025):</small>`;
+
+    var selectFinanzas = document.createElement("select");
+    selectFinanzas.className = "dynamic-filter-select";
+    selectFinanzas.innerHTML = `
+        <option value="" disabled selected>-- Seleccione Fondo --</option>
+        <option value="R28">Ramo 28 (Participaciones)</option>
+        <option value="R33">Ramo 33 (Aportaciones)</option>
+        <option value="TOTAL">Total (R28 + R33)</option>
+    `;
+
+    selectFinanzas.onchange = function () {
+        renderizarMapaFinanzas(this.value);
+    };
+    finanzasWrapper.appendChild(selectFinanzas);
+    finanzasContainer.appendChild(finanzasWrapper);
+
+    // --- MODO TOGGLE LOGIC ---
+    selectModo.onchange = function () {
+        if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+        map.eachLayer(l => {
+            if (l.options && (l.options.className === 'flujo-animado' || l.options.className === 'etiqueta-destino')) {
+                map.removeLayer(l);
+            }
+        });
+        var statsDiv = document.getElementById('stats-overlay');
+        if (statsDiv) statsDiv.style.display = 'none';
+
+        if (this.value === 'flujos') {
+            flujosContainer.style.display = 'block';
+            finanzasContainer.style.display = 'none';
+            document.getElementById('filter-title').innerText = "Intercambios Nacionales";
+        } else {
+            flujosContainer.style.display = 'none';
+            finanzasContainer.style.display = 'block';
+            document.getElementById('filter-title').innerText = "Finanzas Públicas (2025)";
+            selectFinanzas.value = "";
+        }
+    };
+
+    container.appendChild(modoWrapper);
+    container.appendChild(flujosContainer);
+    container.appendChild(finanzasContainer);
+}
+
+function renderizarMapaFinanzas(tipo) {
+    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+
+    var filterTitle = document.getElementById('filter-title');
+    filterTitle.innerText = "Cargando cartografía...";
+
+    if (!estadosPolygonsGeoJSON) {
+        // Obtenemos los polígonos de México
+        fetch('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
+            .then(res => res.json())
+            .then(geo => {
+                estadosPolygonsGeoJSON = geo;
+                filterTitle.innerText = "Finanzas Públicas (2025)";
+                dibujarCoropletaFinanzas(tipo);
+            }).catch(e => {
+                console.error("No se pudo cargar el geojson de México", e);
+                filterTitle.innerText = "Error cargando mapa";
+            });
+    } else {
+        filterTitle.innerText = "Finanzas Públicas (2025)";
+        dibujarCoropletaFinanzas(tipo);
+    }
+}
+
+function normalizarEstadoNombre(nombre) {
+    if (!nombre) return "";
+    var n = nombre.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    if (n === "ESTADO DE MEXICO" || n === "MEXICO") return "México";
+    if (n === "CIUDAD DE MEXICO" || n === "DISTRITO FEDERAL" || n === "CDMX") return "Ciudad de México";
+    if (n === "VERACRUZ DE IGNACIO DE LA LLAVE") return "Veracruz";
+    if (n === "COAHUILA DE ZARAGOZA") return "Coahuila";
+    if (n === "MICHOACAN DE OCAMPO") return "Michoacán";
+
+    for (let key in FINANZAS_FEDERALES_2025) {
+        let keyN = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        if (n === keyN) return key;
+    }
+    return nombre;
+}
+
+function dibujarCoropletaFinanzas(tipo) {
+    var valores = [];
+    var stateDataMap = {};
+
+    estadosPolygonsGeoJSON.features.forEach(f => {
+        var estadoReal = normalizarEstadoNombre(f.properties.name || f.properties.ESTADO || f.properties.NOMGEO);
+        if (FINANZAS_FEDERALES_2025[estadoReal]) {
+            let data = FINANZAS_FEDERALES_2025[estadoReal];
+            let val = tipo === 'TOTAL' ? (data.R28 + data.R33) : data[tipo];
+            valores.push(val);
+            stateDataMap[estadoReal] = val;
+        }
+    });
+
+    valores.sort((a, b) => a - b);
+    var breaks = calcularBreaks(valores);
+
+    var layer = L.geoJSON(estadosPolygonsGeoJSON, {
+        style: function (feature) {
+            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+            var val = stateDataMap[estadoReal];
+            var color = '#333';
+            var opacity = 0.5;
+            if (val !== undefined) {
+                color = RampaRojos[getClase(val, breaks)] || '#333';
+                opacity = 0.8;
+            }
+            return { fillColor: color, weight: 1, opacity: 1, color: 'white', fillOpacity: opacity };
+        },
+        onEachFeature: function (feature, layer) {
+            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+            if (FINANZAS_FEDERALES_2025[estadoReal]) {
+                let data = FINANZAS_FEDERALES_2025[estadoReal];
+                let r28Str = data.R28.toLocaleString('es-MX');
+                let r33Str = data.R33.toLocaleString('es-MX');
+                let totalStr = (data.R28 + data.R33).toLocaleString('es-MX');
+
+                var tooltipContent = `
+                    <div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:5px;">${estadoReal}</div>
+                    <div style="font-size:11px; color:#fff;">Participaciones (R28): $${r28Str} MDP</div>
+                    <div style="font-size:11px; color:#fff;">Aportaciones (R33): $${r33Str} MDP</div>
+                    <div style="font-size:11px; color:#fcae91; font-weight:bold; margin-top:3px;">Total Federal: $${totalStr} MDP</div>
+                    <hr style="border-top:1px solid #444; margin:5px 0;">
+                    <div style="font-size:10px; font-style:italic; color:#ccc;">Altamente dependiente de recursos federales. Se recomienda captura de valor de suelo municipal.</div>
+                `;
+
+                layer.bindTooltip(tooltipContent, {
+                    sticky: true,
+                    className: 'custom-tooltip'
+                });
+
+                layer.on({
+                    mouseover: function (e) {
+                        var l = e.target;
+                        l.setStyle({ weight: 3, color: '#00e5ff' });
+                        l.bringToFront();
+                    },
+                    mouseout: function (e) {
+                        currentGeoJSONLayer.resetStyle(e.target);
+                    }
+                });
+            }
+        }
+    }).addTo(map);
+
+    layer.bringToBack();
+    currentGeoJSONLayer = layer;
+    actualizarLeyenda(breaks, 'MDP');
+    actualizarGraficaFinanzas(tipo);
+}
+
+function actualizarGraficaFinanzas(tipo) {
+    if (typeof Chart === 'undefined') return;
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var titulo = document.getElementById('stats-title-text');
+    let tipoText = tipo === 'R28' ? 'Ramo 28' : (tipo === 'R33' ? 'Ramo 33' : 'Total de Recursos');
+    if (titulo) {
+        titulo.innerHTML = `Top 10 Entidades: ${tipoText}<br><small style='color:#aaa; font-size:11px'>Millones de Pesos (MDP) en 2025</small>`;
+    }
+
+    var chartTitle = document.getElementById('topGlobalChartTitle');
+    if (chartTitle) {
+        chartTitle.innerHTML = 'DEPENDENCIAS FEDERALES 2025';
+        chartTitle.style.display = 'block';
+    }
+
+    var chartContainer = document.getElementById('topGlobalChartContainer');
+    if (chartContainer) chartContainer.style.display = 'block';
+
+    var hr = document.getElementById('topGlobalChartHr');
+    if (hr) hr.style.display = 'block';
+
+    // Ocultar elementos de flujos
+    var summaryDiv = document.getElementById('dynamic-summary-global');
+    if (summaryDiv) summaryDiv.style.display = 'none';
+    var summaryDiv2 = document.getElementById('dynamic-summary');
+    if (summaryDiv2) summaryDiv2.style.display = 'none';
+    var chartTitle2 = document.getElementById('myChartTitle');
+    if (chartTitle2) chartTitle2.style.display = 'none';
+    var chartContainer2 = document.getElementById('myChartContainer');
+    if (chartContainer2) chartContainer2.style.display = 'none';
+    if (summaryDiv) summaryDiv.style.display = 'none';
+
+    // Ordenar Top 10
+    var statesArr = Object.keys(FINANZAS_FEDERALES_2025).map(k => {
+        let d = FINANZAS_FEDERALES_2025[k];
+        return { name: k, R28: d.R28, R33: d.R33, TOTAL: d.R28 + d.R33 };
+    });
+
+    // Ordenar por el tipo seleccionado
+    statesArr.sort((a, b) => b[tipo] - a[tipo]);
+    var top10 = statesArr.slice(0, 10);
+
+    const canvas = document.getElementById('topGlobalChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    let labels = top10.map(f => f.name);
+    let dataR28 = top10.map(f => f.R28);
+    let dataR33 = top10.map(f => f.R33);
+
+    if (window.topGlobalChartInstance) {
+        window.topGlobalChartInstance.destroy();
+    }
+
+    window.topGlobalChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Ramo 28',
+                    data: dataR28,
+                    backgroundColor: '#00e5ff',
+                    borderWidth: 0
+                },
+                {
+                    label: 'Ramo 33',
+                    data: dataR33,
+                    backgroundColor: '#fcae91',
+                    borderWidth: 0
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: { color: '#ccc', font: { size: 10 }, callback: function (value) { return '$' + value.toLocaleString(); } },
+                    grid: { color: '#333' }
+                },
+                y: {
+                    stacked: true,
+                    ticks: { color: '#fff', font: { size: 10, weight: 'bold' } },
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: { display: true, labels: { color: '#fff', font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            return ctx.dataset.label + ': $' + ctx.raw.toLocaleString() + ' MDP';
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino) {
@@ -1005,6 +1307,132 @@ function setupUI() {
         leftContainer.appendChild(marcoBox);
     }
 
+    if (!document.getElementById('instrumentos-municipales-box')) {
+        var instBox = document.createElement('div');
+        instBox.id = 'instrumentos-municipales-box';
+        instBox.className = 'dashboard-box';
+        instBox.style.display = 'none'; // Inicialmente oculto
+        instBox.innerHTML = `
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('inst-mun-content', 'inst-mun-arrow')" title="Ocultar/Mostrar">
+                <span style="font-size: 13px;">Instrumentos Municipales</span> <span id="inst-mun-arrow" class="drop-arrow" style="transform: rotate(0deg);">▼</span>
+            </h4>
+            <div id="inst-mun-content" class="dropdown-content show" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                
+                <h5 style="color:#fcae91; font-size: 12px; margin: 0 0 5px 0; border-bottom: 1px solid #444; padding-bottom: 5px;">Instrumentos de Ordenación y Planeación</h5>
+                
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">LGAHOTDU</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Ley General de Asentamientos Humanos, Ordenamiento Territorial y Desarrollo Urbano. Establece las normas básicas para planear y regular el crecimiento, uso y conservación de los centros de población en todo el país.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Planeación y Regulación | Marco Jurídico Base</div>
+                </div>
+                
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">LGEEPA</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Ley General del Equilibrio Ecológico y la Protección al Ambiente. Regula la preservación y restauración del equilibrio ecológico, asegurando que el desarrollo urbano sea compatible con la protección ambiental.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Planeación y Regulación | Marco Jurídico Base</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">NOM-001-SEDATU-2021</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Norma Oficial Mexicana sobre espacios públicos en los asentamientos humanos. Define la terminología, contenidos y lineamientos para la gestión y diseño de espacios públicos de calidad en las ciudades.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Regulación | Estándar de Gestión</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">NOM-002-SEDATU-2022</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Norma Oficial Mexicana sobre equipamiento en los instrumentos que conforman el Sistema General de Planeación Territorial. Clasificación, terminología y aplicación.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Regulación | Estándar de Gestión</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">NOM-003-SEDATU-2023</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Norma Oficial Mexicana que establece los lineamientos para el fortalecimiento del sistema territorial para resistir, adaptarse y recuperarse ante amenazas de origen natural y del cambio climático.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Regulación | Estándar de Gestión</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">PMDU</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Programa Municipal de Desarrollo Urbano. Es el instrumento local que define los usos de suelo, densidades y metas de crecimiento para un municipio específico.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Planeación | Base para Zonificación</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">PDUCP</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Programa de Desarrollo Urbano del Centro de Población. Detalla el crecimiento futuro de una localidad urbana y la dotación de infraestructura necesaria así como su instrumentación.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Planeación | Base para Zonificación</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">PPDU</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Programas Parciales de Desarrollo Urbano, enfocados en áreas reducidas que requieren una ordenación detallada o reforma interior, permitiendo una intervención más quirúrgica en el tejido urbano.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Gestión para el Desarrollo | Base para Zonificación</div>
+                </div>
+                
+                <h5 style="color:#fcae91; font-size: 12px; margin: 20px 0 5px 0; border-bottom: 1px solid #444; padding-bottom: 5px;"> Instrumentos de Gestión de Suelo y Desarrollo</h5>
+
+                <div style="font-size:10px; color:#ddd; margin-bottom:10px; text-align: justify;">
+                    Ha existido una enorme dependencia de los recursos federales (Participaciones y Aportaciones). Una alternativa para mejorar las finanzas municipales es la gestión de la valorización del suelo urbano.
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Polígonos de Actuación</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Áreas delimitadas donde se permite el intercambio de potencial de desarrollo, la relotificación y la reubicación de usos. Se emplean principalmente en zonas de reciclaje urbano para optimizar el aprovechamiento del suelo.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Gestión de Suelo | Zonificación Flexible</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Zonificación Flotante</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Área donde es posible desarrollar proyectos con requerimientos específicos de mezcla de actividades y aprovechamiento. Dicha área no está fija, sino que se mantiene “flotando” hasta que los interesados solicitan el desarrollo.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Regulación | Zonificación Flexible</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Zonificación Condicional</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Permite modificar la normatividad urbana mediante evaluaciones técnicas de agua, movilidad y protección civil, junto con consulta pública y pago de contraprestación. Adapta usos de suelo a nuevas necesidades.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Regulación | Zonificación Flexible</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Polígonos de Acción Inmediata</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Zonas con gran libertad normativa diseñadas para incentivar la inversión en áreas deterioradas o desvalorizadas. Establecen temporalidades claras para evitar prácticas especulativas.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Gestión para el Desarrollo | Zonificación Flexible</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Permisos Especiales</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Modificaciones para lo no regulado o para actividades de alto impacto que requieren mayor control por parte de la autoridad municipal. Garantizan que estas actividades especiales no afecten zonas residenciales.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Regulación | Zonificación Flexible</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Transferencia de Derechos</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Consiste en la emisión y recepción de derechos de desarrollo entre diferentes zonas para promover la conservación y el mejoramiento de la ciudad.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Gestión de Suelo | Transferencia de Derechos</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Derecho de preferencia</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Herramienta legal que otorga al municipio la prioridad para adquirir predios estratégicos que se pongan en venta. Permite que la autoridad asegure suelo para fines de utilidad pública.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Gestión de Suelo | Grandes Intervenciones</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Polígonos de Actuación Concertada</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Alternativa a las reservas territoriales que facilita la consolidación del suelo regulando a los actores en un marco de seguridad jurídica. Busca el beneficio social mediante acuerdos transparentes.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Gestión de Suelo | Grandes Intervenciones</div>
+                </div>
+
+                <div class="legal-card level-municipal" style="cursor:default; margin-bottom: 8px;">
+                    <b style="color:#fff;">Reagrupamiento parcelario</b>
+                    <div style="font-size:10px; color:#aaa; margin:4px 0; text-align: justify;">Mecanismo que permite la unificación de diversos predios para su posterior redistribución. Facilita la gestión asociada de propietarios para generar parcelas más eficientes y aptas para el desarrollo urbano.</div>
+                    <div style="font-size:9px; color:#00e5ff;">Gestión de Suelo | Grandes Intervenciones</div>
+                </div>
+
+            </div>
+        `;
+        leftContainer.appendChild(instBox);
+    }
+
     if (!document.getElementById('penta-helix-box')) {
         // Pentágono Multi-Hélice
         var pentaBox = document.createElement('div');
@@ -1107,6 +1535,15 @@ function actualizarPanelDerecho(escala) {
     }
 
     marcoTree.innerHTML = htmlLeyes;
+
+    var instBoxRef = document.getElementById('instrumentos-municipales-box');
+    if (instBoxRef) {
+        if (escala === 'municipio') {
+            instBoxRef.style.display = 'block';
+        } else {
+            instBoxRef.style.display = 'none';
+        }
+    }
 }
 
 function showSection(id) {

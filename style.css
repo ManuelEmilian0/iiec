@@ -531,7 +531,7 @@ strong {
 }
 
 .credits-content h3 {
-  color: #ddd;
+  color: #ffffff;
   font-size: 16px;
   margin: 5px 0;
 }
@@ -954,7 +954,7 @@ path.leaflet-interactive {
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.286);
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
   animation: splashFadeInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
   pointer-events: auto;
@@ -999,9 +999,135 @@ path.leaflet-interactive {
   font-size: 16px;
   color: #fff;
   line-height: 1.7;
-  margin-bottom: 40px;
-  text-align: justify;
+  margin-bottom: 30px;
+  text-align: center;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.splash-cards {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+  height: 220px;
+  /* Suficiente altura para el contenido expandido */
+  width: 100%;
+}
+
+.splash-card {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1), background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+  backdrop-filter: blur(5px);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.splash-card:hover {
+  flex: 3;
+  background: rgba(10, 10, 10, 0.7);
+  border-color: #00e5ff;
+  box-shadow: 0 10px 30px rgba(0, 229, 255, 0.3);
+}
+
+.splash-card h4 {
+  margin: 0;
+  font-size: 13px;
+  color: #00e5ff;
+  transition: transform 0.4s ease, margin 0.4s ease, font-size 0.4s ease;
+  white-space: nowrap;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.splash-card:hover h4 {
+  margin-bottom: 5px;
+  font-size: 15px;
+  white-space: normal;
+  transform: scale(1.05);
+}
+
+.splash-card h3 {
+  margin: 5px 0 0 0;
+  font-size: 11px;
+  color: #fff;
+  transition: all 0.4s ease;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.splash-card:hover h3 {
+  font-size: 13px;
+  margin-bottom: 10px;
+  white-space: normal;
+}
+
+.card-question,
+.card-value {
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+  transform: translateY(15px);
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.splash-card:hover .card-question {
+  opacity: 1;
+  max-height: 80px;
+  margin-bottom: 10px;
+  transform: translateY(0);
+}
+
+.splash-card:hover .card-value {
+  opacity: 1;
+  max-height: 400px;
+  overflow-y: auto;
+  transform: translateY(0);
+}
+
+.card-question {
+  font-size: 11px;
+  font-style: italic;
+  color: #fff;
+  text-align: center;
+}
+
+.card-value {
+  font-size: 10px;
+  color: #ccc;
+  line-height: 1.5;
+  text-align: justify;
+  overflow-x: hidden;
+  padding-right: 5px;
+}
+
+.card-value::-webkit-scrollbar {
+  width: 4px;
+}
+
+.card-value::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.card-value::-webkit-scrollbar-thumb {
+  background: #00e5ff;
+  border-radius: 4px;
+}
+
+.card-value::-webkit-scrollbar-thumb:hover {
+  background: #00b3cc;
+}
+
+.card-value strong {
+  color: #fff;
 }
 
 .splash-btn {
@@ -1313,7 +1439,8 @@ path.leaflet-interactive {
 }
 
 .basemap-gallery-panel {
-  display: none; /* Se cambia a grid en JS */
+  display: none;
+  /* Se cambia a grid en JS */
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   padding: 8px;

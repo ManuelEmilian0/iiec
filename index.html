@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redes Productivas - PAPIIT IN300825</title>
+    <title>Geovisualizador Multiescalar</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="icon" href="data:,">
@@ -39,15 +39,54 @@
                     <img src="logo_iiec.png" alt="IIEc" class="splash-logo" style="margin-left: 30px;">
                 </a>
             </div>
-            <h1 class="splash-title">Redes productivas y núcleos industriales dinámicos</h1>
+            <h1 class="splash-title">Atlas de inteligencia multiescalar</h1>
             <p class="splash-mission">
-                Herramienta de geointeligencia multiescalar orientada a articular el análisis cuantitativo, cualitativo
-                y normativo del territorio. Esta plataforma emerge bajo la
-                geografía crítica para transformar la información territorial en decisiones de política pública
-                fundamentadas, anticipatorias y redistributivas.
+                Plataforma de geointeligencia multiescalar orientada a identificar: redes globales de producción,
+                dinámicas
+                locales, zonas
+                estratégicas de intervención, riesgos socioespaciales y oportunidades de inversión través de análisis
+                cuantitativo, cualitativo y normativo.
             </p>
-            <button id="btn-iniciar" class="splash-btn" onclick="iniciarGeovisualizador()">Geovisualizador
-                Interactivo</button>
+
+            <div class="splash-cards">
+                <div class="splash-card">
+                    <h4>Gobierno</h4>
+                    <h3>Intervenir mejor</h3>
+                    <p class="card-question">¿Dónde priorizar, regular e intervenir en el territorio?</p>
+                    <p class="card-value"><strong>Propósito:</strong> Direccionar la inversión
+                        pública, extranjera y
+                        privada para el desarrollo económico y social promoviendo un ordenamiento
+                        territorial basado en evidencia.</p>
+                </div>
+                <div class="splash-card">
+                    <h4>Sector privado</h4>
+                    <h3>Invertir mejor</h3>
+                    <p class="card-question">¿Dónde invertir, expandirse o localizar operaciones?</p>
+                    <p class="card-value"><strong>Propósito:</strong> Identificar zonas de inversión,
+                        maximizar
+                        rentabilidad y mitigar externalidades territoriales para intervenciones de alto impacto.</p>
+                </div>
+                <div class="splash-card">
+                    <h4>Academia</h4>
+                    <h3>Explicar mejor</h3>
+                    <p class="card-question">¿Cómo analizar, explicar y modelar el territorio?</p>
+                    <p class="card-value"><strong>Propósito:</strong> Permitir el análisis integral,
+                        relacional y multiescalar; para la explicación multidisciplinar del territorio, integrando:
+                        sociedad, economía, espacio e
+                        instrumentos de gestión del suelo.
+                    </p>
+                </div>
+                <div class="splash-card">
+                    <h4>Público en general</h4>
+                    <h3>Entender mejor</h3>
+                    <p class="card-question">¿Cómo entender, usar y aprovechar el territorio?</p>
+                    <p class="card-value"><strong>Propósito:</strong> Democratizar la información del
+                        territorio.
+                        Entiende tu ciudad y toma decisiones con información clara y accesible.</p>
+                </div>
+            </div>
+
+            <button id="btn-iniciar" class="splash-btn" onclick="iniciarGeovisualizador()">Iniciar</button>
         </div>
     </div>
 
@@ -65,15 +104,15 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            window.addEventListener('mousemove', function(event) {
+            window.addEventListener('mousemove', function (event) {
                 mouse.x = event.x;
                 mouse.y = event.y;
             });
-            window.addEventListener('mouseout', function() {
+            window.addEventListener('mouseout', function () {
                 mouse.x = undefined;
                 mouse.y = undefined;
             });
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
                 if (canvas) {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;
@@ -99,7 +138,7 @@
 
                     let dx = mouse.x - this.x;
                     let dy = mouse.y - this.y;
-                    let distance = Math.sqrt(dx*dx + dy*dy);
+                    let distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance < mouse.radius) {
                         let forceDirectionX = dx / distance;
@@ -108,7 +147,7 @@
                         let force = (maxDistance - distance) / maxDistance;
                         let directionX = forceDirectionX * force * 5;
                         let directionY = forceDirectionY * force * 5;
-                        
+
                         this.x -= directionX;
                         this.y -= directionY;
                     }
@@ -158,8 +197,8 @@
                     for (let b = a; b < particlesArray.length; b++) {
                         let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
                             + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
-                        
-                        if (distance < (canvas.width/7) * (canvas.height/7)) {
+
+                        if (distance < (canvas.width / 7) * (canvas.height / 7)) {
                             opacityValue = 1 - (distance / 20000);
                             let isBlue = particlesArray[a].color === colors[0];
                             ctx.strokeStyle = isBlue ? `rgba(2, 119, 189, ${opacityValue})` : `rgba(213, 159, 15, ${opacityValue})`;
@@ -197,7 +236,8 @@
             <button class="nav-button" onclick="showSection('metodologia')">Metodología</button>
             <button class="nav-button" onclick="showSection('contacto')">Contacto</button>
             <div style="flex-grow: 1;"></div>
-            <button class="nav-button" id="top-login-btn" style="background:#0277bd; color:#fff;" onclick="openLoginModal()">Iniciar Sesión</button>
+            <button class="nav-button" id="top-login-btn" style="background:#0277bd; color:#fff;"
+                onclick="openLoginModal()">Iniciar Sesión</button>
         </div>
     </div>
 
@@ -211,85 +251,129 @@
             <div class="panel-inner-content">
                 <h2>Marco Teórico</h2>
 
-                <p>La comprensión de la dinámica industrial en México exige integrar las dimensiones política y
-                    espacial, superando el análisis puramente económico. El Estado se debe reconfigurar mediante
-                    procesos de re-escalamiento para adaptar el territorio a los flujos del capital global, transitando
-                    de la homogeneidad nacional a la competitividad de regiones urbanas específicas. Esta metamorfosis
-                    debe responder a la transición tecnológica automotriz y al ascenso del paradigma
-                    electrónico-informático, evitando que los clústeres funcionen como simples enclaves de ensamblaje
-                    desconectados del entorno.</p>
+                <div class="credits-content" style="max-width: 1200px; margin: 0 auto;">
+                    <div class="splash-cards" style="height: 260px; margin-bottom: 25px;">
+                        <div class="splash-card">
+                            <h4>Dinámica Industrial</h4>
+                            <h3>Geopolítica</h3>
+                            <div class="card-question">Contexto Espacial</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                La comprensión de la dinámica industrial exige integrar dimensiones políticas y
+                                espaciales. El Estado debe reconfigurarse mediante procesos de re-escalamiento para
+                                adaptar el territorio al capital global, transitando de la homogeneidad nacional a la
+                                competitividad de regiones urbanas, respondiendo a la transición tecnológica y evitando
+                                enclaves desconectados.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Política Industrial</h4>
+                            <h3>Acoplamiento</h3>
+                            <div class="card-question">Rol del Estado</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                La clave reside en un acoplamiento estratégico activo donde el Estado actúe como
+                                arquitecto del mercado. Requiere instituciones que condicionen la inversión extranjera,
+                                fuercen la transferencia tecnológica hacia proveedores locales y especialicen el capital
+                                humano. La política industrial se convierte en herramienta de ordenamiento territorial.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Desarrollo Local</h4>
+                            <h3>Innovación</h3>
+                            <div class="card-question">Dinámicas Endógenas</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Son centrales la innovación y las dinámicas endógenas como propulsoras de la calidad de
+                                vida. Se plantean dos referentes: el "modelo de desarrollo local" (construcción de
+                                consensos) y el "sistema productivo local" (distribución de recursos), determinando la
+                                senda de desarrollo territorial (Pellegrini, 2024).
+                            </div>
+                        </div>
+                    </div>
 
-                <p>La clave reside en sustituir la inserción pasiva en las RPG por un acoplamiento estratégico activo.
-                    Esto requiere que el Estado actúe como arquitecto del mercado, implementando instituciones
-                    inclusivas que condicionen la inversión extranjera y fuercen la transferencia tecnológica hacia
-                    proveedores locales, especializando el capital humano y la infraestructura local. Así, la política
-                    industrial puede convertirse en una herramienta de ordenamiento territorial que sincroniza las
-                    oportunidades de la escala global con las capacidades locales.</p>
+                    <h3 style="text-align: center; color: #00e5ff; margin-bottom: 15px; font-size: 18px;">Análisis
+                        Multiescalar</h3>
+                    <div class="splash-cards" style="height: 280px; margin-bottom: 25px;">
+                        <div class="splash-card">
+                            <h4>Escala Macro</h4>
+                            <h3>Posicionamiento</h3>
+                            <div class="card-question">Norteamérica</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Examina la posición de México frente a la reconfiguración jerárquico-espacial empleando
+                                matrices ICIOT (1993-2015) y WIOT para rastrear valor agregado transfronterizo. Se
+                                sustenta en el concepto de "scale jumping" (Brenner, 2004) para evaluar la soberanía
+                                industrial frente al capital global.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Escala Meso</h4>
+                            <h3>Desajuste Espacial</h3>
+                            <div class="card-question">SCINCE y DENUE</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Analiza la relación entre núcleos dinámicos y estructura demográfica. Aplica modelos de
+                                accesibilidad mediante isocronas (30, 60 y 90 min) alrededor de plantas armadoras. Se
+                                cruzan con vulnerabilidad socioeconómica para detectar zonas donde la población carece
+                                de perfil técnico o enfrenta barreras de movilidad.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Escala Micro</h4>
+                            <h3>Cohesión</h3>
+                            <div class="card-question">LISA y K-Means</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                En AGEBs se ejecutan modelos estadísticos. Primero, Autocorrelación Espacial Bivariada
+                                (LISA Bivariado) para correlacionar la densidad SEIT con vulnerabilidad. Luego, Clúster
+                                K-Means genera una tipología automatizada ("Nodos de Oportunidad", "Zonas de Riesgo")
+                                integrando densidad, vulnerabilidad y conectividad.
+                            </div>
+                        </div>
+                    </div>
 
-                <p>En el proceso de desarrollo propuesto son centrales la innovación y las dinámicas endógenas como
-                    propulsoras de la mejora de la calidad de vida y la competitividad territorial. Se plantean dos
-                    grandes referentes de la organización territorial, a saber, el “modelo de desarrollo local” y el
-                    “sistema productivo local” como los contextos en los que se identifican la construcción de
-                    consensos, en el caso del primero, y la organización de distribución de recursos, en el segundo. A
-                    su vez, estos dos articuladores determinan la senda de desarrollo local o regional a partir del
-                    proceso endógeno de articulación que determinará la innovación y, por tanto, la transformación del
-                    sistema territorial. Como resultado de estas interacciones desde la senda de desarrollo se
-                    determinará, a su vez, la calidad de vida en ese territorio, y desde la innovación la competitividad
-                    territorial o capacidad de respuesta ante externalidades para no mermar las condiciones de vida y
-                    bienestar generales. (Pellegrini, 2024).</p>
-
-                <p>En definitiva, el desarrollo endógeno solo será viable si se articulan los Sistemas Regionales de
-                    Innovación con una construcción social del espacio urbano que mitigue la segregación y mejore la
-                    calidad de vida. La soberanía industrial depende de armonizar la eficiencia de las cadenas de valor
-                    con la cohesión territorial, transformando los nodos logísticos en motores de bienestar social y
-                    capacidad productiva nacional.</p>
-
-                <h3>Análisis Multiescalar</h3>
-
-                <b>Escala Macro</b>
-                <p>Se examina el posicionamiento estratégico de México frente a la reconfiguración jerárquico-espacial
-                    de Norteamérica. Se emplean las matrices Inter-Country Input-Output Table (ICIOT, 1993-2015) y World
-                    Input-Output Table (WIOT, 1993-2014) para rastrear el valor agregado en el comercio transfronterizo
-                    y medir el grado de integración de la industria nacional en la transición verde y el sector
-                    eléctrico-electrónico. El análisis se sustenta teóricamente en el concepto de scale jumping
-                    (Brenner, 2004) para evaluar cómo el Estado mexicano intenta orquestar la soberanía industrial
-                    frente a los imperativos del capital global. Complementariamente, se propone una regionalización
-                    funcional que identifique los corredores logísticos estratégicos, contrastando su despliegue con los
-                    lineamientos de resiliencia territorial establecidos en la NOM-003-SEDATU-2023.</p>
-
-                <b>Escala Meso</b>
-                <p>Descendiendo de escala, se analiza la relación entre los núcleos dinámicos y la estructura
-                    demográfica utilizando datos del Sistema para la Consulta de Información Censal (SCINCE) y el
-                    Directorio Estadístico Nacional de Unidades Económicas (DENUE). Se aplica un modelo de accesibilidad
-                    basado en la generación de isocronas de transporte público (30, 60 y 90 minutos) alrededor de las
-                    plantas armadoras y parques industriales, cumpliendo con los criterios de integración urbana de la
-                    norma NMX-R-046-SCFI-2015. Estas áreas de influencia se cruzan con capas de vulnerabilidad generadas
-                    mediante indicadores con base en información socioeconómica y nivel educativo para detectar
-                    fenómenos de desajuste espacial, donde la población residente carece del perfil técnico para acceder
-                    a los empleos generados o enfrenta barreras físicas de movilidad, evidenciando ineficiencias
-                    urbanas.</p>
-
-                <b>Escala Micro</b>
-                <p>En la escala más fina, se ejecutan modelos estadísticos avanzados sobre las Áreas Geográficas
-                    Estadísticas Básicas (AGEB) para validar la hipótesis de cohesión territorial. Primero, se
-                    implementa un análisis de Autocorrelación Espacial Bivariada (LISA Bivariado), utilizando el Índice
-                    de Moran Local para correlacionar la densidad de empresas de los sectores Electrónico, Informático y
-                    Telecomunicaciones (SEIT) con el Índice de Vulnerabilidad Acumulada. Este procedimiento permite
-                    identificar clústeres espaciales significativos: zonas de tipo Alto-Alto (alta industria, alta
-                    vulnerabilidad) que denotan segregación y enclaves extractivos; y zonas Alto-Bajo (alta industria,
-                    baja vulnerabilidad) que sugieren desarrollo exitoso. Posteriormente, se aplica un algoritmo de
-                    Clúster K-Means para generar una tipología territorial automatizada que clasifique el suelo según su
-                    aptitud y riesgo, integrando variables de densidad industrial, vulnerabilidad física y conectividad.
-                    Esto permite categorizar el territorio en "Nodos de Oportunidad", "Zonas de Riesgo Industrial"
-                    (conforme a la LGEEPA) y "Periferias Precarias", proporcionando una base empírica robusta para el
-                    diseño de políticas públicas diferenciadas que cumplan con la NOM-001-SEDATU-2021 sobre seguridad y
-                    espacio público. Finalmente, la integración de estos hallazgos permite evaluar si los mecanismos de
-                    gobernanza actuales facilitan la transferencia tecnológica y la cohesión social, o si la disociación
-                    entre la planificación urbana y la estrategia industrial está replicando la fragmentación
-                    productiva, limitando el potencial del nearshoring a una mera expansión del volumen exportador sin
-                    desarrollo de capacidades endógenas. Esto permitirá evaluar si los "núcleos dinámicos" funcionan
-                    verdaderamente como sistemas innovadores o simplemente como aglomeraciones espaciales dictadas por
-                    el capital global.</p>
+                    <h3 style="text-align: center; color: #00e5ff; margin-bottom: 15px; font-size: 18px;">Vulnerabilidad
+                        Global (AGEB / Manzana)</h3>
+                    <div class="splash-cards" style="height: 300px;">
+                        <div class="splash-card">
+                            <h4>Geovisualización</h4>
+                            <h3>Datos Abiertos</h3>
+                            <div class="card-question">Big Data</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Tránsito de una planeación reactiva hacia una Geovisualización interactiva. Transforma
+                                datos del INEGI, SCINCE y CONAPO para identificar patrones de vulnerabilidad mediante un
+                                flujo automatizado en Python, normalizando variables por quintiles relativos (Caracheo y
+                                Camacho, 2023).
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Físico-Espacial</h4>
+                            <h3>Vulnerabilidad en Hogar</h3>
+                            <div class="card-question">Densidad y Carencias</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Refleja condiciones materiales (pavimentación, alumbrado, densidad de vivienda,
+                                hacinamiento). Evidencia dispersión y vaciamiento urbano que merman la eficiencia
+                                territorial, aumentando riesgos por carencias domésticas e inseguridad.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Urbana</h4>
+                            <h3>Déficit de Servicios</h3>
+                            <div class="card-question">Infraestructura Básica</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Compuesta por tres variables:
+                                <br>- Vivienda sin drenaje (riesgos sanitarios).
+                                <br>- Vivienda sin agua entubada (desigualdad al recurso esencial).
+                                <br>- Vivienda sin electricidad (carencia que limita la integración productiva).
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Socioeconómica</h4>
+                            <h3>Fragilidad Social</h3>
+                            <div class="card-question">Sin Oportunidades</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Calculada a partir de ingresos, dependencia económica, afiliación a salud, desocupación,
+                                discapacidad y baja escolaridad. Se establece puntuación (1 a 5) y se combina con los
+                                demás ejes para producir el Índice de Vulnerabilidad Global.
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -298,130 +382,180 @@
             <div class="panel-inner-content">
                 <h2>Metodología</h2>
 
-                <b>Escala Macro</b>
-                <p>En este primer nivel de análisis, la investigación se centra en la inserción de México dentro de la
-                    arquitectura económica de Norteamérica, utilizando QGIS como la plataforma principal para la
-                    geometrización de los flujos de capital global. Mediante el uso de matrices Inter-Country
-                    Input-Output (ICIOT) y World Input-Output (WIOT), se rastrean los vectores de valor agregado que
-                    definen la posición del país en la transición hacia los sectores eléctrico y electrónico. El trabajo
-                    técnico en esta escala implica la transformación de datos tabulares de la OCDE en entidades
-                    geográficas vectoriales, empleando herramientas de análisis de redes y plugins de flujos como
-                    FlowMapper o Shapeing. Estos permiten visualizar los corredores logísticos estratégicos no como
-                    líneas estáticas, sino como magnitudes de intercambio real que atraviesan las fronteras nacionales.
-                </p>
+                <div class="credits-content" style="max-width: 1200px; margin: 0 auto;">
+                    <h3 style="text-align: center; color: #00e5ff; margin-bottom: 15px; font-size: 18px;">Herramientas
+                        Geoespaciales</h3>
+                    <div class="splash-cards" style="height: 280px; margin-bottom: 25px;">
+                        <div class="splash-card">
+                            <h4>Escala Macro</h4>
+                            <h3>Flujos de Capital</h3>
+                            <div class="card-question">QGIS y FlowMapper</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Inserción de México en Norteamérica geometrizando flujos de capital global. Se
+                                transforman datos tabulares (ICIOT y WIOT de la OCDE) en vectores, empleando análisis de
+                                redes y plugins como FlowMapper o Shapeing para visualizar corredores estratégicos y
+                                magnitudes de intercambio real.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Escala Meso</h4>
+                            <h3>Accesibilidad</h3>
+                            <div class="card-question">INEGI y QNEAT3</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Análisis relacional mediante Matrices Insumo-Producto (MIP) regionalizadas de 32
+                                entidades. Se implementan modelos de accesibilidad con el plugin QNEAT3 en QGIS,
+                                generando isocronas de transporte (15, 30 y 60 min) alrededor del DENUE, evaluando si el
+                                suelo cumple la norma NMX-R-046-SCFI-2015.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Escala Micro</h4>
+                            <h3>Big Data</h3>
+                            <div class="card-question">Python y Quintiles</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Transformación de datos brutos del INEGI, SCINCE y CONAPO a través de interoperabilidad
+                                semántica (CVEGEO). Se usa un flujo automatizado en Python para normalizar variables
+                                heterogéneas con una metodología de quintiles relativos, pasando de la planeación
+                                reactiva a la geovisualización interactiva.
+                            </div>
+                        </div>
+                    </div>
 
-                <b>Escala Meso</b>
-                <p>Descendiendo a la escala intermedia, el análisis adquiere un carácter eminentemente relacional, el
-                    cual permite visibilizar la profunda heterogeneidad económica de México al incorporar la dimensión
-                    geográfica. El punto de partida técnico para evaluar estos impactos recae en los Cuadros de Oferta y
-                    Utilización (COU) y las Matrices Insumo-Producto (MIP) del INEGI. Si bien a nivel nacional estas
-                    herramientas ofrecen un detalle exhaustivo de la estructura productiva, su limitación metodológica
-                    histórica radica en la ausencia de desagregación subnacional. Esto se debe a los altos costos
-                    asociados con la captura directa de los flujos de comercio interestatales. Para superar esta barrera
-                    estadística y capturar la realidad regional con información limitada, se implementa una metodología
-                    que combina técnicas matemático-estadísticas avaladas por la comunidad científica internacional,
-                    adaptadas específicamente a los datos disponibles en México.</p>
-                <p>El resultado es la construcción de un conjunto de cuadros y matrices regionalizadas que representan
-                    las economías de las 32 Entidades Federativas para el año 2018. Estas matrices estiman los flujos
-                    comerciales interestatales manteniendo una consistencia total con los COU nacionales, haciendo
-                    explícita, por primera vez, la interdependencia geográfica de las actividades productivas. Es en
-                    este punto donde la estadística se espacializa. Al conjugar estos flujos de intercambio
-                    multirregional estimados con la accesibilidad física a los núcleos dinámicos, el análisis cobra vida
-                    en el territorio. Mediante herramientas de geoprocesamiento en QGIS, se integra el dinamismo de
-                    corredores clave (como los flujos entre CDMX, Nuevo León y Jalisco) con infraestructuras
-                    específicas, permitiendo evaluar, por ejemplo, la capacidad operativa de las armadoras automotrices
-                    para interactuar de forma eficiente con su red de proveeduría inmediata.</p>
-                <p>Se implementan modelos de accesibilidad mediante el plugin QNEAT3, generando isocronas de transporte
-                    y logística de 15, 30 y 60 minutos alrededor de las plantas identificadas en el DENUE. Este proceso
-                    permite mapear cómo las unidades económicas de soporte (IA, IE, IElect) que gravitan en torno a las
-                    armadoras, evaluando si la configuración del suelo cumple con la NMX-R-046-SCFI-2015 sobre
-                    integración urbana. El resultado es un mapa de densidad funcional que revela si los corredores
-                    logísticos multirregionales logran aterrizar de manera eficiente en el tejido municipal o si se
-                    disipan debido a una infraestructura local deficiente.</p>
-
-                <b>Escala Micro</b>
-                <p>La superación de la fragmentación informativa y la incertidumbre territorial en México exige el
-                    tránsito de una planeación reactiva hacia una Geovisualización interactiva, impulsada por la Big
-                    Data. Este enfoque metodológico permite transformar los datos brutos provenientes de fuentes
-                    oficiales como INEGI, SCINCE y CONAPO en conocimiento aplicable, dotando a los municipios de una
-                    estructura analítica capaz de identificar patrones de vulnerabilidad y orientar políticas urbanas
-                    con criterios objetivos. Al integrar escalas que van desde lo municipal (Macro) hasta el Ageb (Meso)
-                    y/o manzana (Micro), se rompe con la opacidad del "misterio de la información ausente" (Soto, 2002),
-                    permitiendo que los datos abiertos adquieran una función estratégica en la gobernanza territorial
-                    para la toma de decisiones. La relevancia de esta Geovisualización radica en su capacidad de
-                    operacionalizar la vulnerabilidad a través de la interoperabilidad semántica y la estandarización de
-                    claves geográficas (CVEGEO). Mediante un flujo automatizado implementado en Python, es posible
-                    procesar información compleja de manera reproducible, normalizando variables heterogéneas a través
-                    de una metodología de quintiles relativos (Caracheo C. y Camacho A., 2023).</p>
-                <p>Este procedimiento garantiza que dimensiones críticas (físico-espacial, urbana, socioeconómica) dejen
-                    de ser interpretaciones subjetivas para convertirse en indicadores ponderados que integran un Índice
-                    Compuesto de Vulnerabilidad Global. La integración de este análisis técnico con la lógica de los
-                    núcleos dinámicos industriales permite observar la estructura territorial de las desigualdades
-                    mediante la autocorrelación espacial. Clusterización: Cargar Matriz de pesos para generar una
-                    correlación de variables. Weights Manager: Gestor de pesos, Queen y peso a correlacionar. Cluster
-                    Maps: Selección de Índice de Moran y la correlación a pesar. El uso del Índice de Moran y la
-                    clusterización LISA que facilita la identificación de "focos rojos" o núcleos geográficos donde la
-                    vulnerabilidad se concentra, permitiendo verificar si los patrones espaciales en torno a los nodos
-                    productivos son aleatorios o responden a una lógica de desarticulación endógena.</p>
-                <p>Se estableció un sistema de puntuación para cada atributo, donde los valores se clasificaron en una
-                    escala de 1 a 5, representando la vulnerabilidad de la siguiente manera:</p>
-                <p>1: Muy baja vulnerabilidad (los atributos indican condiciones favorables)</p>
-                <p>2: Baja vulnerabilidad.</p>
-                <p>3: Media vulnerabilidad.</p>
-                <p>4: Alta vulnerabilidad.</p>
-                <p>5: Muy alta vulnerabilidad (los atributos reflejan condiciones desfavorables o de alta carencia).</p>
-                <p>Con relación a la puntuación determinada, se agruparon los descriptores seleccionados en 3 ejes
-                    temáticos:</p>
-                <p>La Físico-Espacial igual a <b>“Vulnerabilidad en Hogar”</b> refleja las condiciones materiales y de
-                    ocupación del territorio. Se construyó a partir de variables como: nuevas áreas de crecimiento
-                    urbano, la pavimentación, el alumbrado público, la densidad de vivienda, las viviendas deshabitadas
-                    y el hacinamiento. Los resultados de esta vulnerabilidad evidencian procesos de dispersión y
-                    vaciamiento urbano que afectan la eficiencia territorial. También mayores riesgos, asociados a
-                    carencias en infraestructura doméstica, inseguridad y pérdida de cohesión social.</p>
-                <p>La Urbana igual a <b>“Deficiencia en Infraestructura”</b> se compone en tres variables ponderadas:
-                    Vivienda sin drenaje, asociadas a riesgos sanitarios y contaminación ambiental, vivienda sin agua
-                    entubada, refleja la desigualdad en el acceso al recurso más esencial para la salud pública y el
-                    bienestar doméstico y vivienda sin electricidad que representa la carencia más crítica, limita la
-                    integración productiva, educativa y social de los hogares.</p>
-                <p>La dimensión Socioeconómica igual a <b>“Sin oportunidades”</b> se calculó a partir de la ponderación
-                    de siete variables, se identificaron zonas con alta densidad poblacional, nivel de ingresos,
-                    población con dependencia económica, población sin afiliación a servicios de salud, población
-                    desocupada, población con discapacidad y bajo grado promedio de escolaridad. Permitió identificar
-                    áreas con mayor fragilidad social y económica.</p>
-                <p>La combinación de estos indicadores produjo un Índice de Vulnerabilidad Global que distingue con
-                    precisión los territorios consolidados con cualidades a atender.</p>
+                    <h3 style="text-align: center; color: #00e5ff; margin-bottom: 15px; font-size: 18px;">Técnicas de
+                        Análisis Cuantitativo</h3>
+                    <div class="splash-cards" style="height: 280px;">
+                        <div class="splash-card">
+                            <h4>Correlación</h4>
+                            <h3>Clusterización Espacial</h3>
+                            <div class="card-question">Índice de Moran Local</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Aplicación de Autocorrelación Espacial (LISA). Uso de Weights Manager (peso Queen) para
+                                correlacionar variables e identificar "focos rojos". Verifica si los patrones en torno a
+                                los nodos productivos son aleatorios o responden a desarticulación endógena.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Clasificación</h4>
+                            <h3>Índice Compuesto</h3>
+                            <div class="card-question">Escalas de Vulnerabilidad</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Construcción de un Índice de Vulnerabilidad Global agrupado en ejes: Físico-Espacial,
+                                Urbana y Socioeconómica. Las variables se ponderan y clasifican del 1 (muy baja) al 5
+                                (muy alta vulnerabilidad), permitiendo identificar deficiencias en infraestructura y
+                                fragilidad social con precisión a nivel AGEB.
+                            </div>
+                        </div>
+                        <div class="splash-card">
+                            <h4>Segmentación</h4>
+                            <h3>Tipología Territorial</h3>
+                            <div class="card-question">K-Means y Segmentación</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Algoritmos de clustering para generar una tipología territorial automatizada. Agrupa y
+                                segmenta el espacio en categorías estratégicas, integrando la densidad industrial y la
+                                vulnerabilidad, proporcionando bases objetivas para las políticas de resiliencia y
+                                ordenamiento territorial.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div id="contacto" class="main-content-panel">
             <div class="panel-inner-content">
                 <h2>Contacto</h2>
-                <div class="credits-content">
-                    <h3>Universidad Nacional Autónoma de México (UNAM)</h3>
-                    <h3>Instituto de Investigaciones Económicas (IIEc)</h3>
-                    <h3>Licenciatura en Urbanismo</h3>
-                    <br>
-                    <p><strong>Coordinado por:</strong></p>
-                    <p><strong>Dr. Ordóñez Gutiérrez Sergio Adrián</strong></p>
-                    <p><strong>Dr. Bouchain Galicia Rafael César</strong></p>
-                    <br>
-                    <p><strong>Elaborado por:</strong></p>
-                    <p>
-                        <strong><a href="https://manuelemilian0.github.io/perfil_profesional/" class="portfolio-link"
-                                target="_blank" rel="noopener noreferrer">Manuel Emiliano Moreno Pérez</a></strong><br>
-                        emisliano974@gmail.com<br>
-                    </p>
-                    <p>
-                        <strong><a href="https://ia309745-ops.github.io/Perfil_profesional/" class="portfolio-link"
-                                target="_blank" rel="noopener noreferrer">Ismael Kaleet Luna Aguilar</a></strong><br>
-                        ia309745@gmail.com<br>
-                    </p>
-                    <p>
-                        <strong><a href="https://portafoliodario.vercel.app/" class="portfolio-link" target="_blank"
-                                rel="noopener noreferrer">Dario Molina
-                                Figueroa</a></strong><br>
-                        dariom5457@gmail.com<br>
-                    </p>
+                <div class="credits-content" style="max-width: 1000px; margin: 0 auto;">
+
+                    <div class="splash-cards" style="height: 200px; margin-bottom: 15px;">
+                        <!-- Tarjeta Institucional -->
+                        <div class="splash-card">
+                            <h4>Institucional</h4>
+                            <h3>UNAM</h3>
+                            <div class="card-question">Respaldo Académico</div>
+                            <div class="card-value" style="font-size: 11px;">
+                                Universidad Nacional Autónoma de México<br><br>
+                                Instituto de Investigaciones Económicas (IIEc)<br><br>
+                                Licenciatura en Urbanismo
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta Proyecto -->
+                        <div class="splash-card">
+                            <h4>Proyecto</h4>
+                            <h3>PAPIIT IN300825</h3>
+                            <div class="card-question">Herramienta de Geovisualización</div>
+                            <div class="card-value" style="font-size: 11px; line-height: 1.4;">
+                                "Redes productivas globales, núcleos dinamicos y endogeneidad productiva: nuevas
+                                condiciones de una estrategia de desarrollo en México"
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta Dirección -->
+                        <div class="splash-card">
+                            <h4>Dirección</h4>
+                            <h3>Investigadores</h3>
+                            <div class="card-question">Dirigido por:</div>
+                            <div class="card-value" style="font-size: 11px; line-height: 1.5;">
+                                <strong>Dr. en Econ. Ordóñez Gutiérrez Sergio Adrián</strong><br><br>
+                                <strong>M. en C. Bouchain Galicia Rafael César</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="splash-cards" style="height: 260px;">
+                        <!-- Tarjeta Coordinación -->
+                        <div class="splash-card">
+                            <h4>Coordinación</h4>
+                            <h3>Desarrollo Técnico</h3>
+                            <div class="card-question">Coordinado por:</div>
+                            <div class="card-value"
+                                style="font-size: 11px; line-height: 1.4; text-align: left; padding: 0 10px;">
+                                <strong>Dra. en Econ. Paty Aidé Montiel Martínez</strong><br>
+                                <a href="mailto:anitalavalatina2@gmail.com"
+                                    style="color:#00e5ff; text-decoration:none;">anitalavalatina2@gmail.com</a><br><br>
+
+                                <strong><a href="https://manuelemilian0.github.io/perfil_profesional/"
+                                        class="portfolio-link" target="_blank" rel="noopener noreferrer"
+                                        style="color:#fff;">Lic. en Urb. Manuel Emiliano Moreno Pérez</a></strong><br>
+                                <a href="mailto:emisliano974@gmail.com"
+                                    style="color:#00e5ff; text-decoration:none;">emisliano974@gmail.com</a><br><br>
+
+                                <strong><a href="https://ia309745-ops.github.io/Perfil_profesional/"
+                                        class="portfolio-link" target="_blank" rel="noopener noreferrer"
+                                        style="color:#fff;">Lic. en Urb. Ismael Kaleet Luna Aguilar</a></strong><br>
+                                <a href="mailto:ia309745@gmail.com"
+                                    style="color:#00e5ff; text-decoration:none;">ia309745@gmail.com</a><br><br>
+
+                                <strong>Lic. en Econ. Joaquin Manuel Diaz Reyes</strong><br>
+                                <a href="mailto:jmdeconomia@gmail.com"
+                                    style="color:#00e5ff; text-decoration:none;">jmdeconomia@gmail.com</a>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta Participantes -->
+                        <div class="splash-card">
+                            <h4>Participantes</h4>
+                            <h3>Equipo de Análisis</h3>
+                            <div class="card-question">Colaboradores:</div>
+                            <div class="card-value"
+                                style="font-size: 11px; line-height: 1.4; text-align: left; padding: 0 10px;">
+                                <strong><a href="https://portafoliodario.vercel.app/" class="portfolio-link"
+                                        target="_blank" rel="noopener noreferrer" style="color:#fff;">Lic. en Urb. Dario
+                                        Molina Figueroa</a></strong><br>
+                                <a href="mailto:dariom5457@gmail.com"
+                                    style="color:#00e5ff; text-decoration:none;">dariom5457@gmail.com</a><br><br>
+
+                                <strong>Lic. en Econ. Aurora Quiroga</strong><br>
+                                <a href="mailto:auroraquirogam@gmail.com"
+                                    style="color:#00e5ff; text-decoration:none;">auroraquirogam@gmail.com</a><br><br>
+
+                                <strong>Lic. en Mat. Angel Moreno</strong><br>
+                                <a href="mailto:angdavo19999@ciencias.unam.mx"
+                                    style="color:#00e5ff; text-decoration:none;">angdavo19999@ciencias.unam.mx</a>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
