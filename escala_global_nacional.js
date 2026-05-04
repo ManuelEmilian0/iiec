@@ -485,7 +485,7 @@ function iniciarFiltroNacional_Paso1(data) {
     var finanzasContainer = document.createElement("div");
     finanzasContainer.style.display = "none";
 
-    document.getElementById('filter-title').innerText = "Intercambios Nacionales";
+    document.getElementById('filter-title').innerText = "Modo de análisis";
 
     // --- FLUJOS LOGIC ---
     function obtenerGrupo(subsectorTexto) {
@@ -579,11 +579,11 @@ function iniciarFiltroNacional_Paso1(data) {
         if (this.value === 'flujos') {
             flujosContainer.style.display = 'block';
             finanzasContainer.style.display = 'none';
-            document.getElementById('filter-title').innerText = "Intercambios Nacionales";
+            document.getElementById('filter-title').innerText = "Modo de análisis";
         } else {
             flujosContainer.style.display = 'none';
             finanzasContainer.style.display = 'block';
-            document.getElementById('filter-title').innerText = "Finanzas Públicas (2025)";
+            document.getElementById('filter-title').innerText = "Modo de análisis";
             selectFinanzas.value = "";
         }
     };
@@ -605,14 +605,14 @@ function renderizarMapaFinanzas(tipo) {
             .then(res => res.json())
             .then(geo => {
                 estadosPolygonsGeoJSON = geo;
-                filterTitle.innerText = "Finanzas Públicas (2025)";
+                filterTitle.innerText = "Modo de análisis";
                 dibujarCoropletaFinanzas(tipo);
             }).catch(e => {
                 console.error("No se pudo cargar el geojson de México", e);
                 filterTitle.innerText = "Error cargando mapa";
             });
     } else {
-        filterTitle.innerText = "Finanzas Públicas (2025)";
+        filterTitle.innerText = "Modo de análisis";
         dibujarCoropletaFinanzas(tipo);
     }
 }
@@ -633,6 +633,18 @@ function normalizarEstadoNombre(nombre) {
     return nombre;
 }
 
+const ABREVIATURAS_ESTADOS = {
+    "Aguascalientes": "Ags.", "Baja California": "B.C.", "Baja California Sur": "B.C.S.",
+    "Campeche": "Camp.", "Coahuila": "Coah.", "Colima": "Col.", "Chiapas": "Chis.",
+    "Chihuahua": "Chih.", "Ciudad de México": "CDMX", "Durango": "Dgo.",
+    "Guanajuato": "Gto.", "Guerrero": "Gro.", "Hidalgo": "Hgo.", "Jalisco": "Jal.",
+    "México": "Edomex", "Michoacán": "Mich.", "Morelos": "Mor.", "Nayarit": "Nay.",
+    "Nuevo León": "N.L.", "Oaxaca": "Oax.", "Puebla": "Pue.", "Querétaro": "Qro.",
+    "Quintana Roo": "Q.R.", "San Luis Potosí": "S.L.P.", "Sinaloa": "Sin.",
+    "Sonora": "Son.", "Tabasco": "Tab.", "Tamaulipas": "Tamps.", "Tlaxcala": "Tlax.",
+    "Veracruz": "Ver.", "Yucatán": "Yuc.", "Zacatecas": "Zac."
+};
+
 function dibujarCoropletaFinanzas(tipo) {
     var valores = [];
     var stateDataMap = {};
@@ -650,7 +662,9 @@ function dibujarCoropletaFinanzas(tipo) {
     valores.sort((a, b) => a - b);
     var breaks = calcularBreaks(valores);
 
-    var layer = L.geoJSON(estadosPolygonsGeoJSON, {
+    var labelsArray = [];
+
+    var layer_geo = L.geoJSON(estadosPolygonsGeoJSON, {
         style: function (feature) {
             var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
             var val = stateDataMap[estadoReal];
@@ -691,15 +705,30 @@ function dibujarCoropletaFinanzas(tipo) {
                         l.bringToFront();
                     },
                     mouseout: function (e) {
-                        currentGeoJSONLayer.resetStyle(e.target);
+                        layer_geo.resetStyle(e.target);
                     }
                 });
+
+                // Añadir etiqueta permanente
+                var labelCenter = layer.getBounds().getCenter();
+                var nombreAcotado = ABREVIATURAS_ESTADOS[estadoReal] || estadoReal;
+                var labelMarker = L.marker(labelCenter, {
+                    icon: L.divIcon({
+                        className: 'state-label-permanent',
+                        html: `<div style="color: #fff; font-size: 10px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center;">${nombreAcotado}</div>`,
+                        iconSize: [80, 20]
+                    }),
+                    interactive: false
+                });
+                labelsArray.push(labelMarker);
             }
         }
-    }).addTo(map);
+    });
 
-    layer.bringToBack();
-    currentGeoJSONLayer = layer;
+    var labelsGroup = L.featureGroup(labelsArray);
+    var combinedGroup = L.featureGroup([layer_geo, labelsGroup]).addTo(map);
+    combinedGroup.bringToBack();
+    currentGeoJSONLayer = combinedGroup;
     actualizarLeyenda(breaks, 'MDP');
     actualizarGraficaFinanzas(tipo);
 }
@@ -768,31 +797,31 @@ function actualizarGraficaFinanzas(tipo) {
                 {
                     label: 'Ramo 28',
                     data: dataR28,
-                    backgroundColor: '#00e5ff',
+                    backgroundColor: '#0277bd',
                     borderWidth: 0
                 },
                 {
                     label: 'Ramo 33',
                     data: dataR33,
-                    backgroundColor: '#fcae91',
+                    backgroundColor: '#de2d26',
                     borderWidth: 0
                 }
             ]
         },
         options: {
-            indexAxis: 'y',
+            indexAxis: 'x',
             responsive: true,
             maintainAspectRatio: false,
             scales: {
                 x: {
                     stacked: true,
-                    ticks: { color: '#ccc', font: { size: 10 }, callback: function (value) { return '$' + value.toLocaleString(); } },
-                    grid: { color: '#333' }
+                    ticks: { color: '#ccc', font: { size: 10, weight: 'bold' }, maxRotation: 45, minRotation: 45 },
+                    grid: { display: false }
                 },
                 y: {
                     stacked: true,
-                    ticks: { color: '#fff', font: { size: 10, weight: 'bold' } },
-                    grid: { display: false }
+                    ticks: { color: '#ccc', font: { size: 10 }, callback: function (value) { return '$' + value.toLocaleString(); } },
+                    grid: { color: '#333' }
                 }
             },
             plugins: {
@@ -1501,7 +1530,7 @@ function actualizarPanelDerecho(escala) {
         htmlLeyes += '<a href="https://www.gob.mx/t-mec" target="_blank" class="legal-card level-nacional">🤝 T-MEC<br><small>Tratado entre México, EE.UU. y Canadá</small></a>';
         htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf" target="_blank" class="legal-card level-nacional">⚖️ Constitución Política de los E.U.M.<br><small>Artículos 25, 26, 27 y 115</small></a>';
         htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGAHOTDU_011220.pdf" target="_blank" class="legal-card level-nacional">📘 Ley General de Asentamientos Humanos<br><small>LGAHOTDU</small></a>';
-        htmlLeyes += '<a href="https://www.dof.gob.mx/nota_detalle.php?codigo=5643444&fecha=22/02/2022" target="_blank" class="legal-card level-nacional">📗 NOM-001-SEDATU-2021<br><small>Espacios Públicos</small></a>';
+        htmlLeyes += '<div style="margin-bottom: 10px;"></div>';
 
         ttGov.innerHTML = "<b>Gobierno Federal:</b><br>SEDATU, SEMARNAT, INEGI";
         ttAca.innerHTML = "<b>Academia:</b><br>CONAHCYT, Centros Públicos de Inv.";

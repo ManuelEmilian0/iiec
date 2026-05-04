@@ -92,6 +92,8 @@ function iniciarLogicaMunicipio() {
     container.appendChild(selectEstado);
     container.appendChild(selectIndice);
 
+
+
     // ==========================================
     // HERRAMIENTA DE DIBUJO (PARTICIPATIVA)
     // ==========================================
@@ -380,35 +382,33 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
         var colorsVuln = ['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'];
 
         window.vulnChartInstance = new Chart(ctxVuln, {
-            type: 'bar',
+            type: 'pie',
             data: {
                 labels: labelsVuln,
                 datasets: [{
                     label: 'Población',
                     data: dataVuln,
                     backgroundColor: colorsVuln,
-                    borderColor: '#333',
+                    borderColor: '#222',
                     borderWidth: 1
                 }]
             },
             plugins: [ChartDataLabels],
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: { display: true, position: 'right', labels: { color: '#ccc', font: { size: 10 }, boxWidth: 12, padding: 6 } },
                     datalabels: {
                         color: '#fff',
-                        align: 'right',
-                        anchor: 'end',
-                        font: { weight: 'bold', size: 10 },
-                        formatter: function (value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
+                        font: { weight: 'bold', size: 11 },
+                        textShadowBlur: 3, textShadowColor: '#000',
+                        formatter: function (value, context) {
+                            var total = context.dataset.data.reduce((a, b) => a + b, 0); 
+                            var pct = ((value / total) * 100).toFixed(1);
+                            return pct > 5 ? pct + '%' : '';
+                        }
                     }
-                },
-                scales: {
-                    x: { ticks: { color: '#aaa', callback: function (val) { return (val / 1000).toFixed(0) + 'k' } }, grid: { color: '#444' } },
-                    y: { ticks: { color: '#fff', font: { size: 10 } }, grid: { display: false } }
                 }
             }
         });
@@ -419,9 +419,9 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
         var ctxPob = canvasPob.getContext('2d');
         if (window.pobChartInstance) window.pobChartInstance.destroy();
 
-        var labelsPob = ['Pob. Total', 'Pob. Ocupada', 'Pob. Especializada', 'Pob. Discapacidad'];
-        var dataPob = [totalPob, totalEco, totalEdu, totalDisc];
-        var colorsPob = ['#2196f3', '#4caf50', '#ff9800', '#f44336'];
+        var labelsPob = ['Ocupada', 'Especializada', 'Discapacidad'];
+        var dataPob = [totalEco, totalEdu, totalDisc];
+        var colorsPob = ['#00e5ff', '#ff9800', '#f44336'];
 
         window.pobChartInstance = new Chart(ctxPob, {
             type: 'bar',
@@ -431,8 +431,8 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                     label: 'Habitantes',
                     data: dataPob,
                     backgroundColor: colorsPob,
-                    borderColor: '#333',
-                    borderWidth: 1
+                    borderRadius: 4,
+                    borderWidth: 0
                 }]
             },
             plugins: [ChartDataLabels],
@@ -444,15 +444,23 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                     legend: { display: false },
                     datalabels: {
                         color: '#fff',
-                        align: 'right',
+                        align: 'end',
                         anchor: 'end',
                         font: { weight: 'bold', size: 10 },
-                        formatter: function (value) { return value > 0 ? value.toLocaleString('en-US') : ''; }
+                        formatter: function (value) { 
+                            if(totalPob > 0 && value > 0) {
+                                return value.toLocaleString('en-US') + ' (' + ((value/totalPob)*100).toFixed(1) + '%)'; 
+                            }
+                            return value > 0 ? value.toLocaleString('en-US') : '';
+                        }
                     }
                 },
                 scales: {
-                    x: { ticks: { color: '#aaa', callback: function (val) { return (val / 1000).toFixed(0) + 'k' } }, grid: { color: '#444' } },
-                    y: { ticks: { color: '#fff', font: { size: 10 } }, grid: { display: false } }
+                    x: { display: false, max: totalPob },
+                    y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { display: false }, border: {display: false} }
+                },
+                layout: {
+                    padding: { right: 80 }
                 }
             }
         });
@@ -710,8 +718,7 @@ window.toggleAgebNivel = function (nivelText) {
             item.style.opacity = '1';
             item.style.filter = 'grayscale(0%)';
         } else {
-            item.style.opacity = '0.35';
-            item.style.filter = 'grayscale(100%)';
         }
     });
 };
+

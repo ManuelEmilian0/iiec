@@ -340,19 +340,21 @@ function actualizarGraficasVinculacion(nombreEstado, isocronasEstado) {
     if (canvasEstrato) {
         if (estratoChart) estratoChart.destroy();
         estratoChart = new Chart(canvasEstrato.getContext('2d'), {
-            type: 'pie',
-            data: { labels: estratoLabels, datasets: [{ data: estratoValues, backgroundColor: coloresEstrato.slice(0, estratoLabels.length), borderColor: '#222', borderWidth: 1 }] },
+            type: 'bar',
+            data: { labels: estratoLabels, datasets: [{ label: 'Empresas', data: estratoValues, backgroundColor: coloresEstrato.slice(0, estratoLabels.length), borderColor: '#222', borderWidth: 1 }] },
             plugins: [ChartDataLabels],
             options: {
+                indexAxis: 'y',
                 responsive: true, maintainAspectRatio: false, layout: { padding: 5 },
+                scales: {
+                    x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#444' } },
+                    y: { ticks: { color: '#ddd', font: { size: 10 } }, grid: { display: false } }
+                },
                 plugins: {
-                    legend: { display: true, position: 'bottom', labels: { color: '#ccc', font: { size: 10 }, boxWidth: 12, padding: 6 } },
+                    legend: { display: false },
                     datalabels: {
-                        color: '#fff', font: { weight: 'bold', size: 12 }, textShadowBlur: 3, textShadowColor: '#000',
-                        formatter: function (value, context) {
-                            var total = context.dataset.data.reduce((a, b) => a + b, 0); var pct = ((value / total) * 100).toFixed(1);
-                            return pct > 5 ? value + '\n(' + pct + '%)' : '';
-                        }
+                        color: '#fff', font: { weight: 'bold', size: 10 }, textShadowBlur: 2, textShadowColor: '#000',
+                        formatter: function (value) { return value > 0 ? value : ''; }
                     }
                 }
             }
