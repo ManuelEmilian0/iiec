@@ -1,0 +1,4170 @@
+{
+    "type": "FeatureCollection",
+    "name": "Equipamiento_Tijuana",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Centro Estatal de  Artes Tecate",
+                "Dependen": "Pública",
+                "Clasificac": "Teatro",
+                "LATITUD": "32.564295525266196",
+                "LONGITUD": "-116.64245605724868"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.64245605724868,
+                    32.564295525266196
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Centro de Espectaculos Alamar",
+                "Dependen": "Pública",
+                "Clasificac": "Teatro",
+                "LATITUD": "32.51587207138092",
+                "LONGITUD": "-116.95401864014073"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.954018640140731,
+                    32.515872071380919
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Centro Estatal de las Artes",
+                "Dependen": "Pública",
+                "Clasificac": "Centro de arte",
+                "LATITUD": "32.56463692335383",
+                "LONGITUD": "-116.64294729651934"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.642947296519338,
+                    32.564636923353831
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Biblioteca Salvador",
+                "Dependen": "Pública",
+                "Clasificac": "Biblioteca",
+                "LATITUD": "32.514568955533456",
+                "LONGITUD": "-117.0045385158212"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.004538515821196,
+                    32.514568955533456
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "\nBrooklyn Art Dept",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.52199543621225",
+                "LONGITUD": "-117.12239588363391"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.122395883633914,
+                    32.521995436212251
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Lienzo Charro Cortijo De San Jose",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.52326887649176",
+                "LONGITUD": "-117.11348291395895"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.113482913958947,
+                    32.523268876491763
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "El Gran Hogar",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.51059512419381",
+                "LONGITUD": "-117.10526371064348"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.105263710643484,
+                    32.510595124193813
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Museo de Cera de Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.53670684421867",
+                "LONGITUD": "-117.03586639351565"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.035866393515647,
+                    32.536706844218671
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Museo de Historia de Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.53503434771774",
+                "LONGITUD": "-117.03890389471096"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.038903894710955,
+                    32.53503434771774
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Museo del Coleccionista de Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.529759303538626",
+                "LONGITUD": "-117.0355874881467"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.035587488146703,
+                    32.529759303538626
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Museo del Taco",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.52996220205607",
+                "LONGITUD": "-117.03505804828"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.035058048280007,
+                    32.529962202056069
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Centro Cultural Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Centro cultural",
+                "LATITUD": "32.530049639693296",
+                "LONGITUD": "-117.0238767071907"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.023876707190695,
+                    32.530049639693296
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Museo de Las Californias",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.53002670596717",
+                "LONGITUD": "-117.02301533089614"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.023015330896143,
+                    32.530026705967167
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Museo El Cubo",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.52952980713068",
+                "LONGITUD": "-117.02321934107117"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.023219341071169,
+                    32.529529807130679
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Lienzo Charro Del Noroeste",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.516946707126756",
+                "LONGITUD": "-116.96415387773608"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.964153877736081,
+                    32.516946707126756
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Ámbar Centro Interactivo",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.49840192485579",
+                "LONGITUD": "-116.94299278693704"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.94299278693704,
+                    32.498401924855791
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Museo El trompo",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.49565164757583",
+                "LONGITUD": "-116.938408473438"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.938408473438002,
+                    32.495651647575833
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "MUSEO COMUNITARIO DE TECATE\n",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.570426218752644",
+                "LONGITUD": "-116.620033812957"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.620033812957004,
+                    32.570426218752644
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "Instituto Municipal de Arte y Cultura (IMAC)",
+                "Dependen": "Pública",
+                "Clasificac": "Centro artistico",
+                "LATITUD": "32.34197477644296",
+                "LONGITUD": "-117.05870681272866"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.058706812728659,
+                    32.34197477644296
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Cultural",
+                "Nombre": "MUSEO WA KUATAY\n",
+                "Dependen": "Pública",
+                "Clasificac": "Museo",
+                "LATITUD": "32.34201021780742",
+                "LONGITUD": "-117.05855100253578"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.058551002535779,
+                    32.34201021780742
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva CREA",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.52739227138826",
+                "LONGITUD": "-117.01207148277443"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.012071482774431,
+                    32.527392271388258
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.513480560997934",
+                "LONGITUD": "-116.9730432008439"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.973043200843904,
+                    32.513480560997934
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Campos Deportivos Otay",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.53681639457391",
+                "LONGITUD": "-116.94641307504008"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.946413075040084,
+                    32.536816394573911
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Eufrasio Santana",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.5709951238802",
+                "LONGITUD": "-116.62161828478509"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.621618284785086,
+                    32.570995123880202
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Profesor Andrés Luna Rodriguez",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.38304306380862",
+                "LONGITUD": "-117.05925378161339"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.059253781613393,
+                    32.383043063808621
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Las Cascadas",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.4423022820629",
+                "LONGITUD": "-117.05486748707946"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.054867487079463,
+                    32.442302282062897
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Gran Tenochtitlán",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.509127812862566",
+                "LONGITUD": "-117.07773288942792"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.077732889427921,
+                    32.509127812862566
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Benito Juarez",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.5401074751041",
+                "LONGITUD": "-117.0467696707771"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.046769670777095,
+                    32.540107475104101
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Reforma",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.52753865674431",
+                "LONGITUD": "-116.9929256731091"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.992925673109099,
+                    32.527538656744312
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Sanchez Taboada",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.465196217149575",
+                "LONGITUD": "-116.96925910853693"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.969259108536932,
+                    32.465196217149575
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Jose San Meza Cortes",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.4826440926191",
+                "LONGITUD": "-116.98776704352258"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.987767043522581,
+                    32.482644092619097
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva El Rubi",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.481837834633474",
+                "LONGITUD": "-117.03198016856236"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.031980168562356,
+                    32.481837834633474
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva SalvaTierra",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.485755541407805",
+                "LONGITUD": "-117.06974059868493"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.06974059868493,
+                    32.485755541407805
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva El Dorado",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.49459630028355",
+                "LONGITUD": "-116.86802400836652"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.868024008366518,
+                    32.494596300283547
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Parque Recreativoo y Deportivo Cerro de las Abejas",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.46747649281077",
+                "LONGITUD": "-116.86091894624168"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.860918946241682,
+                    32.467476492810768
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Las Villas",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.50114464789036",
+                "LONGITUD": "-116.85971463725224"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.859714637252239,
+                    32.501144647890357
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Torres del Marino",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.5026444612739",
+                "LONGITUD": "-116.8669522399218"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.866952239921801,
+                    32.502644461273903
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Mariano Matamoros",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.48996273274724",
+                "LONGITUD": "-116.88255627068902"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.882556270689022,
+                    32.489962732747237
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva del Niño",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.5068858761296",
+                "LONGITUD": "-116.79357724774255"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.793577247742547,
+                    32.506885876129601
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Ruffo Apel",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.366117652599",
+                "LONGITUD": "-117.06107818516509"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.061078185165087,
+                    32.366117652599002
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva Planetario",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.46042546569445",
+                "LONGITUD": "-116.97301691157374"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.973016911573737,
+                    32.460425465694449
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Unidad Deportiva del Seguro Social Pacifico",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.450397755354714",
+                "LONGITUD": "-116.973180181999"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.973180181998998,
+                    32.450397755354714
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Deportivo",
+                "Nombre": "Uniad Deportiva del Bosque",
+                "Dependen": "Pública",
+                "Clasificac": "Unidad Deportiva",
+                "LATITUD": "32.51110022466544",
+                "LONGITUD": "-116.83095036361783"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.830950363617831,
+                    32.511100224665441
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Angeles Tijuana",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.5180860817772",
+                "LONGITUD": "-117.00778562857963"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.007785628579626,
+                    32.518086081777199
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital San Francisco TJ BC",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.51943226624087",
+                "LONGITUD": "-117.0209974941573"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.020997494157299,
+                    32.519432266240869
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Cruz Roja Mexicana Delegación Rosarito",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.34185834821848",
+                "LONGITUD": "-117.05619273679972"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.056192736799716,
+                    32.34185834821848
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital BONANOVA",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.340162393065405",
+                "LONGITUD": "-117.05652154454265"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.056521544542647,
+                    32.340162393065405
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital BAJA MEDIX",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.34436863907435",
+                "LONGITUD": "-117.05706603128964"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.057066031289636,
+                    32.344368639074347
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Jardon",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.364684214866834",
+                "LONGITUD": "-117.05404233176867"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.05404233176867,
+                    32.364684214866834
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Oasis",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.531022826323024",
+                "LONGITUD": "-117.11919712746024"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.119197127460239,
+                    32.531022826323024
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Guadalajara",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.53436974220722",
+                "LONGITUD": "-117.04679308642517"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.046793086425168,
+                    32.534369742207218
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Grupo Médico de la Piedad",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.53337560115666",
+                "LONGITUD": "-117.04686196460064"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.046861964600637,
+                    32.533375601156663
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "CIPLASTIC America",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.53135677191195",
+                "LONGITUD": "-117.04166867534269"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.041668675342692,
+                    32.531356771911952
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Centro Médico SENABIL",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.53415392198345",
+                "LONGITUD": "-117.03905310103065"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.039053101030646,
+                    32.534153921983453
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Centro Médico Florence",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.522655131855025",
+                "LONGITUD": "-117.03134556157893"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.031345561578931,
+                    32.522655131855025
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Rio Médica",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.53157164080322",
+                "LONGITUD": "-117.02503286428721"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.025032864287212,
+                    32.531571640803222
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Centro Médico Plaza",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.52576861984178",
+                "LONGITUD": "-117.02321172593746"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.023211725937458,
+                    32.525768619841777
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Centro Médico Premier",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.524642456630765",
+                "LONGITUD": "-117.02081197165302"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.020811971653018,
+                    32.524642456630765
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Real de VH",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.52327877534376",
+                "LONGITUD": "-117.01718799439949"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.017187994399492,
+                    32.523278775343762
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital HMN",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.52157425934403",
+                "LONGITUD": "-117.0145757702039"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.014575770203905,
+                    32.521574259344028
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Excel",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.52100460032457",
+                "LONGITUD": "-117.0117387855643"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.011738785564305,
+                    32.521004600324567
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Instituto Nefrologico de Tijuana",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.521158021942654",
+                "LONGITUD": "-117.00900420534002"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.00900420534002,
+                    32.521158021942654
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital CER",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.52320221010773",
+                "LONGITUD": "-117.01304954912639"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.013049549126393,
+                    32.523202210107733
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital CMB",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.52560490160975",
+                "LONGITUD": "-117.00607999406108"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.006079994061082,
+                    32.525604901609753
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Mi Doctor",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.53403470746474",
+                "LONGITUD": "-117.02276460003014"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.022764600030143,
+                    32.534034707464741
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital México",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.53859934824019",
+                "LONGITUD": "-117.0281742706419"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.028174270641898,
+                    32.53859934824019
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Centro Médico Fronteras Unidas PRO Salud",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.51948347891511",
+                "LONGITUD": "-116.97355769763026"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.973557697630255,
+                    32.519483478915113
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "International BioCare",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.50983130510001",
+                "LONGITUD": "-116.98918274586434"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.989182745864341,
+                    32.509831305100008
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Rubio Cancer Center",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.50161339188067",
+                "LONGITUD": "-116.96615964441366"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.966159644413665,
+                    32.501613391880667
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Cruz Roja Mexicana",
+                "Dependen": "Pública",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.50672024765095",
+                "LONGITUD": "-116.96398117182585"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.96398117182585,
+                    32.506720247650946
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Arcangeles",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.48572151419435",
+                "LONGITUD": "-116.95116389127134"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.951163891271335,
+                    32.485721514194353
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Insurgentes Rio",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.48977264904266",
+                "LONGITUD": "-116.9283434138617"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.928343413861697,
+                    32.489772649042663
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Regional IMSS Número 1",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.476382279739774",
+                "LONGITUD": "-116.92700095808804"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.927000958088044,
+                    32.476382279739774
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Green & Health Hospital",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.51306106597475",
+                "LONGITUD": "-116.87231243452027"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.872312434520268,
+                    32.513061065974753
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital Santa Catalina",
+                "Dependen": "Privado",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.5715313697093",
+                "LONGITUD": "-116.63668006512813"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.636680065128132,
+                    32.571531369709298
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Cruz Roja Mexicana Tecate",
+                "Dependen": "Pública",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.57222380994269",
+                "LONGITUD": "-116.64158810645799"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.641588106457988,
+                    32.572223809942692
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "HOSPITAL GENERAL DE TECATE",
+                "Dependen": "Pública",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.557444",
+                "LONGITUD": "-116.632415"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.632415,
+                    32.557444
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "RURAL DE 02 NÚCLEOS BÁSICOS LA RUMOROSA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.541286",
+                "LONGITUD": "-116.047287"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.047287,
+                    32.541286
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "RURAL DE 02 NÚCLEOS BÁSICOS VALLE DE LAS PALMAS",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.370171",
+                "LONGITUD": "-116.619738"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.619738,
+                    32.370171
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 02 NÚCLEOS BÁSICOS LUIS ECHEVERRÍA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.505542",
+                "LONGITUD": "-116.307203"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.307203,
+                    32.505542
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 02 NÚCLEOS BÁSICOS NUEVA COLONIA HINDÚ",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.49011",
+                "LONGITUD": "-116.570838"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.570838,
+                    32.49011
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "HOSPITAL GENERAL TIJUANA",
+                "Dependen": "Pública",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.525583",
+                "LONGITUD": "-117.009698"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.009698,
+                    32.525583
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS CAÑÓN DEL SAINZ",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.422201",
+                "LONGITUD": "-116.960202"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.960202,
+                    32.422201
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS LÁZARO CÁRDENAS",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.524682",
+                "LONGITUD": "-117.099874"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.099874,
+                    32.524682
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 02 NÚCLEOS BÁSICOS REFORMA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.466407",
+                "LONGITUD": "-116.957052"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.957052,
+                    32.466407
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS INSURGENTES",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.540312",
+                "LONGITUD": "-116.881002"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.881002,
+                    32.540312
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 02 NÚCLEOS BÁSICOS LA MESA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.495079",
+                "LONGITUD": "-116.967958"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.967958,
+                    32.495079
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS HERRERA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.529181",
+                "LONGITUD": "-117.064759"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.064759,
+                    32.529181
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS MIRAMAR",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.51471",
+                "LONGITUD": "-117.083005"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.083005,
+                    32.51471
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS CAÑÓN DEL PADRE",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.5234765",
+                "LONGITUD": "-116.9356023"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.9356023,
+                    32.5234765
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS PIPILA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.505208",
+                "LONGITUD": "-116.877305"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.877305,
+                    32.505208
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS 3 DE OCTUBRE",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.4600199",
+                "LONGITUD": "-116.9380942"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.9380942,
+                    32.4600199
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 02 NÚCLEOS BÁSICOS EL NIÑO",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.504671",
+                "LONGITUD": "-116.79313"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.79313,
+                    32.504671
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS LOMAS TAURINAS",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.5339425",
+                "LONGITUD": "-116.9896964"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.9896964,
+                    32.5339425
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS SALVATIERRA (FLORES MAGÓN)",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.483141",
+                "LONGITUD": "-117.077807"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.077807,
+                    32.483141
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS MARÍANO MATAMOROS",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.4760856",
+                "LONGITUD": "-116.881216"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.881216,
+                    32.4760856
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS CAMINO VERDE",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.4746588",
+                "LONGITUD": "-116.9761128"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.9761128,
+                    32.4746588
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 02 NÚCLEOS BÁSICOS PEDREGAL DE SANTA JULIA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.487771",
+                "LONGITUD": "-117.059844"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.059844,
+                    32.487771
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS SÁNCHEZ TABOADA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.4678683",
+                "LONGITUD": "-116.9706684"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.9706684,
+                    32.4678683
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS LA PRESA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.455237",
+                "LONGITUD": "-116.918273"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.918273,
+                    32.455237
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 04 NÚCLEOS BÁSICOS FLORIDO (MORITA)",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.4757522",
+                "LONGITUD": "-116.8562615"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.8562615,
+                    32.4757522
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS VALLE VERDE",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.5188985",
+                "LONGITUD": "-116.8736545"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.8736545,
+                    32.5188985
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 04 NÚCLEOS BÁSICOS LA JOYA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.45141",
+                "LONGITUD": "-116.989345"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.989345,
+                    32.45141
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 05 NÚCLEOS BÁSICOS COL. RUBÍ",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.4786766",
+                "LONGITUD": "-117.0373777"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.0373777,
+                    32.4786766
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 06 NÚCLEOS BÁSICOS FRANCISCO VILLA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.5107552",
+                "LONGITUD": "-117.0556442"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.0556442,
+                    32.5107552
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "RURAL DE 03 NÚCLEOS BÁSICOS EJIDO OJO DE AGUA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.472074758416",
+                "LONGITUD": "-116.79083249009742"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.790832490097415,
+                    32.472074758415999
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "RURAL DE 02 NÚCLEOS BÁSICOS PLAN LIBERTADOR",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.4055936",
+                "LONGITUD": "-117.0459362"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.0459362,
+                    32.4055936
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS PRIMO TAPIA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.2215459",
+                "LONGITUD": "-116.9171232"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.9171232,
+                    32.2215459
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "HOSPITAL MATERNO INFANTIL DE TIJUANA",
+                "Dependen": "Pública",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.489581",
+                "LONGITUD": "-116.92895"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.92895,
+                    32.489581
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "HOSPITAL GENERAL PLAYAS DE ROSARITO",
+                "Dependen": "Pública",
+                "Clasificac": "DE HOSPITALIZACIÓN",
+                "LATITUD": "32.3636",
+                "LONGITUD": "-117.0554"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.0554,
+                    32.3636
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOSSÁNCHEZ TABOADA REACOMODO",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.461939",
+                "LONGITUD": "-116.967766"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.967766,
+                    32.461939
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS TERRAZAS DEL VALLE",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.49136",
+                "LONGITUD": "-116.825954"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.825954,
+                    32.49136
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 03 NÚCLEOS BÁSICOS CUMBRES",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.487793",
+                "LONGITUD": "-117.090248"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.090248,
+                    32.487793
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "CENTRO DE SALUD TECATE",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.563482",
+                "LONGITUD": "-116.589384"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.589384,
+                    32.563482
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "URBANO DE 12 NÚCLEOS BÁSICOS TIJUANA",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.527386",
+                "LONGITUD": "-117.03782"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.03782,
+                    32.527386
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "CENTRO DE SALUD URBANO PLAYAS DE ROSARITO",
+                "Dependen": "Pública",
+                "Clasificac": "DE CONSULTA EXTERNA",
+                "LATITUD": "32.39742",
+                "LONGITUD": "-117.060862"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.060862,
+                    32.39742
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital General de Tecate",
+                "Dependen": "Pública",
+                "Clasificac": "General",
+                "LATITUD": "32.55723265087165",
+                "LONGITUD": "-116.63212076658007"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.632120766580073,
+                    32.557232650871647
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital General de Subzona 6",
+                "Dependen": "Pública",
+                "Clasificac": "General",
+                "LATITUD": "32.54565145164521",
+                "LONGITUD": "-116.63157851237308"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.631578512373082,
+                    32.545651451645213
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "ISSSTE Hospital General Fray Junipero Serra",
+                "Dependen": "Público",
+                "Clasificac": "General",
+                "LATITUD": "32.50803621593456",
+                "LONGITUD": "-116.98523111257819"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.985231112578191,
+                    32.50803621593456
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital General Regional No. 20 IMSS",
+                "Dependen": "Público",
+                "Clasificac": "General",
+                "LATITUD": "32.49931791151759",
+                "LONGITUD": "-116.96497075997684"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.964970759976836,
+                    32.499317911517593
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital de Gineco-Obsteteicia",
+                "Dependen": "Público",
+                "Clasificac": "Especilizada",
+                "LATITUD": "32.51429982771239",
+                "LONGITUD": "-117.00927819297307"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.009278192973071,
+                    32.514299827712392
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital General de Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "General",
+                "LATITUD": "32.52565216245207",
+                "LONGITUD": "-117.00959792676186"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.009597926761856,
+                    32.525652162452069
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Salud",
+                "Nombre": "Hospital General de Playas de Rosarito",
+                "Dependen": "Pública",
+                "Clasificac": "General",
+                "LATITUD": "32.36382227446036",
+                "LONGITUD": "-117.05568175713846"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.055681757138458,
+                    32.363822274460361
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Telebachillerato Comunitario Gomez Morín Num. 4",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.885402673200765",
+                "LONGITUD": "-116.53805533621608"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.538055336216075,
+                    31.885402673200765
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Bachilleres de Baja California Plantel Valle de Guadalupe",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.099568049697616",
+                "LONGITUD": "-116.57902888964905"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.579028889649052,
+                    32.099568049697616
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Estudios Tecnologicos del Mar Num. 11",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.876474200354828",
+                "LONGITUD": "-116.67979071009522"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.679790710095219,
+                    31.876474200354828
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Xochicalco",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.870607143432455",
+                "LONGITUD": "-116.61035637993442"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.610356379934416,
+                    31.870607143432455
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Universidad Anahuac, Bachilleraro Campus Calp",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.876363649190168",
+                "LONGITUD": "-116.649188980297"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.649188980296998,
+                    31.876363649190168
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Bachillerato Tecnológico Agropecuario Num. 198",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.700971980163555",
+                "LONGITUD": "-116.55679790979984"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.55679790979984,
+                    31.700971980163555
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Vizcaya, Campus Ensenada",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.870407306435588",
+                "LONGITUD": "-116.62236886801836"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.622368868018356,
+                    31.870407306435588
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Estudios Tecnológicos Industrial Y de Servicios  Num. 74",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.78417705037214",
+                "LONGITUD": "-116.61582318019774"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.615823180197737,
+                    31.78417705037214
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "CBTIS 41",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "31.80674825448513",
+                "LONGITUD": "-116.59445283941278"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.594452839412781,
+                    31.806748254485129
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Bachillerato Universidad Iberoamericana Noroeste",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.519928199159615",
+                "LONGITUD": "-117.10255289484599"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.102552894845985,
+                    32.519928199159615
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Estudios Básicos de Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.513101750368364",
+                "LONGITUD": "-116.87834490963108"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.878344909631082,
+                    32.513101750368364
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Cesun Preparatoria Campus Morelos",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.49994974580832",
+                "LONGITUD": "-116.92866148849943"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.928661488499429,
+                    32.499949745808323
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Enseñanza Técnica y Superior",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.507810780293546",
+                "LONGITUD": "-116.92493951996082"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.924939519960816,
+                    32.507810780293546
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Estudios Cientificos y Tecnológicos Plantel La Presa",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.448251891533516",
+                "LONGITUD": "-116.92822802415722"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.928228024157221,
+                    32.448251891533516
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Estudios Cientificos y Tecnológicos Plantel Villa del Sol",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.49674750167199",
+                "LONGITUD": "-116.85332794325605"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.853327943256048,
+                    32.49674750167199
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Bachillerato Politécnico de Baja California",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.50410513452579",
+                "LONGITUD": "-116.85314094311614"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.853140943116145,
+                    32.504105134525787
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Britania",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.50105807135741",
+                "LONGITUD": "-116.96581636806144"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.965816368061439,
+                    32.501058071357413
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Bachilleres de Baja California Plantel La Mesa",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.459846926905634",
+                "LONGITUD": "-116.93388315746128"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.933883157461281,
+                    32.459846926905634
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Estudios Cientificos y Tecnológicos Plantel El FLorido",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.46796129414362",
+                "LONGITUD": "-116.86235738580807"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.862357385808068,
+                    32.46796129414362
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Instituto de Enseñanza Media Superior Siglo XXI S.C",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.510970620339485",
+                "LONGITUD": "-116.91390591013798"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.913905910137984,
+                    32.510970620339485
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Estudios Bachillerato Integral del Noroeste",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.48458965096144",
+                "LONGITUD": "-116.88045676044075"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.880456760440751,
+                    32.484589650961439
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "UDCI",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.50209183357174",
+                "LONGITUD": "-116.88931478649803"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.889314786498034,
+                    32.50209183357174
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Nacional de Educación Profesional Técnica Num. 18 Tijuana I",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.475898079633616",
+                "LONGITUD": "-116.9438625098664"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.943862509866406,
+                    32.475898079633616
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Escuela en Electronica Digital",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.482261720328935",
+                "LONGITUD": "-116.94171772029298"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.941717720292985,
+                    32.482261720328935
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Educativo Sinaloa",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51105892002837",
+                "LONGITUD": "-116.90664846000055"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.906648460000554,
+                    32.511058920028368
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Bachillerato Tecnologico Industrial y de Servicios Num. 116",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.5387651796784",
+                "LONGITUD": "-116.92465057961911"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.924650579619112,
+                    32.5387651796784
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Estudios Tecnologicos Industrial y de Servicios Num. 58",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.537981460277095",
+                "LONGITUD": "-116.92693906042228"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.926939060422285,
+                    32.537981460277095
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Bachillerato Tecnológico Industrial y de Servicios Num. 155",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.481692020040846",
+                "LONGITUD": "-117.03369214043857"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.033692140438575,
+                    32.481692020040846
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Instituto Colinas",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.48707094126711",
+                "LONGITUD": "-116.99586731140215"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.995867311402151,
+                    32.487070941267113
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Instituto Radiologico del Noroeste",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.504607357284534",
+                "LONGITUD": "-116.97987878860106"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.979878788601056,
+                    32.504607357284534
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Federal Lazaro Cardenas",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51451185800616",
+                "LONGITUD": "-117.00418189934766"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.004181899347657,
+                    32.514511858006159
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Estudios Cientificos y Tecnologicos Plantel Altiplano",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.52358142964356",
+                "LONGITUD": "-116.85599334986345"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.855993349863454,
+                    32.523581429643563
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Juan Bosco de la Fuente Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.48968882649311",
+                "LONGITUD": "-117.01678640014791"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.016786400147907,
+                    32.489688826493108
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Preparatoria Hidalgo",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.5337035189933",
+                "LONGITUD": "-117.04872147424206"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.048721474242058,
+                    32.533703518993299
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Cristobal Colon de Tijuana",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.534950679645945",
+                "LONGITUD": "-117.04556725991594"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.045567259915941,
+                    32.534950679645945
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Preparatoria Municipal Manuel Gómez Morin",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.53740650977812",
+                "LONGITUD": "-117.06363914033079"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.063639140330793,
+                    32.537406509778123
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Cadi",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.532650982248576",
+                "LONGITUD": "-117.0715700020741"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.071570002074097,
+                    32.532650982248576
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Jose Vasconcelos 3, Unidad Villafontana",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51495356739591",
+                "LONGITUD": "-116.85802296268197"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.858022962681972,
+                    32.514953567395906
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Centro de Bachillerato Tecnológico Industrial y de Servicios Num. 237",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.48059012208172",
+                "LONGITUD": "-116.8824603075734"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.882460307573396,
+                    32.480590122081722
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Instituto Jacome",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.49136525577435",
+                "LONGITUD": "-116.96037685213847"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.960376852138467,
+                    32.491365255774348
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Cecyt Preparatoria",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.52671977919003",
+                "LONGITUD": "-116.94771251590616"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.947712515906161,
+                    32.526719779190032
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Instituto Mexico Americano Noroeste IMAN",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.526655069800114",
+                "LONGITUD": "-117.10902222303231"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.109022223032312,
+                    32.526655069800114
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Preparatoria UDC Playas",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.52657301403031",
+                "LONGITUD": "-117.11171693012254"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.11171693012254,
+                    32.526573014030312
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Bachilleres de Baja California Plantel Nueva Tijuana",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.481762519957044",
+                "LONGITUD": "-116.9260487204139"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.926048720413903,
+                    32.481762519957044
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Politécnico de Baja California",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.484825509957886",
+                "LONGITUD": "-116.92464075023494"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.924640750234943,
+                    32.484825509957886
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Padre Javier Esparza",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.473370514742925",
+                "LONGITUD": "-116.92041291715277"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.920412917152774,
+                    32.473370514742925
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Ignacio Manuel Altamirano",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.49422027265424",
+                "LONGITUD": "-116.95812253707489"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.958122537074885,
+                    32.494220272654239
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Bachilleres de Baja California Plantel Mtro. Ruben Vizcaino Valencia",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51319174995206",
+                "LONGITUD": "-116.97039508113507"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.970395081135067,
+                    32.513191749952057
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio Internacional de Tijuana",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.5106088574304",
+                "LONGITUD": "-116.98062807853124"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.98062807853124,
+                    32.510608857430398
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Instituto Sor Juana Ines de la Cruz",
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.52993469141528",
+                "LONGITUD": "-117.04098420876952"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.040984208769515,
+                    32.529934691415278
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": "Colegio de Bachilleres de Baja California Extensión Tijuana Siglo XXI",
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.517155877896116",
+                "LONGITUD": "-117.05897512236382"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.058975122363819,
+                    32.517155877896116
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.52625405035348",
+                "LONGITUD": "-117.03147785447429"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.031477854474289,
+                    32.526254050353479
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.46307427795913",
+                "LONGITUD": "-116.87577493887841"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.875774938878408,
+                    32.46307427795913
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.439134889215296",
+                "LONGITUD": "-116.92601062553238"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.926010625532385,
+                    32.439134889215296
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.43757133992764",
+                "LONGITUD": "-117.0628932001548"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.062893200154804,
+                    32.437571339927644
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.501810460410795",
+                "LONGITUD": "-117.03267312007192"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.032673120071919,
+                    32.501810460410795
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.53710633875131",
+                "LONGITUD": "-116.94317767434413"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.943177674344128,
+                    32.537106338751308
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.50172151261932",
+                "LONGITUD": "-116.94593261503083"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.945932615030827,
+                    32.501721512619319
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.491158392980104",
+                "LONGITUD": "-116.93039602246046"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.930396022460457,
+                    32.491158392980104
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51733099221021",
+                "LONGITUD": "-116.92773802350393"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.927738023503935,
+                    32.517330992210212
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.506734602852404",
+                "LONGITUD": "-116.98031992798873"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.980319927988731,
+                    32.506734602852404
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51482210974015",
+                "LONGITUD": "-116.94379260046212"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.943792600462118,
+                    32.514822109740152
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.544113473060534",
+                "LONGITUD": "-116.90220607335361"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.902206073353611,
+                    32.544113473060534
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.50868375025092",
+                "LONGITUD": "-116.79363525957483"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.793635259574828,
+                    32.508683750250917
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51406383988546",
+                "LONGITUD": "-117.1143645972701"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.114364597270097,
+                    32.514063839885459
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.5329775677071",
+                "LONGITUD": "-117.03320207876622"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.033202078766223,
+                    32.5329775677071
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.541496390505195",
+                "LONGITUD": "-116.99959968498618"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.99959968498618,
+                    32.541496390505195
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.54684718782245",
+                "LONGITUD": "-116.87647425656864"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.876474256568642,
+                    32.546847187822451
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.51972581163931",
+                "LONGITUD": "-117.01584695845455"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.015846958454546,
+                    32.519725811639312
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.48141818139085",
+                "LONGITUD": "-117.03063137452693"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.030631374526934,
+                    32.48141818139085
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.48573061388638",
+                "LONGITUD": "-117.05040370354726"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.050403703547261,
+                    32.485730613886382
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.47728671049603",
+                "LONGITUD": "-116.9598399112006"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.959839911200604,
+                    32.477286710496031
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.4709218568765",
+                "LONGITUD": "-116.93774147604591"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.937741476045915,
+                    32.470921856876501
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.478653780154964",
+                "LONGITUD": "-116.7850351309888"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.785035130988803,
+                    32.478653780154964
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.48593635248527",
+                "LONGITUD": "-116.86590059361201"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.865900593612011,
+                    32.485936352485268
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.469396463787454",
+                "LONGITUD": "-117.00855394736763"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.008553947367631,
+                    32.469396463787454
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.44211270513744",
+                "LONGITUD": "-117.05074520729228"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.05074520729228,
+                    32.44211270513744
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.47835634365918",
+                "LONGITUD": "-116.97914366071784"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.979143660717838,
+                    32.478356343659179
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.33999665160514",
+                "LONGITUD": "-117.05518297534815"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.055182975348146,
+                    32.339996651605141
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.34204160947783",
+                "LONGITUD": "-117.05375921779418"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.05375921779418,
+                    32.342041609477832
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.36710299002459",
+                "LONGITUD": "-117.06179940272266"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.061799402722656,
+                    32.367102990024591
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Media Superior",
+                "LATITUD": "32.384685862992384",
+                "LONGITUD": "-117.05915860543433"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.059158605434334,
+                    32.384685862992384
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.56905933967866",
+                "LONGITUD": "-116.62609785044187"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.626097850441866,
+                    32.56905933967866
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.519060254920184",
+                "LONGITUD": "-117.10081481607337"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.100814816073367,
+                    32.519060254920184
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.50550218025429",
+                "LONGITUD": "-116.9242019498138"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.924201949813806,
+                    32.50550218025429
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.501205829559346",
+                "LONGITUD": "-116.9357232323064"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.935723232306401,
+                    32.501205829559346
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.462855979767156",
+                "LONGITUD": "-116.86857765958821"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.868577659588212,
+                    32.462855979767156
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.53534493953536",
+                "LONGITUD": "-116.9272864204079"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.927286420407896,
+                    32.535344939535364
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.46031197988087",
+                "LONGITUD": "-116.82563372036303"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.82563372036303,
+                    32.460311979880871
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.53002684978388",
+                "LONGITUD": "-116.98749501971818"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.987495019718182,
+                    32.53002684978388
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.51325294985554",
+                "LONGITUD": "-116.9582036496788"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.958203649678794,
+                    32.513252949855541
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.52680265801643",
+                "LONGITUD": "-116.9509013926907"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.950901392690696,
+                    32.526802658016429
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.49240345854082",
+                "LONGITUD": "-116.95775255236583"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.957752552365832,
+                    32.492403458540821
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.48508301508947",
+                "LONGITUD": "-117.03476710738848"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.034767107388475,
+                    32.485083015089472
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.48111085005605",
+                "LONGITUD": "-116.928348419701"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.928348419700995,
+                    32.481110850056048
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.5219350298573",
+                "LONGITUD": "-117.0267633801596"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.026763380159593,
+                    32.521935029857303
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.52722456039459",
+                "LONGITUD": "-117.03025675634368"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.030256756343675,
+                    32.527224560394593
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.5223550706072",
+                "LONGITUD": "-117.12032352258767"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.120323522587668,
+                    32.522355070607198
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.53336010512997",
+                "LONGITUD": "-117.05306963542871"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.053069635428713,
+                    32.533360105129972
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.53892191003768",
+                "LONGITUD": "-116.94254131990971"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.942541319909708,
+                    32.538921910037679
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.532026850099534",
+                "LONGITUD": "-116.96438918008405"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.964389180084055,
+                    32.532026850099534
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.501510800128905",
+                "LONGITUD": "-116.9476033804898"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.947603380489795,
+                    32.501510800128905
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.50981704881939",
+                "LONGITUD": "-116.97360324836585"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -116.973603248365848,
+                    32.509817048819393
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.5130712493162",
+                "LONGITUD": "-117.0353821156812"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.035382115681202,
+                    32.513071249316198
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.52729269959116",
+                "LONGITUD": "-117.1176223315195"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.117622331519499,
+                    32.527292699591158
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.52561621527214",
+                "LONGITUD": "-117.03180660144726"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.031806601447258,
+                    32.525616215272137
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Pública",
+                "Clasificac": "Superior",
+                "LATITUD": "32.34252363042493",
+                "LONGITUD": "-117.03354845972855"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.03354845972855,
+                    32.342523630424928
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "Tipo": "Educativo",
+                "Nombre": null,
+                "Dependen": "Privado",
+                "Clasificac": "Superior",
+                "LATITUD": "32.384231645486395",
+                "LONGITUD": "-117.05555339740414"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -117.05555339740414,
+                    32.384231645486395
+                ]
+            }
+        }
+    ]
+}

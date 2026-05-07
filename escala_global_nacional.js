@@ -98,6 +98,25 @@ function initMap() {
                     map.addLayer(bm.layer);
                     currentActiveLayer = bm.layer;
 
+                    window.limiteBoundaryColor = (bm.name === "Satélite" || bm.name === "Oscuro") ? '#ffffff' : '#000000';
+
+                    if (window.limiteEntidadLayer) {
+                        window.limiteEntidadLayer.eachLayer(l => {
+                            if (l.setStyle) l.setStyle({ color: window.limiteBoundaryColor, fillColor: window.limiteBoundaryColor });
+                            if (l._icon && l._icon.innerHTML) {
+                                l._icon.innerHTML = l._icon.innerHTML.replace(/color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))/, 'color: ' + window.limiteBoundaryColor);
+                            }
+                        });
+                    }
+                    if (window.limiteMunicipalLayer) {
+                        window.limiteMunicipalLayer.eachLayer(l => {
+                            if (l.setStyle) l.setStyle({ color: window.limiteBoundaryColor });
+                            if (l._icon && l._icon.innerHTML) {
+                                l._icon.innerHTML = l._icon.innerHTML.replace(/color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))/, 'color: ' + window.limiteBoundaryColor);
+                            }
+                        });
+                    }
+
                     var allItems = galleryPanel.querySelectorAll('.basemap-item');
                     allItems.forEach(i => i.classList.remove('active'));
                     item.classList.add('active');
@@ -200,6 +219,8 @@ function loadLayer(scaleType) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
     if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
+    if (window.limiteEntidadLayer) { map.removeLayer(window.limiteEntidadLayer); window.limiteEntidadLayer = null; }
+    if (window.limiteMunicipalLayer) { map.removeLayer(window.limiteMunicipalLayer); window.limiteMunicipalLayer = null; }
 
     // Remover controles de dibujo si existen
     if (map.pm) {
@@ -365,6 +386,133 @@ function loadLayer(scaleType) {
 }
 
 // ==========================================
+// FUNCIÓN GLOBAL LÍMITE ESTATAL
+// ==========================================
+window.limiteEntidadLayer = null;
+window.dibujarLimiteEntidad = function (nombreEstado) {
+    var p = new Promise((resolve) => {
+        if (window.limiteEstatalGeoJSON) {
+            resolve(window.limiteEstatalGeoJSON);
+        } else {
+            fetch('Limite_estatal.geojson')
+                .then(res => res.json())
+                .then(geo => {
+                    window.limiteEstatalGeoJSON = geo;
+                    resolve(geo);
+                }).catch(e => resolve(null));
+        }
+    });
+
+    p.then(geo => {
+        if (!geo) return;
+        if (window.limiteEntidadLayer) map.removeLayer(window.limiteEntidadLayer);
+
+        var estadoBusqueda = normalizarEstadoNombre(nombreEstado);
+        var stateFeature = geo.features.find(f => {
+            var n = normalizarEstadoNombre(f.properties.name || f.properties.ESTADO || f.properties.NOMGEO);
+            return n === estadoBusqueda;
+        });
+
+        if (stateFeature) {
+            var polyLayer = L.geoJSON(stateFeature, {
+                style: {
+                    color: window.limiteBoundaryColor || '#ffffff',
+                    weight: 2,
+                    opacity: 0.8,
+                    fillOpacity: 0.05,
+                    fillColor: window.limiteBoundaryColor || '#ffffff'
+                },
+                interactive: false
+            });
+
+            var center = polyLayer.getBounds().getCenter();
+            var labelMarker = L.marker(center, {
+                icon: L.divIcon({
+                    className: 'state-label-permanent',
+                    html: `<div style="color: ${window.limiteBoundaryColor || '#ffffff'}; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center; text-transform: uppercase; pointer-events:none;">${estadoBusqueda}</div>`,
+                    iconSize: [150, 20],
+                    iconAnchor: [75, 10]
+                }),
+                interactive: false
+            });
+
+            window.limiteEntidadLayer = L.featureGroup([polyLayer, labelMarker]).addTo(map);
+            window.limiteEntidadLayer.bringToFront();
+        }
+    });
+};
+
+window.limiteMunicipalLayer = null;
+window.municipiosPolygonsGeoJSON = null;
+
+window.dibujarLimiteMunicipal = function (nombreEstado) {
+    var p = new Promise((resolve) => {
+        if (window.municipiosPolygonsGeoJSON) {
+            resolve(window.municipiosPolygonsGeoJSON);
+        } else {
+            fetch('Limite_municipal_opt.geojson')
+                .then(res => res.json())
+                .then(geo => {
+                    window.municipiosPolygonsGeoJSON = geo;
+                    resolve(geo);
+                }).catch(e => resolve(null));
+        }
+    });
+
+    p.then(geo => {
+        if (!geo) return;
+        if (window.limiteMunicipalLayer) map.removeLayer(window.limiteMunicipalLayer);
+
+        var estadoBusqueda = normalizarEstadoNombre(nombreEstado);
+
+        // Filtrar municipios cuyo estado coincida con estadoBusqueda
+        var munFeatures = geo.features.filter(f => {
+            var n = normalizarEstadoNombre(f.properties.NOMGEO || "");
+            // Si el geojson tiene NOMGEO para el estado, o cve_ent para cruzar.
+            // Dado que vimos que NOMGEO coincide con el nombre del estado (ej. "México"):
+            return n === estadoBusqueda;
+        });
+
+        if (munFeatures.length > 0) {
+            var polyLayer = L.geoJSON(munFeatures, {
+                style: {
+                    color: window.limiteBoundaryColor || '#ffffff',
+                    weight: 1,
+                    opacity: 0.6,
+                    fillOpacity: 0.0,
+                    dashArray: '2, 4'
+                },
+                interactive: false
+            });
+
+            var layers = [polyLayer];
+
+            // Etiquetas de los municipios
+            munFeatures.forEach(f => {
+                var munLayer = L.geoJSON(f);
+                var center = munLayer.getBounds().getCenter();
+                var nombreMun = f.properties.nom_mun || "";
+                if (nombreMun) {
+                    var labelMarker = L.marker(center, {
+                        icon: L.divIcon({
+                            className: 'mun-label-permanent',
+                            html: `<div style="color: ${window.limiteBoundaryColor || '#ffffff'}; font-size: 10px; text-shadow: 1px 1px 2px #000; text-align: center; pointer-events:none;">${nombreMun}</div>`,
+                            iconSize: [80, 20],
+                            iconAnchor: [40, 10]
+                        }),
+                        interactive: false
+                    });
+                    layers.push(labelMarker);
+                }
+            });
+
+            window.limiteMunicipalLayer = L.featureGroup(layers).addTo(map);
+            window.limiteMunicipalLayer.bringToFront();
+        }
+    });
+};
+
+// ==========================================
 // LÓGICA MUNDIAL & NACIONAL
 // ==========================================
 function iniciarFiltroMundial_Paso1(data) {
@@ -463,7 +611,7 @@ const FINANZAS_FEDERALES_2025 = {
     "Zacatecas": { R28: 11530, R33: 16212 }
 };
 
-let estadosPolygonsGeoJSON = null;
+window.estadosPolygonsGeoJSON = null;
 
 function iniciarFiltroNacional_Paso1(data) {
     var container = document.getElementById('filter-buttons-container');
@@ -471,13 +619,14 @@ function iniciarFiltroNacional_Paso1(data) {
 
     var modoWrapper = document.createElement("div");
     modoWrapper.style.marginBottom = "15px";
-    modoWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Modo de Análisis:</small>`;
+    modoWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Tipo de Análisis:</small>`;
 
     var selectModo = document.createElement("select");
     selectModo.className = "dynamic-filter-select";
     selectModo.innerHTML = `
         <option value="flujos">Intercambios (Flujos Industriales)</option>
         <option value="finanzas">Finanzas Públicas (Dependencia Federal)</option>
+        <option value="productividad">Productividad Industrial (Evolución temporal)</option>
     `;
     modoWrapper.appendChild(selectModo);
 
@@ -565,6 +714,48 @@ function iniciarFiltroNacional_Paso1(data) {
     finanzasWrapper.appendChild(selectFinanzas);
     finanzasContainer.appendChild(finanzasWrapper);
 
+    // --- PRODUCTIVIDAD LOGIC ---
+    var productividadContainer = document.createElement("div");
+    productividadContainer.style.display = "none";
+
+    var prodWrapper = document.createElement("div");
+    prodWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Industria (CSV):</small>`;
+
+    var selectIndustriaCSV = document.createElement("select");
+    selectIndustriaCSV.className = "dynamic-filter-select";
+    selectIndustriaCSV.innerHTML = `
+        <option value="" disabled selected>-- Seleccione Industria --</option>
+        <option value="IC_ELECTRICA">Eléctrica (IC_ELECTRICA)</option>
+        <option value="IC_ELECTRONICA">Electrónica (IC_ELECTRONICA)</option>
+        <option value="IC_SEIT">SEIT (IC_SEIT)</option>
+    `;
+
+    var anioWrapper = document.createElement("div");
+    anioWrapper.style.marginTop = "10px";
+    anioWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Año de Corte:</small>`;
+
+    var selectAnio = document.createElement("select");
+    selectAnio.className = "dynamic-filter-select";
+    selectAnio.innerHTML = `
+        <option value="2023" selected>2023</option>
+        <option value="2018">2018</option>
+        <option value="2013">2013</option>
+        <option value="2008">2008</option>
+        <option value="2003">2003</option>
+    `;
+
+    prodWrapper.appendChild(selectIndustriaCSV);
+    anioWrapper.appendChild(selectAnio);
+    productividadContainer.appendChild(prodWrapper);
+    productividadContainer.appendChild(anioWrapper);
+
+    selectIndustriaCSV.onchange = function () {
+        if (selectIndustriaCSV.value) renderizarMapaProductividad(selectIndustriaCSV.value, selectAnio.value);
+    };
+    selectAnio.onchange = function () {
+        if (selectIndustriaCSV.value) renderizarMapaProductividad(selectIndustriaCSV.value, selectAnio.value);
+    };
+
     // --- MODO TOGGLE LOGIC ---
     selectModo.onchange = function () {
         if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
@@ -579,18 +770,27 @@ function iniciarFiltroNacional_Paso1(data) {
         if (this.value === 'flujos') {
             flujosContainer.style.display = 'block';
             finanzasContainer.style.display = 'none';
+            productividadContainer.style.display = 'none';
             document.getElementById('filter-title').innerText = "Modo de análisis";
-        } else {
+        } else if (this.value === 'finanzas') {
             flujosContainer.style.display = 'none';
             finanzasContainer.style.display = 'block';
+            productividadContainer.style.display = 'none';
             document.getElementById('filter-title').innerText = "Modo de análisis";
             selectFinanzas.value = "";
+        } else if (this.value === 'productividad') {
+            flujosContainer.style.display = 'none';
+            finanzasContainer.style.display = 'none';
+            productividadContainer.style.display = 'block';
+            document.getElementById('filter-title').innerText = "Modo de análisis";
+            selectIndustriaCSV.value = "";
         }
     };
 
     container.appendChild(modoWrapper);
     container.appendChild(flujosContainer);
     container.appendChild(finanzasContainer);
+    container.appendChild(productividadContainer);
 }
 
 function renderizarMapaFinanzas(tipo) {
@@ -599,12 +799,12 @@ function renderizarMapaFinanzas(tipo) {
     var filterTitle = document.getElementById('filter-title');
     filterTitle.innerText = "Cargando cartografía...";
 
-    if (!estadosPolygonsGeoJSON) {
+    if (!window.estadosPolygonsGeoJSON) {
         // Obtenemos los polígonos de México
         fetch('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
             .then(res => res.json())
             .then(geo => {
-                estadosPolygonsGeoJSON = geo;
+                window.estadosPolygonsGeoJSON = geo;
                 filterTitle.innerText = "Modo de análisis";
                 dibujarCoropletaFinanzas(tipo);
             }).catch(e => {
@@ -620,15 +820,21 @@ function renderizarMapaFinanzas(tipo) {
 function normalizarEstadoNombre(nombre) {
     if (!nombre) return "";
     var n = nombre.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-    if (n === "ESTADO DE MEXICO" || n === "MEXICO") return "México";
-    if (n === "CIUDAD DE MEXICO" || n === "DISTRITO FEDERAL" || n === "CDMX") return "Ciudad de México";
+    n = n.replace(/[\ufffd\uFFFD]/g, ""); // Remove invalid chars like 
+
+    if (n === "ESTADO DE MEXICO" || n === "MEXICO" || n === "MXICO") return "México";
+    if (n === "CIUDAD DE MEXICO" || n === "DISTRITO FEDERAL" || n === "CDMX" || n === "CIUDAD DE MXICO") return "Ciudad de México";
     if (n === "VERACRUZ DE IGNACIO DE LA LLAVE") return "Veracruz";
     if (n === "COAHUILA DE ZARAGOZA") return "Coahuila";
-    if (n === "MICHOACAN DE OCAMPO") return "Michoacán";
+    if (n === "MICHOACAN DE OCAMPO" || n === "MICHOACAN" || n === "MICHOACN") return "Michoacán";
+    if (n === "NUEVO LEON" || n === "NUEVO LEN") return "Nuevo León";
+    if (n === "QUERETARO" || n === "QUERTARO") return "Querétaro";
+    if (n === "SAN LUIS POTOSI" || n === "SAN LUIS POTOS") return "San Luis Potosí";
+    if (n === "YUCATAN" || n === "YUCATN") return "Yucatán";
 
     for (let key in FINANZAS_FEDERALES_2025) {
         let keyN = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        if (n === keyN) return key;
+        if (n === keyN || n === keyN.replace(/[AEIOU]/g, "")) return key;
     }
     return nombre;
 }
@@ -649,7 +855,7 @@ function dibujarCoropletaFinanzas(tipo) {
     var valores = [];
     var stateDataMap = {};
 
-    estadosPolygonsGeoJSON.features.forEach(f => {
+    window.estadosPolygonsGeoJSON.features.forEach(f => {
         var estadoReal = normalizarEstadoNombre(f.properties.name || f.properties.ESTADO || f.properties.NOMGEO);
         if (FINANZAS_FEDERALES_2025[estadoReal]) {
             let data = FINANZAS_FEDERALES_2025[estadoReal];
@@ -664,7 +870,7 @@ function dibujarCoropletaFinanzas(tipo) {
 
     var labelsArray = [];
 
-    var layer_geo = L.geoJSON(estadosPolygonsGeoJSON, {
+    var layer_geo = L.geoJSON(window.estadosPolygonsGeoJSON, {
         style: function (feature) {
             var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
             var val = stateDataMap[estadoReal];
@@ -1272,6 +1478,10 @@ function setupUI() {
                     <h4 class="panel-title" id="titulo-pob" style="font-size:12px; margin-bottom:8px;">Indicadores de Estructura Poblacional</h4>
                     <div style="height:240px; position:relative;"><canvas id="pobChart"></canvas></div>
                     <div id="sintesis-pob" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
+                    <h4 class="panel-title" id="titulo-mun-res" style="font-size:12px; margin-bottom:8px;">Resumen por Municipio</h4>
+                    <div style="height:300px; position:relative;"><canvas id="munResumenChart"></canvas></div>
+                    <div id="sintesis-mun-res" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
                 </div>
             </div>
         `;
@@ -2151,3 +2361,224 @@ window.iluminarTop5Nacional = function (top5Nombres, colores) {
         }).catch(e => console.error("Error al cargar denue.geojson para el top 5:", e));
     }
 };
+
+window.productDataActual = {};
+window.industriaActual = '';
+
+function renderizarMapaProductividad(industria, anio) {
+    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+
+    var filterTitle = document.getElementById('filter-title');
+    filterTitle.innerText = "Cargando datos CSV...";
+
+    var filename = industria + '.csv';
+
+    fetch(filename)
+        .then(response => {
+            if (!response.ok) throw new Error("Archivo " + filename + " no encontrado");
+            return response.text();
+        })
+        .then(csvText => {
+            var rows = csvText.split('\n');
+            var headers = rows[0].split(',');
+            var anioIdx = headers.findIndex(h => h.trim() === anio);
+
+            if (anioIdx === -1) {
+                alert("Año " + anio + " no encontrado en el archivo " + filename);
+                return;
+            }
+
+            var productData = {};
+            for (var i = 1; i < rows.length; i++) {
+                if (!rows[i].trim()) continue;
+                var cols = rows[i].split(',');
+                var estado = normalizarEstadoNombre(cols[0].trim());
+                var val = parseFloat(cols[anioIdx].trim());
+
+                var historial = {};
+                headers.forEach((h, idx) => {
+                    if (idx > 0 && h.trim()) {
+                        historial[h.trim()] = parseFloat(cols[idx].trim());
+                    }
+                });
+
+                productData[estado] = {
+                    valor: val,
+                    historial: historial
+                };
+            }
+
+            window.productDataActual = productData;
+            window.industriaActual = industria;
+
+            if (!window.estadosPolygonsGeoJSON) {
+                fetch('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
+                    .then(res => res.json())
+                    .then(geo => {
+                        window.estadosPolygonsGeoJSON = geo;
+                        dibujarCoropletaProductividad(anio);
+                    }).catch(e => {
+                        console.error(e);
+                        filterTitle.innerText = "Error cargando mapa";
+                    });
+            } else {
+                dibujarCoropletaProductividad(anio);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            filterTitle.innerText = "Error: " + err.message;
+        });
+}
+
+function dibujarCoropletaProductividad(anio) {
+    var valores = [];
+    var productData = window.productDataActual;
+
+    window.estadosPolygonsGeoJSON.features.forEach(f => {
+        var estadoReal = normalizarEstadoNombre(f.properties.name || f.properties.ESTADO || f.properties.NOMGEO);
+        if (productData[estadoReal] && !isNaN(productData[estadoReal].valor)) {
+            valores.push(productData[estadoReal].valor);
+        }
+    });
+
+    valores.sort((a, b) => a - b);
+    var breaks = calcularBreaks(valores);
+
+    currentGeoJSONLayer = L.geoJSON(window.estadosPolygonsGeoJSON, {
+        style: function (feature) {
+            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+            var color = '#333';
+            var opacity = 0.5;
+            if (productData[estadoReal] && !isNaN(productData[estadoReal].valor)) {
+                color = RampaRojos[getClase(productData[estadoReal].valor, breaks)] || '#333';
+                opacity = 0.8;
+            }
+            return { fillColor: color, weight: 1, opacity: 1, color: window.limiteBoundaryColor || 'white', fillOpacity: opacity };
+        },
+        onEachFeature: function (feature, layer) {
+            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+            if (productData[estadoReal] && !isNaN(productData[estadoReal].valor)) {
+                var valStr = productData[estadoReal].valor.toFixed(4);
+                var tooltipContent = `
+                    <div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:5px;">${estadoReal}</div>
+                    <div style="font-size:11px; color:#fff;">Índice Productividad (${anio}): ${valStr}</div>
+                `;
+                layer.bindTooltip(tooltipContent, { sticky: true, className: 'custom-tooltip' });
+
+                layer.on({
+                    mouseover: function (e) {
+                        e.target.setStyle({ weight: 3, color: '#00e5ff' });
+                        e.target.bringToFront();
+                    },
+                    mouseout: function (e) {
+                        currentGeoJSONLayer.resetStyle(e.target);
+                    },
+                    click: function (e) {
+                        dibujarGraficaEvolucion([estadoReal]);
+                    }
+                });
+            }
+        }
+    }).addTo(map);
+
+    document.getElementById('filter-title').innerText = "Modo de análisis";
+
+    // Generar simbología dinámica para decimales
+    actualizarLeyendaProductividad(breaks);
+
+    var top5 = Object.keys(productData)
+        .filter(k => !isNaN(productData[k].valor))
+        .sort((a, b) => productData[b].valor - productData[a].valor)
+        .slice(0, 5);
+
+    dibujarGraficaEvolucion(top5);
+}
+
+function dibujarGraficaEvolucion(estadosArreglo) {
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var tgc = document.getElementById('topGlobalChartContainer');
+    if (tgc) tgc.style.display = 'block';
+    var tgt = document.getElementById('topGlobalChartTitle');
+    if (tgt) {
+        tgt.style.display = 'block';
+        tgt.innerText = estadosArreglo.length === 1 ? 'Evolución Histórica: ' + estadosArreglo[0] : 'Evolución Histórica: Top 5 Entidades';
+    }
+    var tghr = document.getElementById('topGlobalChartHr');
+    if (tghr) tghr.style.display = 'block';
+
+    var ctx = document.getElementById('topGlobalChart');
+    if (!ctx) return;
+    ctx = ctx.getContext('2d');
+    if (window.topGlobalChartInstance) window.topGlobalChartInstance.destroy();
+
+    var productData = window.productDataActual;
+    var unEstado = productData[estadosArreglo[0]];
+    if (!unEstado) return;
+
+    var anios = Object.keys(unEstado.historial).sort();
+
+    var datasets = estadosArreglo.map((estado, idx) => {
+        var color = RampaRojos[(idx + 2) % RampaRojos.length] || '#00e5ff';
+        if (estadosArreglo.length === 1) color = '#00e5ff';
+
+        var dataValues = anios.map(a => productData[estado].historial[a]);
+        return {
+            label: estado,
+            data: dataValues,
+            borderColor: color,
+            backgroundColor: color,
+            tension: 0.3,
+            fill: false,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: color
+        };
+    });
+
+    window.topGlobalChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: anios,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: estadosArreglo.length > 1, position: 'bottom', labels: { color: '#ccc', font: { size: 10 } } }
+            },
+            scales: {
+                x: { ticks: { color: '#ccc' }, grid: { color: '#333' } },
+                y: { ticks: { color: '#ccc' }, grid: { color: '#333' }, title: { display: true, text: 'Índice de Productividad', color: '#aaa' } }
+            }
+        }
+    });
+}
+
+function actualizarLeyendaProductividad(breaks) {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if (!div || !overlay) return;
+
+    var f = (n) => (n || 0).toFixed(4);
+    var coloresCSS = RampaRojos.join(', ');
+
+    var html = `
+        <div id="legend-flujos">
+            <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">Índice Productividad</div>
+            <div style="width: 100%; padding: 0 5px; box-sizing: border-box;">
+                <div style="width: 100%; height: 35px; background: linear-gradient(to right, ${coloresCSS}); clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 60%);"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 5px;">
+                    <span>${f(breaks[0])}</span>
+                    <span>> ${f(breaks[3])}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    div.innerHTML = html;
+    overlay.style.display = 'block';
+}
+

@@ -42,6 +42,8 @@ const CVE_ENT_ESTADOS = {
 function iniciarLogicaMunicipio() {
     if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+    if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
+    if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
     agebRawData = null;
 
     var container = document.getElementById('filter-buttons-container');
@@ -55,7 +57,6 @@ function iniciarLogicaMunicipio() {
     selectEstado.className = "dynamic-filter-select";
     selectEstado.innerHTML = `<option value="" disabled selected>-- Entidad Federativa --</option>`;
     nombresEstados.forEach(nombre => {
-        // En vez de guardar un solo archivo `.geojson`, guardamos la clave de la región para cargarlo
         var regionAsociada = ESTADOS_POR_REGION[nombre];
         selectEstado.innerHTML += `<option value="${regionAsociada}">${nombre}</option>`;
     });
@@ -71,12 +72,64 @@ function iniciarLogicaMunicipio() {
         { id: 'G_INDICE', label: 'Índice Global' }
     ];
 
+    var equipWrapper = document.createElement("div");
+    equipWrapper.id = "equip-wrapper";
+    equipWrapper.style.display = "none";
+    equipWrapper.style.marginTop = "15px";
+    equipWrapper.style.paddingTop = "10px";
+    equipWrapper.style.borderTop = "1px solid #444";
+
     selectEstado.onchange = function () {
         if (this.value) {
             var nombreEst = this.options[this.selectedIndex].text;
+
+            if (nombreEst === "Baja California") {
+                equipWrapper.style.display = "block";
+                if (equipWrapper.innerHTML === "") {
+                    // Inicializar controles de equipamiento
+                    var lbl = document.createElement("small");
+                    lbl.style.cssText = "color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;";
+                    lbl.innerText = "Equipamiento Tijuana";
+
+                    var toggleEquip = document.createElement("select");
+                    toggleEquip.className = "dynamic-filter-select";
+                    toggleEquip.innerHTML = `
+                        <option value="off" selected>Apagado</option>
+                        <option value="on">Encender Equipamiento</option>
+                    `;
+
+                    var controlesAdicionales = document.createElement("div");
+                    controlesAdicionales.style.display = "none";
+
+                    toggleEquip.onchange = function () {
+                        if (this.value === "on") {
+                            controlesAdicionales.style.display = "block";
+                            renderizarEquipamientoTijuana(controlesAdicionales);
+                        } else {
+                            controlesAdicionales.style.display = "none";
+                            if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
+                            if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
+                            var chartContainer = document.getElementById('equipamiento-chart-container');
+                            if (chartContainer) chartContainer.style.display = 'none';
+                            var eqLegend = document.getElementById('equip-legend-content');
+                            if (eqLegend) eqLegend.remove();
+                        }
+                    };
+
+                    equipWrapper.appendChild(lbl);
+                    equipWrapper.appendChild(toggleEquip);
+                    equipWrapper.appendChild(controlesAdicionales);
+                }
+            } else {
+                equipWrapper.style.display = "none";
+                if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
+                if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
+                var chartContainer = document.getElementById('equipamiento-chart-container');
+                if (chartContainer) chartContainer.style.display = 'none';
+            }
+
             var regionKey = this.value;
-            // Busca el archivo asignado en el diccionario
-            var archivoGeojson = REGIONES_AGEB[regionKey] || "agebmex.geojson"; // Puedes dejar uno por defecto por si falla
+            var archivoGeojson = REGIONES_AGEB[regionKey] || "agebmex.geojson";
             document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
             cargarAgebEstadoRegional(nombreEst, archivoGeojson, selectIndice, opcionesAgeb);
         }
@@ -85,12 +138,14 @@ function iniciarLogicaMunicipio() {
     selectIndice.onchange = function () {
         if (this.value) {
             var labelNombre = this.options[this.selectedIndex].text;
-            renderizarMapaAgeb(this.value, labelNombre, document.querySelector('#filter-buttons-container select').options[document.querySelector('#filter-buttons-container select').selectedIndex].text);
+            renderizarMapaAgeb(this.value, labelNombre, selectEstado.options[selectEstado.selectedIndex].text);
+            if (window.equipamientoLayer) window.equipamientoLayer.bringToFront();
         }
     };
 
     container.appendChild(selectEstado);
     container.appendChild(selectIndice);
+    container.appendChild(equipWrapper);
 
 
 
@@ -111,7 +166,9 @@ function iniciarLogicaMunicipio() {
         });
 
         // Asegurarse de que no haya múltiples listeners
-        map.off('pm:create');
+        if (map._events && map._events['pm:create']) {
+            delete map._events['pm:create'];
+        }
 
         map.on('pm:create', function (e) {
             var layer = e.layer;
@@ -173,6 +230,15 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
     // Armadoras siempre lo cargamos o lo abstraemos también
     promises.push(fetch('armadoras.geojson').then(r => r.json()));
 
+    // Cargar Limite_municipal.geojson sincrónicamente para los gráficos
+    promises.push(
+        window.municipiosPolygonsGeoJSON ? Promise.resolve(window.municipiosPolygonsGeoJSON) :
+            fetch('Limite_municipal_opt.geojson').then(r => r.json()).then(geo => {
+                window.municipiosPolygonsGeoJSON = geo;
+                return geo;
+            }).catch(e => null)
+    );
+
     Promise.all(promises)
         .then(([agebDataRegional, armadorasData]) => {
             document.getElementById('filter-title').innerText = "Vulnerabilidad";
@@ -231,6 +297,13 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
             selectIndice.style.display = 'block';
 
             renderizarMapaAgeb('G_INDICE', 'Índice Global', nombreEstado);
+
+            if (typeof window.dibujarLimiteEntidad === 'function') {
+                window.dibujarLimiteEntidad(nombreEstado);
+            }
+            if (typeof window.dibujarLimiteMunicipal === 'function') {
+                window.dibujarLimiteMunicipal(nombreEstado);
+            }
         })
         .catch(err => {
             console.error("Error cargando capas regionales:", err);
@@ -404,7 +477,7 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                         font: { weight: 'bold', size: 11 },
                         textShadowBlur: 3, textShadowColor: '#000',
                         formatter: function (value, context) {
-                            var total = context.dataset.data.reduce((a, b) => a + b, 0); 
+                            var total = context.dataset.data.reduce((a, b) => a + b, 0);
                             var pct = ((value / total) * 100).toFixed(1);
                             return pct > 5 ? pct + '%' : '';
                         }
@@ -447,9 +520,9 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                         align: 'end',
                         anchor: 'end',
                         font: { weight: 'bold', size: 10 },
-                        formatter: function (value) { 
-                            if(totalPob > 0 && value > 0) {
-                                return value.toLocaleString('en-US') + ' (' + ((value/totalPob)*100).toFixed(1) + '%)'; 
+                        formatter: function (value) {
+                            if (totalPob > 0 && value > 0) {
+                                return value.toLocaleString('en-US') + ' (' + ((value / totalPob) * 100).toFixed(1) + '%)';
                             }
                             return value > 0 ? value.toLocaleString('en-US') : '';
                         }
@@ -457,13 +530,128 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                 },
                 scales: {
                     x: { display: false, max: totalPob },
-                    y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { display: false }, border: {display: false} }
+                    y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { display: false }, border: { display: false } }
                 },
                 layout: {
                     padding: { right: 80 }
                 }
             }
         });
+    }
+
+    // Chart 3: Resumen por Municipio (Población, AGEBs, Vulnerabilidad Promedio)
+    var canvasMunRes = document.getElementById('munResumenChart');
+    if (canvasMunRes) {
+        var ctxMunRes = canvasMunRes.getContext('2d');
+        if (window.munResumenChartInstance) window.munResumenChartInstance.destroy();
+
+        var munData = {};
+        var cveToName = {};
+        if (window.municipiosPolygonsGeoJSON && window.municipiosPolygonsGeoJSON.features) {
+            window.municipiosPolygonsGeoJSON.features.forEach(f => {
+                if (f.properties.cve_umun && f.properties.nom_mun) {
+                    cveToName[f.properties.cve_umun] = f.properties.nom_mun;
+                }
+            });
+        }
+
+        agebRawData.features.forEach(f => {
+            var p = f.properties;
+            var cvegeo = p.CVEGEO || "";
+            var cve_umun = cvegeo.substring(0, 5);
+
+            if (cve_umun.length === 5) {
+                if (!munData[cve_umun]) {
+                    munData[cve_umun] = {
+                        name: cveToName[cve_umun] || ("Mun " + cve_umun),
+                        agebs: 0,
+                        pob: 0,
+                        vulnSum: 0,
+                        vulnValidos: 0
+                    };
+                }
+
+                munData[cve_umun].agebs++;
+                munData[cve_umun].pob += parseFloat(p.POB1_x) || 0;
+
+                var valCat = p[atributo] || "Sin dato";
+                var vStr = valCat.toString().trim().toUpperCase();
+                var numVul = 0;
+                if (vStr === 'MUY ALTO') numVul = 5;
+                else if (vStr === 'ALTO') numVul = 4;
+                else if (vStr === 'MEDIO') numVul = 3;
+                else if (vStr === 'BAJO') numVul = 2;
+                else if (vStr === 'MUY BAJO') numVul = 1;
+
+                if (numVul > 0) {
+                    munData[cve_umun].vulnSum += numVul;
+                    munData[cve_umun].vulnValidos++;
+                }
+            }
+        });
+
+        var sortedMuns = Object.values(munData).sort((a, b) => b.pob - a.pob);
+        if (sortedMuns.length > 15) sortedMuns = sortedMuns.slice(0, 15);
+
+        var labelsMun = sortedMuns.map(m => m.name);
+        var dataAgebsMun = sortedMuns.map(m => m.agebs);
+        var dataVulnMun = sortedMuns.map(m => m.vulnValidos > 0 ? parseFloat((m.vulnSum / m.vulnValidos).toFixed(1)) : 0);
+
+        window.munResumenChartInstance = new Chart(ctxMunRes, {
+            type: 'bar',
+            data: {
+                labels: labelsMun,
+                datasets: [
+                    {
+                        label: 'AGEBs Analizados',
+                        data: dataAgebsMun,
+                        backgroundColor: '#0277bd',
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Vuln. Promedio',
+                        data: dataVulnMun,
+                        backgroundColor: '#d59f0f',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#ddd', font: { size: 10 } }, position: 'bottom' },
+                    datalabels: {
+                        color: '#fff', font: { size: 9 },
+                        formatter: function (val, ctx) { return val > 0 ? val : ""; },
+                        anchor: 'end',
+                        align: 'end'
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#ccc', font: { size: 9 } }, grid: { display: false } },
+                    y: {
+                        type: 'linear', display: true, position: 'left',
+                        ticks: { color: '#ccc', font: { size: 10 } }, grid: { color: '#333' },
+                        title: { display: true, text: 'Total AGEBs', color: '#0277bd' }
+                    },
+                    y1: {
+                        type: 'linear', display: true, position: 'right',
+                        ticks: { color: '#ccc', font: { size: 10 } },
+                        title: { display: true, text: 'Vuln. (1-5)', color: '#d59f0f' },
+                        grid: { drawOnChartArea: false },
+                        min: 0, max: 5
+                    }
+                }
+            }
+        });
+
+        var sumMun = document.getElementById('sintesis-mun-res');
+        if (sumMun) {
+            sumMun.style.display = 'block';
+            sumMun.innerHTML = `Muestra los principales municipios. Las barras azules indican la cantidad de AGEBs, y las amarillas el nivel de vulnerabilidad promedio (1-5).`;
+        }
     }
 
     // --- SÍNTESIS VULNERABILIDAD ---
@@ -721,4 +909,238 @@ window.toggleAgebNivel = function (nivelText) {
         }
     });
 };
+
+// ==========================================
+// NUEVO MÓDULO: EQUIPAMIENTO TIJUANA
+// ==========================================
+window.equipamientoLayer = null;
+window.equipamientoBufferLayer = null;
+window.chartEquipamientoInstance = null;
+
+function renderizarEquipamientoTijuana(wrapper) {
+    if (window.equipamientoDataCache) {
+        configurarUIEquipamiento(wrapper, window.equipamientoDataCache);
+        return;
+    }
+
+    fetch('Equipamiento_Tijuana.geojson')
+        .then(r => r.json())
+        .then(data => {
+            window.equipamientoDataCache = data;
+            configurarUIEquipamiento(wrapper, data);
+        })
+        .catch(e => {
+            console.error("Error cargando Equipamiento:", e);
+            document.getElementById('filter-title').innerText = "Error cargando archivo";
+        });
+}
+
+function configurarUIEquipamiento(wrapper, data) {
+    wrapper.innerHTML = "";
+
+    var tipos = [...new Set(data.features.map(f => f.properties.Tipo || "Otro"))].sort();
+
+    // Cultural - Amarrillo, Deportivo - Verde, Educativo - Azul y Salud - Rosa
+    window.tipoEquipColorMap = {
+        'Cultural': '#ffcc00', // Amarillo
+        'Deportivo': '#2ca02c', // Verde
+        'Educativo': '#1f77b4', // Azul
+        'Salud': '#ff69b4'      // Rosa
+    };
+
+    var selectTipo = document.createElement("select");
+    selectTipo.className = "dynamic-filter-select";
+    selectTipo.innerHTML = `<option value="TODOS">Todos los Tipos</option>`;
+    tipos.forEach(t => {
+        selectTipo.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+
+    selectTipo.onchange = function () {
+        pintarEquipamientoEnMapa(data, this.value);
+    };
+
+    wrapper.appendChild(selectTipo);
+
+    // Render inicial
+    pintarEquipamientoEnMapa(data, "TODOS");
+    generarGraficaEquipamiento(data);
+}
+
+function pintarEquipamientoEnMapa(data, tipoFiltro) {
+    if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
+    if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
+
+    var features = tipoFiltro === "TODOS" ? data.features : data.features.filter(f => f.properties.Tipo === tipoFiltro);
+    if (features.length === 0) return;
+
+    // Crear layer de puntos
+    window.equipamientoLayer = L.geoJSON({ type: "FeatureCollection", features: features }, {
+        pointToLayer: function (feature, latlng) {
+            var t = feature.properties.Tipo || "Otro";
+            var color = window.tipoEquipColorMap[t] || '#999';
+            return L.circleMarker(latlng, {
+                radius: 6,
+                fillColor: color,
+                color: '#fff',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.9
+            });
+        },
+        onEachFeature: function (feature, layer) {
+            var props = feature.properties;
+            var tooltipHtml = `
+                <div style="font-family:'Noto Sans'; font-size:12px; min-width: 150px;">
+                    <div style="font-weight:bold; color:#00e5ff; margin-bottom:5px;">${props.Nombre || "Sin nombre"}</div>
+                    <table style="width:100%; color:#fff; font-size:11px;">
+                        <tr><td style="color:#aaa; padding-right:10px;">Tipo:</td><td><strong>${props.Tipo || "N/A"}</strong></td></tr>
+                        <tr><td style="color:#aaa; padding-right:10px;">Clasificac:</td><td>${props.Clasificac || "N/A"}</td></tr>
+                        <tr><td style="color:#aaa; padding-right:10px;">Dependen:</td><td>${props.Dependen || "N/A"}</td></tr>
+                    </table>
+                </div>
+            `;
+            layer.bindTooltip(tooltipHtml, { sticky: true, className: 'custom-tooltip' });
+        }
+    }).addTo(map);
+
+    // Generar Buffer de impacto usando Turf si un tipo especifico es seleccionado
+    if (tipoFiltro !== "TODOS" && typeof turf !== 'undefined') {
+        try {
+            var color = window.tipoEquipColorMap[tipoFiltro] || '#fff';
+            // Buffer de 1.5 kilometros
+            var bufferGeom = turf.buffer({ type: "FeatureCollection", features: features }, 1.5, { units: 'kilometers' });
+            window.equipamientoBufferLayer = L.geoJSON(bufferGeom, {
+                style: {
+                    color: color,
+                    weight: 2,
+                    fillColor: color,
+                    fillOpacity: 0.2,
+                    dashArray: '5, 5'
+                }
+            }).addTo(map);
+            // Colocar los puntos arriba de los buffers
+            window.equipamientoLayer.bringToFront();
+        } catch (e) {
+            console.warn("Turf.js buffer error:", e);
+        }
+    }
+
+    // Sobreponer a capa AGEB
+    if (agebLayer) {
+        if (window.equipamientoBufferLayer) window.equipamientoBufferLayer.bringToFront();
+        if (window.equipamientoLayer) window.equipamientoLayer.bringToFront();
+    }
+
+    // Actualizar leyenda adicional de equipamiento
+    var equipLegend = document.getElementById('equip-legend-content');
+    if (!equipLegend) {
+        equipLegend = document.createElement('div');
+        equipLegend.id = 'equip-legend-content';
+        equipLegend.style.marginTop = "15px";
+        equipLegend.style.paddingTop = "10px";
+        equipLegend.style.borderTop = "1px solid #444";
+        var div = document.getElementById('legend-content');
+        if (div) div.appendChild(equipLegend);
+    }
+
+    if (equipLegend) {
+        equipLegend.innerHTML = `<div style="font-size:13px; font-weight:bold; color:#ddd; margin-bottom:10px;">Equipamiento (${tipoFiltro})</div>`;
+        if (tipoFiltro !== "TODOS") {
+            equipLegend.innerHTML += `
+                <div style="display:flex; align-items:center; margin-bottom:5px;">
+                    <div style="width:14px; height:14px; border-radius:50%; background:${window.tipoEquipColorMap[tipoFiltro]}; border:1px solid #fff; margin-right:8px;"></div>
+                    <span style="color:#ccc; font-size:12px;">Puntos (${features.length})</span>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <div style="width:14px; height:14px; background:${window.tipoEquipColorMap[tipoFiltro]}44; border:2px dashed ${window.tipoEquipColorMap[tipoFiltro]}; margin-right:8px;"></div>
+                    <span style="color:#ccc; font-size:12px;">Área de Impacto (1.5 km)</span>
+                </div>
+            `;
+        } else {
+            Object.keys(window.tipoEquipColorMap).forEach(t => {
+                var c = window.tipoEquipColorMap[t];
+                var n = features.filter(f => f.properties.Tipo === t).length;
+                equipLegend.innerHTML += `
+                    <div style="display:flex; align-items:center; margin-bottom:5px;">
+                        <div style="width:14px; height:14px; border-radius:50%; background:${c}; border:1px solid #fff; margin-right:8px;"></div>
+                        <span style="color:#ccc; font-size:12px;">${t} (${n})</span>
+                    </div>
+                `;
+            });
+        }
+    }
+}
+
+function generarGraficaEquipamiento(data) {
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var chartContainer = document.getElementById('equipamiento-chart-container');
+    if (!chartContainer) {
+        chartContainer = document.createElement('div');
+        chartContainer.id = 'equipamiento-chart-container';
+        chartContainer.style.marginTop = "20px";
+        chartContainer.style.paddingTop = "10px";
+        chartContainer.style.borderTop = "1px solid #333";
+        var parentDiv = document.getElementById('municipal-charts-container');
+        if (parentDiv) parentDiv.appendChild(chartContainer);
+    }
+    chartContainer.style.display = 'block';
+
+    chartContainer.innerHTML = `
+        <h4 style="color:#fff; font-size:12px; margin-bottom:10px; text-transform: uppercase;">Inventario por Tipo de Equipamiento</h4>
+        <div style="height:220px; position:relative; width: 100%;">
+            <canvas id="equipChart"></canvas>
+        </div>
+    `;
+
+    var conteos = {};
+    data.features.forEach(f => {
+        var t = f.properties.Tipo || "Otro";
+        conteos[t] = (conteos[t] || 0) + 1;
+    });
+
+    var labels = Object.keys(conteos).sort((a, b) => conteos[b] - conteos[a]);
+    var vals = labels.map(l => conteos[l]);
+    var bgColors = labels.map(l => window.tipoEquipColorMap[l] || '#999');
+
+    var ctx = document.getElementById('equipChart');
+    if (!ctx) return;
+    ctx = ctx.getContext('2d');
+
+    if (window.chartEquipamientoInstance) window.chartEquipamientoInstance.destroy();
+
+    window.chartEquipamientoInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: vals,
+                backgroundColor: bgColors,
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    color: '#fff',
+                    anchor: 'end',
+                    align: 'right',
+                    font: { size: 10, weight: 'bold' },
+                    formatter: function (val) { return val; }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#ccc' }, grid: { color: '#333' }, suggestedMax: Math.max(...vals) * 1.2 },
+                y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { display: false } }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
 
