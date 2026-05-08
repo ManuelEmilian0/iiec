@@ -440,6 +440,7 @@ window.dibujarLimiteEntidad = function (nombreEstado) {
             window.limiteEntidadLayer.bringToFront();
         }
     });
+
 };
 
 window.limiteMunicipalLayer = null;
@@ -510,6 +511,7 @@ window.dibujarLimiteMunicipal = function (nombreEstado) {
             window.limiteMunicipalLayer.bringToFront();
         }
     });
+
 };
 
 // ==========================================
@@ -719,15 +721,15 @@ function iniciarFiltroNacional_Paso1(data) {
     productividadContainer.style.display = "none";
 
     var prodWrapper = document.createElement("div");
-    prodWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Industria (CSV):</small>`;
+    prodWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Industria:</small>`;
 
     var selectIndustriaCSV = document.createElement("select");
     selectIndustriaCSV.className = "dynamic-filter-select";
     selectIndustriaCSV.innerHTML = `
         <option value="" disabled selected>-- Seleccione Industria --</option>
-        <option value="IC_ELECTRICA">Eléctrica (IC_ELECTRICA)</option>
-        <option value="IC_ELECTRONICA">Electrónica (IC_ELECTRONICA)</option>
-        <option value="IC_SEIT">SEIT (IC_SEIT)</option>
+        <option value="IC_ELECTRICA">Automotriz</option>
+        <option value="IC_ELECTRONICA">Electrónica</option>
+        <option value="IC_SEIT">Servicios SEIT</option>
     `;
 
     var anioWrapper = document.createElement("div");
@@ -1042,6 +1044,7 @@ function actualizarGraficaFinanzas(tipo) {
             }
         }
     });
+
 }
 
 function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino) {
@@ -1229,6 +1232,7 @@ function actualizarGraficaTop5Global(top5Origenes, industriaSel) {
             }
         }
     });
+
 }
 
 function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) {
@@ -1354,6 +1358,7 @@ function actualizarGrafica(features, campoEtiqueta, campoValor, etiquetaMoneda) 
             }
         }
     });
+
 }
 
 // ==========================================
@@ -2207,10 +2212,16 @@ window.procesarDatosEmpresas = function (datos, indicador = 'Activos_Millones') 
 
         var winnerModel = winnerRecord['Vía de desarrollo'] || "Alta Tecnología";
         var winnerInd = winnerRecord['Industria'] || "su sector";
+        var descInd = "";
+        if (winnerInd === "OEM") descInd = " (Fabricante de Equipos Originales / Ensambladora)";
+        else if (winnerInd === "My/oS electrónicos") descInd = " (Micro y Opto Semiconductores)";
+        else if (winnerInd === "Autopartes") descInd = " (Componentes Automotrices)";
+        else if (winnerInd === "Autopartes electrónicas") descInd = " (Componentes Electrónicos Automotrices)";
+        else if (winnerInd === "Semiconductores") descInd = " (Microchips y Circuitos Integrados)";
 
         var sintesisDiv = document.getElementById('sintesis-empresasLine');
         if (sintesisDiv) {
-            sintesisDiv.innerHTML = `Liderando en la industria de <b>${winnerInd}</b>, la empresa <b style="color:#00e5ff;">${winnerName}</b> encabeza la métrica de <b>${indicadorText}</b> con un valor destacado de <b>${valDisplay}</b>. Esto fortalece su posición bajo la ruta de <span style="text-shadow: 1px 1px 2px #000; color:#fff; font-weight:bold;">${winnerModel}</span> dentro de los nodos industriales geolocalizados.`;
+            sintesisDiv.innerHTML = `Liderando en la industria de <b>${winnerInd}</b><span style="font-size: 0.95em; color: #ccc;">${descInd}</span>, la empresa <b style="color:#00e5ff;">${winnerName}</b> encabeza la métrica de <b>${indicadorText}</b> con un valor destacado de <b>${valDisplay}</b>. Esto fortalece su posición bajo la ruta de <span style="text-shadow: 1px 1px 2px #000; color:#fff; font-weight:bold;">${winnerModel}</span> dentro de los nodos industriales geolocalizados.`;
             sintesisDiv.style.display = 'block';
         }
 
@@ -2475,7 +2486,7 @@ function dibujarCoropletaProductividad(anio) {
                         currentGeoJSONLayer.resetStyle(e.target);
                     },
                     click: function (e) {
-                        dibujarGraficaEvolucion([estadoReal]);
+                        dibujarGraficaEvolucion([estadoReal], anio);
                     }
                 });
             }
@@ -2492,10 +2503,10 @@ function dibujarCoropletaProductividad(anio) {
         .sort((a, b) => productData[b].valor - productData[a].valor)
         .slice(0, 5);
 
-    dibujarGraficaEvolucion(top5);
+    dibujarGraficaEvolucion(top5, anio);
 }
 
-function dibujarGraficaEvolucion(estadosArreglo) {
+function dibujarGraficaEvolucion(estadosArreglo, anioSeleccionado) {
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
 
@@ -2519,6 +2530,14 @@ function dibujarGraficaEvolucion(estadosArreglo) {
     if (!unEstado) return;
 
     var anios = Object.keys(unEstado.historial).sort();
+
+    // Ocultar posibles resúmenes de flujos
+    var summaryDiv2 = document.getElementById('dynamic-summary');
+    if (summaryDiv2) summaryDiv2.style.display = 'none';
+    var chartTitle2 = document.getElementById('myChartTitle');
+    if (chartTitle2) chartTitle2.style.display = 'none';
+    var chartContainer2 = document.getElementById('myChartContainer');
+    if (chartContainer2) chartContainer2.style.display = 'none';
 
     var datasets = estadosArreglo.map((estado, idx) => {
         var color = RampaRojos[(idx + 2) % RampaRojos.length] || '#00e5ff';
@@ -2556,6 +2575,46 @@ function dibujarGraficaEvolucion(estadosArreglo) {
             }
         }
     });
+
+    // Agregar síntesis dinámica
+    var summaryDiv = document.getElementById('dynamic-summary-global');
+    if (summaryDiv && anioSeleccionado) {
+        var indText = window.industriaActual || "la industria";
+        if (indText === 'IC_ELECTRICA') indText = "Automotriz";
+        if (indText === 'IC_ELECTRONICA') indText = "Electrónica";
+        if (indText === 'IC_SEIT') indText = "Servicios SEIT";
+
+        var anioInicio = anios[0];
+
+        if (estadosArreglo.length > 1) {
+            var top1 = estadosArreglo[0];
+            var top2 = estadosArreglo[1] || "";
+            var top3 = estadosArreglo[2] || "";
+
+            var valTop1Inicio = productData[top1].historial[anioInicio];
+            var valTop1Fin = productData[top1].historial[anioSeleccionado];
+            var crecTop1 = valTop1Inicio ? ((valTop1Fin - valTop1Inicio) / Math.abs(valTop1Inicio) * 100).toFixed(1) : 0;
+
+            var tendenciaTop1 = (valTop1Fin > valTop1Inicio) ? `creciendo un ${crecTop1}% desde ${anioInicio}` : `ajustando su índice respecto a ${anioInicio}`;
+
+            var textoTop23 = (top2 && top3) ? `Por su parte, <b style="color:#fff">${top2}</b> y <b style="color:#fff">${top3}</b> mantienen una fuerte competencia, reconfigurando constantemente el Top 5.` : "";
+
+            summaryDiv.innerHTML = `En <b>${anioSeleccionado}</b> (industria <b>${indText}</b>), <b style="color:#00e5ff">${top1}</b> consolida su liderazgo ${tendenciaTop1}. ${textoTop23} Esto refleja cómo la productividad regional se transforma año con año.`;
+            summaryDiv.style.textAlign = 'justify';
+            summaryDiv.style.display = 'block';
+        } else {
+            var estadoStr = estadosArreglo[0];
+            var valInicio = productData[estadoStr].historial[anioInicio];
+            var valAnio = productData[estadoStr].historial[anioSeleccionado];
+            var direccion = valAnio >= valInicio ? "un avance" : "una fluctuación";
+
+            summaryDiv.innerHTML = `Para <b>${anioSeleccionado}</b> en la industria <b>${indText}</b>, <b style="color:#00e5ff">${estadoStr}</b> muestra ${direccion} en su índice respecto a ${anioInicio}, reflejando su adaptación a los ciclos del sector.`;
+            summaryDiv.style.textAlign = 'justify';
+            summaryDiv.style.display = 'block';
+        }
+    } else if (summaryDiv) {
+        summaryDiv.style.display = 'none';
+    }
 }
 
 function actualizarLeyendaProductividad(breaks) {
