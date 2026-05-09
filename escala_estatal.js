@@ -234,6 +234,10 @@ function filtrarPorEstado(nombreEstado) {
 
     actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado, isocronasEstado);
     actualizarLeyendaIsocronas();
+
+    if (typeof window.dibujarLimiteMunicipal === 'function') {
+        window.dibujarLimiteMunicipal(nombreEstado);
+    }
 }
 
 function dibujarArmadorasPuntos(features) {

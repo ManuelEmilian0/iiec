@@ -298,9 +298,7 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
 
             renderizarMapaAgeb('G_INDICE', 'Índice Global', nombreEstado);
 
-            if (typeof window.dibujarLimiteEntidad === 'function') {
-                window.dibujarLimiteEntidad(nombreEstado);
-            }
+
             if (typeof window.dibujarLimiteMunicipal === 'function') {
                 window.dibujarLimiteMunicipal(nombreEstado);
             }

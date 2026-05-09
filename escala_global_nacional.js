@@ -100,14 +100,7 @@ function initMap() {
 
                     window.limiteBoundaryColor = (bm.name === "Satélite" || bm.name === "Oscuro") ? '#ffffff' : '#000000';
 
-                    if (window.limiteEntidadLayer) {
-                        window.limiteEntidadLayer.eachLayer(l => {
-                            if (l.setStyle) l.setStyle({ color: window.limiteBoundaryColor, fillColor: window.limiteBoundaryColor });
-                            if (l._icon && l._icon.innerHTML) {
-                                l._icon.innerHTML = l._icon.innerHTML.replace(/color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))/, 'color: ' + window.limiteBoundaryColor);
-                            }
-                        });
-                    }
+
                     if (window.limiteMunicipalLayer) {
                         window.limiteMunicipalLayer.eachLayer(l => {
                             if (l.setStyle) l.setStyle({ color: window.limiteBoundaryColor });
@@ -219,7 +212,7 @@ function loadLayer(scaleType) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
     if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
-    if (window.limiteEntidadLayer) { map.removeLayer(window.limiteEntidadLayer); window.limiteEntidadLayer = null; }
+
     if (window.limiteMunicipalLayer) { map.removeLayer(window.limiteMunicipalLayer); window.limiteMunicipalLayer = null; }
 
     // Remover controles de dibujo si existen
@@ -385,63 +378,7 @@ function loadLayer(scaleType) {
         .catch(error => console.error("Error cargando datos: " + error));
 }
 
-// ==========================================
-// FUNCIÓN GLOBAL LÍMITE ESTATAL
-// ==========================================
-window.limiteEntidadLayer = null;
-window.dibujarLimiteEntidad = function (nombreEstado) {
-    var p = new Promise((resolve) => {
-        if (window.limiteEstatalGeoJSON) {
-            resolve(window.limiteEstatalGeoJSON);
-        } else {
-            fetch('Limite_estatal.geojson')
-                .then(res => res.json())
-                .then(geo => {
-                    window.limiteEstatalGeoJSON = geo;
-                    resolve(geo);
-                }).catch(e => resolve(null));
-        }
-    });
 
-    p.then(geo => {
-        if (!geo) return;
-        if (window.limiteEntidadLayer) map.removeLayer(window.limiteEntidadLayer);
-
-        var estadoBusqueda = normalizarEstadoNombre(nombreEstado);
-        var stateFeature = geo.features.find(f => {
-            var n = normalizarEstadoNombre(f.properties.name || f.properties.ESTADO || f.properties.NOMGEO);
-            return n === estadoBusqueda;
-        });
-
-        if (stateFeature) {
-            var polyLayer = L.geoJSON(stateFeature, {
-                style: {
-                    color: window.limiteBoundaryColor || '#ffffff',
-                    weight: 2,
-                    opacity: 0.8,
-                    fillOpacity: 0.05,
-                    fillColor: window.limiteBoundaryColor || '#ffffff'
-                },
-                interactive: false
-            });
-
-            var center = polyLayer.getBounds().getCenter();
-            var labelMarker = L.marker(center, {
-                icon: L.divIcon({
-                    className: 'state-label-permanent',
-                    html: `<div style="color: ${window.limiteBoundaryColor || '#ffffff'}; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center; text-transform: uppercase; pointer-events:none;">${estadoBusqueda}</div>`,
-                    iconSize: [150, 20],
-                    iconAnchor: [75, 10]
-                }),
-                interactive: false
-            });
-
-            window.limiteEntidadLayer = L.featureGroup([polyLayer, labelMarker]).addTo(map);
-            window.limiteEntidadLayer.bringToFront();
-        }
-    });
-
-};
 
 window.limiteMunicipalLayer = null;
 window.municipiosPolygonsGeoJSON = null;
@@ -2443,11 +2380,17 @@ function renderizarMapaProductividad(industria, anio) {
 }
 
 function dibujarCoropletaProductividad(anio) {
+
     var valores = [];
     var productData = window.productDataActual;
 
     window.estadosPolygonsGeoJSON.features.forEach(f => {
-        var estadoReal = normalizarEstadoNombre(f.properties.name || f.properties.ESTADO || f.properties.NOMGEO);
+        var estadoReal = normalizarEstadoNombre(
+            f.properties.name ||
+            f.properties.ESTADO ||
+            f.properties.NOMGEO
+        );
+
         if (productData[estadoReal] && !isNaN(productData[estadoReal].valor)) {
             valores.push(productData[estadoReal].valor);
         }
@@ -2456,26 +2399,60 @@ function dibujarCoropletaProductividad(anio) {
     valores.sort((a, b) => a - b);
     var breaks = calcularBreaks(valores);
 
-    currentGeoJSONLayer = L.geoJSON(window.estadosPolygonsGeoJSON, {
+    var labelsArray = [];
+
+    var layer_geo = L.geoJSON(window.estadosPolygonsGeoJSON, {
+
         style: function (feature) {
-            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+
+            var estadoReal = normalizarEstadoNombre(
+                feature.properties.name ||
+                feature.properties.ESTADO ||
+                feature.properties.NOMGEO
+            );
+
             var color = '#333';
             var opacity = 0.5;
+
             if (productData[estadoReal] && !isNaN(productData[estadoReal].valor)) {
                 color = RampaRojos[getClase(productData[estadoReal].valor, breaks)] || '#333';
                 opacity = 0.8;
             }
-            return { fillColor: color, weight: 1, opacity: 1, color: window.limiteBoundaryColor || 'white', fillOpacity: opacity };
+
+            return {
+                fillColor: color,
+                weight: 1,
+                opacity: 1,
+                color: window.limiteBoundaryColor || 'white',
+                fillOpacity: opacity
+            };
         },
+
         onEachFeature: function (feature, layer) {
-            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+
+            var estadoReal = normalizarEstadoNombre(
+                feature.properties.name ||
+                feature.properties.ESTADO ||
+                feature.properties.NOMGEO
+            );
+
             if (productData[estadoReal] && !isNaN(productData[estadoReal].valor)) {
+
                 var valStr = productData[estadoReal].valor.toFixed(4);
+
                 var tooltipContent = `
-                    <div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:5px;">${estadoReal}</div>
-                    <div style="font-size:11px; color:#fff;">Índice Productividad (${anio}): ${valStr}</div>
+                    <div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:5px;">
+                        ${estadoReal}
+                    </div>
+                    <div style="font-size:11px; color:#fff;">
+                        Índice Productividad (${anio}): ${valStr}
+                    </div>
                 `;
-                layer.bindTooltip(tooltipContent, { sticky: true, className: 'custom-tooltip' });
+
+                layer.bindTooltip(tooltipContent, {
+                    sticky: true,
+                    className: 'custom-tooltip'
+                });
 
                 layer.on({
                     mouseover: function (e) {
@@ -2483,7 +2460,7 @@ function dibujarCoropletaProductividad(anio) {
                         e.target.bringToFront();
                     },
                     mouseout: function (e) {
-                        currentGeoJSONLayer.resetStyle(e.target);
+                        layer_geo.resetStyle(e.target);
                     },
                     click: function (e) {
                         dibujarGraficaEvolucion([estadoReal], anio);
@@ -2491,11 +2468,42 @@ function dibujarCoropletaProductividad(anio) {
                 });
             }
         }
-    }).addTo(map);
+    }); // ← AQUÍ estaba el error (faltaba cerrar L.geoJSON)
+
+    // Crear labels
+    layer_geo.eachLayer(function (layer) {
+
+        var estadoReal = normalizarEstadoNombre(
+            layer.feature.properties.name ||
+            layer.feature.properties.ESTADO ||
+            layer.feature.properties.NOMGEO
+        );
+
+        var labelCenter = layer.getBounds().getCenter();
+        var nombreAcotado = ABREVIATURAS_ESTADOS[estadoReal] || estadoReal;
+
+        var labelMarker = L.marker(labelCenter, {
+            icon: L.divIcon({
+                className: 'state-label-permanent',
+                html: `<div style="color: #fff; font-size: 10px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center;">
+                        ${nombreAcotado}
+                       </div>`,
+                iconSize: [80, 20]
+            }),
+            interactive: false
+        });
+
+        labelsArray.push(labelMarker);
+    });
+
+    var labelsGroup = L.featureGroup(labelsArray);
+    var combinedGroup = L.featureGroup([layer_geo, labelsGroup]).addTo(map);
+
+    combinedGroup.bringToBack();
+    currentGeoJSONLayer = combinedGroup;
 
     document.getElementById('filter-title').innerText = "Modo de análisis";
 
-    // Generar simbología dinámica para decimales
     actualizarLeyendaProductividad(breaks);
 
     var top5 = Object.keys(productData)
@@ -2505,139 +2513,3 @@ function dibujarCoropletaProductividad(anio) {
 
     dibujarGraficaEvolucion(top5, anio);
 }
-
-function dibujarGraficaEvolucion(estadosArreglo, anioSeleccionado) {
-    var statsDiv = document.getElementById('stats-overlay');
-    if (statsDiv) statsDiv.style.display = 'block';
-
-    var tgc = document.getElementById('topGlobalChartContainer');
-    if (tgc) tgc.style.display = 'block';
-    var tgt = document.getElementById('topGlobalChartTitle');
-    if (tgt) {
-        tgt.style.display = 'block';
-        tgt.innerText = estadosArreglo.length === 1 ? 'Evolución Histórica: ' + estadosArreglo[0] : 'Evolución Histórica: Top 5 Entidades';
-    }
-    var tghr = document.getElementById('topGlobalChartHr');
-    if (tghr) tghr.style.display = 'block';
-
-    var ctx = document.getElementById('topGlobalChart');
-    if (!ctx) return;
-    ctx = ctx.getContext('2d');
-    if (window.topGlobalChartInstance) window.topGlobalChartInstance.destroy();
-
-    var productData = window.productDataActual;
-    var unEstado = productData[estadosArreglo[0]];
-    if (!unEstado) return;
-
-    var anios = Object.keys(unEstado.historial).sort();
-
-    // Ocultar posibles resúmenes de flujos
-    var summaryDiv2 = document.getElementById('dynamic-summary');
-    if (summaryDiv2) summaryDiv2.style.display = 'none';
-    var chartTitle2 = document.getElementById('myChartTitle');
-    if (chartTitle2) chartTitle2.style.display = 'none';
-    var chartContainer2 = document.getElementById('myChartContainer');
-    if (chartContainer2) chartContainer2.style.display = 'none';
-
-    var datasets = estadosArreglo.map((estado, idx) => {
-        var color = RampaRojos[(idx + 2) % RampaRojos.length] || '#00e5ff';
-        if (estadosArreglo.length === 1) color = '#00e5ff';
-
-        var dataValues = anios.map(a => productData[estado].historial[a]);
-        return {
-            label: estado,
-            data: dataValues,
-            borderColor: color,
-            backgroundColor: color,
-            tension: 0.3,
-            fill: false,
-            borderWidth: 2,
-            pointRadius: 4,
-            pointBackgroundColor: color
-        };
-    });
-
-    window.topGlobalChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: anios,
-            datasets: datasets
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: estadosArreglo.length > 1, position: 'bottom', labels: { color: '#ccc', font: { size: 10 } } }
-            },
-            scales: {
-                x: { ticks: { color: '#ccc' }, grid: { color: '#333' } },
-                y: { ticks: { color: '#ccc' }, grid: { color: '#333' }, title: { display: true, text: 'Índice de Productividad', color: '#aaa' } }
-            }
-        }
-    });
-
-    // Agregar síntesis dinámica
-    var summaryDiv = document.getElementById('dynamic-summary-global');
-    if (summaryDiv && anioSeleccionado) {
-        var indText = window.industriaActual || "la industria";
-        if (indText === 'IC_ELECTRICA') indText = "Automotriz";
-        if (indText === 'IC_ELECTRONICA') indText = "Electrónica";
-        if (indText === 'IC_SEIT') indText = "Servicios SEIT";
-
-        var anioInicio = anios[0];
-
-        if (estadosArreglo.length > 1) {
-            var top1 = estadosArreglo[0];
-            var top2 = estadosArreglo[1] || "";
-            var top3 = estadosArreglo[2] || "";
-
-            var valTop1Inicio = productData[top1].historial[anioInicio];
-            var valTop1Fin = productData[top1].historial[anioSeleccionado];
-            var crecTop1 = valTop1Inicio ? ((valTop1Fin - valTop1Inicio) / Math.abs(valTop1Inicio) * 100).toFixed(1) : 0;
-
-            var tendenciaTop1 = (valTop1Fin > valTop1Inicio) ? `creciendo un ${crecTop1}% desde ${anioInicio}` : `ajustando su índice respecto a ${anioInicio}`;
-
-            var textoTop23 = (top2 && top3) ? `Por su parte, <b style="color:#fff">${top2}</b> y <b style="color:#fff">${top3}</b> mantienen una fuerte competencia, reconfigurando constantemente el Top 5.` : "";
-
-            summaryDiv.innerHTML = `En <b>${anioSeleccionado}</b> (industria <b>${indText}</b>), <b style="color:#00e5ff">${top1}</b> consolida su liderazgo ${tendenciaTop1}. ${textoTop23} Esto refleja cómo la productividad regional se transforma año con año.`;
-            summaryDiv.style.textAlign = 'justify';
-            summaryDiv.style.display = 'block';
-        } else {
-            var estadoStr = estadosArreglo[0];
-            var valInicio = productData[estadoStr].historial[anioInicio];
-            var valAnio = productData[estadoStr].historial[anioSeleccionado];
-            var direccion = valAnio >= valInicio ? "un avance" : "una fluctuación";
-
-            summaryDiv.innerHTML = `Para <b>${anioSeleccionado}</b> en la industria <b>${indText}</b>, <b style="color:#00e5ff">${estadoStr}</b> muestra ${direccion} en su índice respecto a ${anioInicio}, reflejando su adaptación a los ciclos del sector.`;
-            summaryDiv.style.textAlign = 'justify';
-            summaryDiv.style.display = 'block';
-        }
-    } else if (summaryDiv) {
-        summaryDiv.style.display = 'none';
-    }
-}
-
-function actualizarLeyendaProductividad(breaks) {
-    var overlay = document.getElementById('legend-overlay');
-    var div = document.getElementById('legend-content');
-    if (!div || !overlay) return;
-
-    var f = (n) => (n || 0).toFixed(4);
-    var coloresCSS = RampaRojos.join(', ');
-
-    var html = `
-        <div id="legend-flujos">
-            <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">Índice Productividad</div>
-            <div style="width: 100%; padding: 0 5px; box-sizing: border-box;">
-                <div style="width: 100%; height: 35px; background: linear-gradient(to right, ${coloresCSS}); clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 60%);"></div>
-                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #ccc; font-weight: bold; margin-top: 5px;">
-                    <span>${f(breaks[0])}</span>
-                    <span>> ${f(breaks[3])}</span>
-                </div>
-            </div>
-        </div>
-    `;
-    div.innerHTML = html;
-    overlay.style.display = 'block';
-}
-
