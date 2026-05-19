@@ -1491,3 +1491,6 @@ path.leaflet-interactive {
   text-align: center;
   font-weight: bold;
 }
+.dynamic-summary-box { text-align: justify; }
+#leyenda-sintesis { text-align: justify; }
+#leyenda-sintesis-fin { text-align: justify; }

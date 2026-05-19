@@ -874,7 +874,9 @@ function dibujarCoropletaFinanzas(tipo) {
     var combinedGroup = L.featureGroup([layer_geo, labelsGroup]).addTo(map);
     combinedGroup.bringToBack();
     currentGeoJSONLayer = combinedGroup;
-    actualizarLeyenda(breaks, 'MDP');
+
+    window.finanzasDataMap = stateDataMap; // Guardar para el filtrado
+    actualizarLeyendaFinanzas(breaks);
     actualizarGraficaFinanzas(tipo);
 }
 
@@ -1389,41 +1391,41 @@ function setupUI() {
             <div id="stats-content" class="dropdown-content show">
                 <h4 class="panel-title" id="topGlobalChartTitle" style="font-size:12px; margin-bottom:8px; display:none;">Top 5 Exportadores Mundiales</h4>
                 <div style="height:240px; position:relative; width: 100%; display:none;" id="topGlobalChartContainer"><canvas id="topGlobalChart"></canvas></div>
-                <div id="dynamic-summary-global" class="dynamic-summary-box" style="margin-top:10px; margin-bottom:15px; display:none;"></div>
+                <div id="dynamic-summary-global" class="dynamic-summary-box" style="margin-top:10px; margin-bottom:15px; display:none; text-align: justify;"></div>
                 <hr id="topGlobalChartHr" style="border:0; border-top:1px solid #444; margin:12px 0; display:none;">
                 <h4 class="panel-title" id="myChartTitle" style="font-size:12px; margin-bottom:8px; display:none;">Top Destinos</h4>
                 <div style="height:240px; position:relative; width: 100%; display:none;" id="myChartContainer"><canvas id="myChart"></canvas></div>
-                <div id="dynamic-summary" class="dynamic-summary-box"></div>
+                <div id="dynamic-summary" class="dynamic-summary-box" style="text-align: justify;"></div>
                 
                 <!-- GRÁFICAS ESTATAL -->
                 <div id="vinculacion-charts-container" style="display:none;">
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distribución por Estrato</h4>
                     <div style="height:240px; position:relative;"><canvas id="estratoChart"></canvas></div>
-                    <div id="sintesis-estrato" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <div id="sintesis-estrato" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Unidades Económicas por Empresa</h4>
                     <div style="height:400px; position:relative;"><canvas id="empresaChart"></canvas></div>
-                    <div id="sintesis-empresa" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <div id="sintesis-empresa" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" style="font-size:12px; margin-bottom:8px;">Distancia de Clústeres (Isocronas)</h4>
                     <div style="height:300px; position:relative;"><canvas id="isocronaChart"></canvas></div>
-                    <div id="sintesis-isocrona" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <div id="sintesis-isocrona" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
                 </div>
                 <!-- GRÁFICAS MUNICIPAL -->
                 <div id="municipal-charts-container" style="display:none;">
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" id="titulo-vuln" style="font-size:12px; margin-bottom:8px;">Distribución de Población por Nivel de Vulnerabilidad</h4>
                     <div style="height:240px; position:relative;"><canvas id="vulnChart"></canvas></div>
-                    <div id="sintesis-vuln" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <div id="sintesis-vuln" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" id="titulo-pob" style="font-size:12px; margin-bottom:8px;">Indicadores de Estructura Poblacional</h4>
                     <div style="height:240px; position:relative;"><canvas id="pobChart"></canvas></div>
-                    <div id="sintesis-pob" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <div id="sintesis-pob" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0;">
                     <h4 class="panel-title" id="titulo-mun-res" style="font-size:12px; margin-bottom:8px;">Resumen por Municipio</h4>
                     <div style="height:300px; position:relative;"><canvas id="munResumenChart"></canvas></div>
-                    <div id="sintesis-mun-res" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+                    <div id="sintesis-mun-res" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
                 </div>
             </div>
         `;
@@ -1825,6 +1827,299 @@ function actualizarLeyenda(breaks, moneda) {
 
     overlay.style.display = 'block';
 }
+
+window.breaksProductividadActual = [];
+window.claseProductividadSeleccionada = null;
+
+window.sintesisProductividad = [
+    "Clase 1: Productividad incipiente. Desarrollo industrial básico o muy rezagado en su sector.",
+    "Clase 2: Productividad baja. Oportunidades de mejora en tecnificación y eficiencia.",
+    "Clase 3: Productividad media. En transición hacia procesos más robustos e integrados.",
+    "Clase 4: Productividad alta. Consolidación industrial notable en los subsectores evaluados.",
+    "Clase 5: Productividad muy alta. Entidades líderes en innovación y máxima eficiencia sectorial."
+];
+
+function actualizarLeyendaProductividad(breaks) {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if (!div || !overlay) return;
+
+    window.breaksProductividadActual = breaks;
+    window.claseProductividadSeleccionada = null; // Reset al redibujar
+
+    var f = (n) => (n || 0).toLocaleString('es-MX', { maximumFractionDigits: 4 });
+    var colores = RampaRojos;
+
+    var html = `
+        <div id="legend-flujos">
+            <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px; text-transform:uppercase;">CLASES</div>
+            <div style="font-size:11px; color:#aaa; margin-bottom:10px;">Selecciona un cuadrante para filtrar entidades</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-top: 5px;">
+    `;
+
+    // Generar las 5 cajas interactivas
+    var rangos = [
+        `Menor o igual a ${f(breaks[0])}`,
+        `${f(breaks[0])} - ${f(breaks[1])}`,
+        `${f(breaks[1])} - ${f(breaks[2])}`,
+        `${f(breaks[2])} - ${f(breaks[3])}`,
+        `Mayor a ${f(breaks[3])}`
+    ];
+
+    for (let i = 0; i < 5; i++) {
+        html += `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                <div class="legend-box" data-class="${i}" 
+                     style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px;" 
+                     onclick="filtrarMapaProductividad(${i})" title="${rangos[i]}"></div>
+                <div style="font-size: 9px; color: #ccc; margin-top: 4px; text-align: center;">Clase ${i + 1}</div>
+            </div>
+        `;
+    }
+
+    html += `
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #ccc; font-weight: bold; margin-top: 5px;">
+                <span>Min</span>
+                <span>Max</span>
+            </div>
+            <div id="leyenda-sintesis" style="margin-top:10px; font-size:11px; color:#00e5ff; font-style:italic; text-align: justify;">Selecciona una clase para ver su interpretación espacial.</div>
+        </div>
+        <div id="legend-nodos-locales" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; display:none;"></div>
+    `;
+
+    div.innerHTML = html;
+
+    if (currentScaleType === 'nacional') {
+        if (window.top5NombresCache && window.coloresLineasCache) {
+            window.actualizarLeyendaNodosNacionales(window.top5NombresCache, window.coloresLineasCache);
+        }
+    }
+
+    overlay.style.display = 'block';
+}
+
+window.filtrarMapaProductividad = function (clase) {
+    if (window.claseProductividadSeleccionada === clase) {
+        window.claseProductividadSeleccionada = null; // deseleccionar
+    } else {
+        window.claseProductividadSeleccionada = clase;
+    }
+
+    // Actualizar Síntesis
+    var sintesisEl = document.getElementById('leyenda-sintesis');
+    if (window.claseProductividadSeleccionada === null) {
+        if(sintesisEl) sintesisEl.innerHTML = "Selecciona una clase para ver su interpretación espacial.";
+    } else {
+        if(sintesisEl) sintesisEl.innerHTML = window.sintesisProductividad[window.claseProductividadSeleccionada];
+    }
+
+    // Actualizar UI de la leyenda
+    document.querySelectorAll('.legend-box').forEach(box => {
+        let boxClase = parseInt(box.getAttribute('data-class'));
+        if (window.claseProductividadSeleccionada === null) {
+            box.style.opacity = '1';
+            box.style.border = '1px solid #1a1a1a';
+            box.style.transform = 'scale(1)';
+        } else if (boxClase === window.claseProductividadSeleccionada) {
+            box.style.opacity = '1';
+            box.style.border = '2px solid #00e5ff';
+            box.style.transform = 'scale(1.1)';
+            box.style.zIndex = '10';
+        } else {
+            box.style.opacity = '0.3';
+            box.style.border = '1px solid #1a1a1a';
+            box.style.transform = 'scale(1)';
+            box.style.zIndex = '1';
+        }
+    });
+
+    // Filtrar los polígonos del mapa
+    if (typeof currentGeoJSONLayer !== 'undefined' && currentGeoJSONLayer) {
+        currentGeoJSONLayer.eachLayer(subGroup => {
+            if (subGroup.eachLayer) {
+                subGroup.eachLayer(layer => {
+                    if (layer.feature && layer.feature.geometry && layer.feature.geometry.type !== 'Point') {
+                        var estadoReal = normalizarEstadoNombre(
+                            layer.feature.properties.name ||
+                            layer.feature.properties.ESTADO ||
+                            layer.feature.properties.NOMGEO
+                        );
+
+                        var pd = window.productDataActual[estadoReal];
+                        if (pd && !isNaN(pd.valor)) {
+                            var claseEstado = getClase(pd.valor, window.breaksProductividadActual);
+                            if (window.claseProductividadSeleccionada === null || claseEstado === window.claseProductividadSeleccionada) {
+                                layer.setStyle({ opacity: 1, fillOpacity: 0.8 });
+                                // Restaurar eventos si estaban atenuados
+                            } else {
+                                layer.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
+                            }
+                        } else {
+                            layer.setStyle({ opacity: 0.2, fillOpacity: 0 });
+                        }
+                    } else if (layer.feature && layer.feature.geometry && layer.feature.geometry.type === 'Point') {
+                        // Atenuar labels si están fuera de la clase
+                        var estadoReal = normalizarEstadoNombre(
+                            layer.feature.properties.name ||
+                            layer.feature.properties.ESTADO ||
+                            layer.feature.properties.NOMGEO
+                        );
+                        var pd = window.productDataActual[estadoReal];
+                        if (pd && !isNaN(pd.valor)) {
+                            var claseEstado = getClase(pd.valor, window.breaksProductividadActual);
+                            if (window.claseProductividadSeleccionada === null || claseEstado === window.claseProductividadSeleccionada) {
+                                if (layer._icon) layer._icon.style.opacity = "1";
+                            } else {
+                                if (layer._icon) layer._icon.style.opacity = "0.2";
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+};
+
+window.breaksFinanzasActual = [];
+window.claseFinanzasSeleccionada = null;
+
+window.sintesisFinanzas = [
+    "Clase 1: Autonomía Alta. Entidades con menor dependencia, indicativo de fuerte recaudación propia.",
+    "Clase 2: Dependencia Baja. Capacidad fiscal suficiente con aportaciones moderadas.",
+    "Clase 3: Dependencia Moderada. Contrapeso promedio entre ingresos locales y gasto federalizado.",
+    "Clase 4: Dependencia Alta. Presupuesto altamente subordinado a participaciones nacionales.",
+    "Clase 5: Dependencia Crítica. Finanzas operativas casi totalmente ancladas al fondo federal."
+];
+
+function actualizarLeyendaFinanzas(breaks) {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if (!div || !overlay) return;
+
+    window.breaksFinanzasActual = breaks;
+    window.claseFinanzasSeleccionada = null;
+
+    var f = (n) => "$" + (n || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 }) + " MDP";
+    var colores = RampaRojos;
+
+    var html = `
+        <div id="legend-flujos">
+            <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px; text-transform:uppercase;">CLASES (FINANZAS)</div>
+            <div style="font-size:11px; color:#aaa; margin-bottom:10px;">Selecciona un cuadrante para filtrar entidades</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-top: 5px;">
+    `;
+
+    var rangos = [
+        `Menor o igual a ${f(breaks[0])}`,
+        `${f(breaks[0])} - ${f(breaks[1])}`,
+        `${f(breaks[1])} - ${f(breaks[2])}`,
+        `${f(breaks[2])} - ${f(breaks[3])}`,
+        `Mayor a ${f(breaks[3])}`
+    ];
+
+    for (let i = 0; i < 5; i++) {
+        html += `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                <div class="legend-box-fin" data-class="${i}" 
+                     style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px;" 
+                     onclick="filtrarMapaFinanzas(${i})" title="${rangos[i]}"></div>
+                <div style="font-size: 9px; color: #ccc; margin-top: 4px; text-align: center;">Clase ${i + 1}</div>
+            </div>
+        `;
+    }
+
+    html += `
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #ccc; font-weight: bold; margin-top: 5px;">
+                <span>Min</span>
+                <span>Max</span>
+            </div>
+            <div id="leyenda-sintesis-fin" style="margin-top:10px; font-size:11px; color:#fcae91; font-style:italic; text-align: justify;">Selecciona una clase para ver su interpretación espacial.</div>
+        </div>
+        <div id="legend-nodos-locales" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; display:none;"></div>
+    `;
+
+    div.innerHTML = html;
+    overlay.style.display = 'block';
+}
+
+window.filtrarMapaFinanzas = function (clase) {
+    if (window.claseFinanzasSeleccionada === clase) {
+        window.claseFinanzasSeleccionada = null;
+    } else {
+        window.claseFinanzasSeleccionada = clase;
+    }
+
+    var sintesisEl = document.getElementById('leyenda-sintesis-fin');
+    if (window.claseFinanzasSeleccionada === null) {
+        if(sintesisEl) sintesisEl.innerHTML = "Selecciona una clase para ver su interpretación espacial.";
+    } else {
+        if(sintesisEl) sintesisEl.innerHTML = window.sintesisFinanzas[window.claseFinanzasSeleccionada];
+    }
+
+    document.querySelectorAll('.legend-box-fin').forEach(box => {
+        let boxClase = parseInt(box.getAttribute('data-class'));
+        if (window.claseFinanzasSeleccionada === null) {
+            box.style.opacity = '1';
+            box.style.border = '1px solid #1a1a1a';
+            box.style.transform = 'scale(1)';
+        } else if (boxClase === window.claseFinanzasSeleccionada) {
+            box.style.opacity = '1';
+            box.style.border = '2px solid #00e5ff';
+            box.style.transform = 'scale(1.1)';
+            box.style.zIndex = '10';
+        } else {
+            box.style.opacity = '0.3';
+            box.style.border = '1px solid #1a1a1a';
+            box.style.transform = 'scale(1)';
+            box.style.zIndex = '1';
+        }
+    });
+
+    if (typeof currentGeoJSONLayer !== 'undefined' && currentGeoJSONLayer) {
+        currentGeoJSONLayer.eachLayer(subGroup => {
+            if (subGroup.eachLayer) {
+                subGroup.eachLayer(layer => {
+                    if (layer.feature && layer.feature.geometry && layer.feature.geometry.type !== 'Point') {
+                        var estadoReal = normalizarEstadoNombre(
+                            layer.feature.properties.name ||
+                            layer.feature.properties.ESTADO ||
+                            layer.feature.properties.NOMGEO
+                        );
+                        
+                        var val = window.finanzasDataMap && window.finanzasDataMap[estadoReal];
+                        if (val !== undefined) {
+                            var claseEstado = getClase(val, window.breaksFinanzasActual);
+                            if (window.claseFinanzasSeleccionada === null || claseEstado === window.claseFinanzasSeleccionada) {
+                                layer.setStyle({ opacity: 1, fillOpacity: 0.8 });
+                            } else {
+                                layer.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
+                            }
+                        } else {
+                            layer.setStyle({ opacity: 0.2, fillOpacity: 0 });
+                        }
+                    } else if (layer.feature && layer.feature.geometry && layer.feature.geometry.type === 'Point') {
+                        var estadoReal = normalizarEstadoNombre(
+                            layer.feature.properties.name ||
+                            layer.feature.properties.ESTADO ||
+                            layer.feature.properties.NOMGEO
+                        );
+                        var val = window.finanzasDataMap && window.finanzasDataMap[estadoReal];
+                        if (val !== undefined) {
+                            var claseEstado = getClase(val, window.breaksFinanzasActual);
+                            if (window.claseFinanzasSeleccionada === null || claseEstado === window.claseFinanzasSeleccionada) {
+                                if (layer._icon) layer._icon.style.opacity = "1";
+                            } else {
+                                if (layer._icon) layer._icon.style.opacity = "0.2";
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+};
 
 // ==========================================
 // MODAL PENTA-HELICE (DERECHOS Y OBLIGACIONES)
@@ -2512,4 +2807,131 @@ function dibujarCoropletaProductividad(anio) {
         .slice(0, 5);
 
     dibujarGraficaEvolucion(top5, anio);
+}
+
+function dibujarGraficaEvolucion(estadosSeleccionados, anioDestacado) {
+    if (typeof Chart === 'undefined') return;
+
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var statsContent = document.getElementById('stats-content');
+    if (statsContent && !statsContent.classList.contains('show')) {
+        statsContent.classList.add('show');
+    }
+
+    var chartContainer = document.getElementById('topGlobalChartContainer');
+    if (chartContainer) chartContainer.style.display = 'block';
+
+    var ind = window.industriaActual ? window.industriaActual.toUpperCase() : "SECTOR";
+    var chartTitle = document.getElementById('topGlobalChartTitle');
+    if (chartTitle) {
+        chartTitle.innerHTML = 'EVOLUCIÓN TEMPORAL: PRODUCTIVIDAD EN ' + ind;
+        chartTitle.style.display = 'block';
+    }
+
+    var hr = document.getElementById('topGlobalChartHr');
+    if (hr) hr.style.display = 'block';
+
+    var canvas = document.getElementById('topGlobalChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    if (window.topGlobalChartInstance) {
+        window.topGlobalChartInstance.destroy();
+    }
+
+    var labelsSet = new Set();
+    estadosSeleccionados.forEach(edo => {
+        if (window.productDataActual[edo] && window.productDataActual[edo].historial) {
+            Object.keys(window.productDataActual[edo].historial).forEach(anio => labelsSet.add(anio));
+        }
+    });
+
+    // Ordenar los años de menor a mayor
+    var labels = Array.from(labelsSet).sort((a, b) => parseInt(a) - parseInt(b));
+
+    var colores = ['#00e5ff', '#ff3366', '#d59f0f', '#00e676', '#d500f9'];
+    var datasets = [];
+
+    estadosSeleccionados.forEach((edo, index) => {
+        var dataValues = [];
+        labels.forEach(anio => {
+            var val = window.productDataActual[edo]?.historial[anio];
+            dataValues.push(val !== undefined ? val : null);
+        });
+
+        datasets.push({
+            label: edo,
+            data: dataValues,
+            borderColor: colores[index % colores.length],
+            backgroundColor: colores[index % colores.length],
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#222'
+        });
+    });
+
+    window.topGlobalChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { color: '#ccc', font: { size: 10 }, boxWidth: 12 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(20,20,20,0.95)',
+                    titleColor: '#00e5ff',
+                    bodyColor: '#fff',
+                    borderColor: '#555',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toLocaleString('es-MX', { maximumFractionDigits: 4 });
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                y: {
+                    ticks: {
+                        color: '#aaa',
+                        callback: function (value) { return value.toLocaleString('es-MX', { maximumFractionDigits: 4 }); }
+                    },
+                    grid: { color: '#333', borderDash: [2, 2] }
+                }
+            }
+        }
+    });
+
+    // Agregar síntesis dinámica
+    var summaryDiv = document.getElementById('dynamic-summary-global');
+    if (summaryDiv && estadosSeleccionados.length > 0) {
+        var lider = estadosSeleccionados[0];
+        var primerAnio = labels[0] || "";
+        var ultimoAnio = labels[labels.length - 1] || "";
+        var indNombre = window.industriaActual ? window.industriaActual.toLowerCase() : "la industria seleccionada";
+        
+        var texto = `A lo largo del periodo analizado (${primerAnio} - ${ultimoAnio}), el estado de <b style="color:#00e5ff;">${lider}</b> se ha mantenido como el nodo más competitivo en <b style="color:#fcae91;">${indNombre}</b>, liderando la eficiencia del sector a nivel nacional. Las variaciones en la curva reflejan su resiliencia y adaptabilidad a los ciclos económicos globales.`;
+
+        summaryDiv.innerHTML = texto;
+        summaryDiv.style.display = 'block';
+    }
 }
