@@ -664,8 +664,8 @@ function iniciarFiltroNacional_Paso1(data) {
     selectIndustriaCSV.className = "dynamic-filter-select";
     selectIndustriaCSV.innerHTML = `
         <option value="" disabled selected>-- Seleccione Industria --</option>
-        <option value="IC_ELECTRICA">Automotriz</option>
-        <option value="IC_ELECTRONICA">Electrónica</option>
+        <option value="IC_AUTOMOTRIZ">Automotriz</option>
+        <option value="IC_ELECTRICA">Eléctrica</option>
         <option value="IC_SEIT">Servicios SEIT</option>
     `;
 
@@ -1857,6 +1857,16 @@ function actualizarLeyendaProductividad(breaks) {
             <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-top: 5px;">
     `;
 
+    var conteos = [0, 0, 0, 0, 0];
+    if (window.productDataActual) {
+        Object.keys(window.productDataActual).forEach(estado => {
+            var pd = window.productDataActual[estado];
+            if (pd && !isNaN(pd.valor)) {
+                conteos[getClase(pd.valor, breaks)]++;
+            }
+        });
+    }
+
     // Generar las 5 cajas interactivas
     var rangos = [
         `Menor o igual a ${f(breaks[0])}`,
@@ -1870,8 +1880,8 @@ function actualizarLeyendaProductividad(breaks) {
         html += `
             <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
                 <div class="legend-box" data-class="${i}" 
-                     style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px;" 
-                     onclick="filtrarMapaProductividad(${i})" title="${rangos[i]}"></div>
+                     style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;" 
+                     onclick="filtrarMapaProductividad(${i})" title="${rangos[i]}">${conteos[i]}</div>
                 <div style="font-size: 9px; color: #ccc; margin-top: 4px; text-align: center;">Clase ${i + 1}</div>
             </div>
         `;
@@ -2010,6 +2020,16 @@ function actualizarLeyendaFinanzas(breaks) {
             <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-top: 5px;">
     `;
 
+    var conteos = [0, 0, 0, 0, 0];
+    if (window.finanzasDataMap) {
+        Object.keys(window.finanzasDataMap).forEach(estado => {
+            var val = window.finanzasDataMap[estado];
+            if (val !== undefined && !isNaN(val)) {
+                conteos[getClase(val, breaks)]++;
+            }
+        });
+    }
+
     var rangos = [
         `Menor o igual a ${f(breaks[0])}`,
         `${f(breaks[0])} - ${f(breaks[1])}`,
@@ -2022,8 +2042,8 @@ function actualizarLeyendaFinanzas(breaks) {
         html += `
             <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
                 <div class="legend-box-fin" data-class="${i}" 
-                     style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px;" 
-                     onclick="filtrarMapaFinanzas(${i})" title="${rangos[i]}"></div>
+                     style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;" 
+                     onclick="filtrarMapaFinanzas(${i})" title="${rangos[i]}">${conteos[i]}</div>
                 <div style="font-size: 9px; color: #ccc; margin-top: 4px; text-align: center;">Clase ${i + 1}</div>
             </div>
         `;
@@ -2634,14 +2654,19 @@ function renderizarMapaProductividad(industria, anio) {
             var productData = {};
             for (var i = 1; i < rows.length; i++) {
                 if (!rows[i].trim()) continue;
-                var cols = rows[i].split(',');
-                var estado = normalizarEstadoNombre(cols[0].trim());
-                var val = parseFloat(cols[anioIdx].trim());
+                var rawCols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                var cols = rawCols.map(c => {
+                    let cleaned = c.trim();
+                    if (cleaned.startsWith('"') && cleaned.endsWith('"')) cleaned = cleaned.slice(1, -1);
+                    return cleaned.replace(',', '.');
+                });
+                var estado = normalizarEstadoNombre(cols[0]);
+                var val = parseFloat(cols[anioIdx]);
 
                 var historial = {};
                 headers.forEach((h, idx) => {
-                    if (idx > 0 && h.trim()) {
-                        historial[h.trim()] = parseFloat(cols[idx].trim());
+                    if (idx > 0 && h.trim() && cols[idx] !== undefined) {
+                        historial[h.trim()] = parseFloat(cols[idx]);
                     }
                 });
 
