@@ -3,6 +3,8 @@
 // ==========================================
 // Variables Globales compartidas entre escalas
 var map;
+var minimap = null;
+var minimapDot = null;
 var currentGeoJSONLayer = null;
 var armadorasLayer = null;
 var isocronasLayer = null;
@@ -198,6 +200,46 @@ function initMap() {
 
     // Asegurar que el estado de autenticación se aplique al control recién creado
     if (typeof checkAuthUI === "function") checkAuthUI();
+
+    // ==========================================
+    // INICIALIZACIÓN DE MINIMAPA
+    // ==========================================
+    if (minimap !== undefined && minimap !== null) { minimap.remove(); }
+    minimap = L.map('minimap', {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', maxZoom: 19
+    }).addTo(minimap);
+
+    var dotIcon = L.divIcon({
+        className: '',
+        iconSize: [20, 20],
+        html: '<div style="width:12px; height:12px; background:#00ffff; border-radius:50%; box-shadow: 0 0 10px 5px rgba(0, 229, 255, 0.6); position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);"></div>'
+    });
+    minimapDot = L.marker(map.getCenter(), { icon: dotIcon }).addTo(minimap);
+
+    function updateMinimap() {
+        var center = map.getCenter();
+        var zoom = map.getZoom();
+        var minimapZoom = Math.max(0, zoom - 5);
+        minimap.setView(center, minimapZoom, {animate: false});
+        minimapDot.setLatLng(center);
+    }
+    
+    map.on('move', updateMinimap);
+    map.on('zoom', updateMinimap);
+    // Para asegurar que el minimapa se posicione bien tras cargar css
+    setTimeout(() => {
+        if (minimap) minimap.invalidateSize();
+        updateMinimap();
+    }, 1000);
 }
 
 // ==========================================
@@ -565,7 +607,7 @@ function iniciarFiltroNacional_Paso1(data) {
     selectModo.innerHTML = `
         <option value="flujos">Intercambios (Flujos Industriales)</option>
         <option value="finanzas">Finanzas Públicas (Dependencia Federal)</option>
-        <option value="productividad">Productividad Industrial (Evolución temporal)</option>
+        <option value="productividad">Índice de crecimiento complejo (Evolución temporal)</option>
     `;
     modoWrapper.appendChild(selectModo);
 
@@ -2861,7 +2903,7 @@ function dibujarGraficaEvolucion(estadosSeleccionados, anioDestacado) {
     var ind = window.industriaActual ? window.industriaActual.toUpperCase() : "SECTOR";
     var chartTitle = document.getElementById('topGlobalChartTitle');
     if (chartTitle) {
-        chartTitle.innerHTML = 'EVOLUCIÓN TEMPORAL: PRODUCTIVIDAD EN ' + ind;
+        chartTitle.innerHTML = 'EVOLUCIÓN TEMPORAL: CRECIMIENTO EN ' + ind;
         chartTitle.style.display = 'block';
     }
 
