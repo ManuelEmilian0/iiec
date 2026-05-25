@@ -1813,6 +1813,16 @@ function actualizarLeyenda(breaks, moneda) {
                     <span>> $${f(valorMaximo)}</span>
                 </div>
             </div>
+            <div style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+                <span style="font-size: 11px; color: #aaa;">Opacidad Flujos:</span>
+                <input type="range" min="0" max="1" step="0.1" value="0.8" style="width: 50%; cursor: pointer;" 
+                    oninput="if(currentGeoJSONLayer) { currentGeoJSONLayer.eachLayer(l => { if(l instanceof L.Polyline) l.setStyle({opacity: this.value}); }); }">
+            </div>
+            <div style="margin-top:5px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size: 11px; color: #aaa;">Opacidad Nodos:</span>
+                <input type="range" min="0" max="1" step="0.1" value="1" style="width: 50%; cursor: pointer;" 
+                    oninput="if(currentGeoJSONLayer) { currentGeoJSONLayer.eachLayer(l => { if(l instanceof L.CircleMarker) l.setStyle({fillOpacity: this.value, opacity: this.value}); }); }">
+            </div>
         </div>
         <div id="legend-nodos-locales" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; display:none;"></div>
     `;

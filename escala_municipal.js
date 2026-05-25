@@ -44,6 +44,8 @@ function iniciarLogicaMunicipio() {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
     if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
+    if (window.limiteDelegacionalLayer) { map.removeLayer(window.limiteDelegacionalLayer); window.limiteDelegacionalLayer = null; }
+    if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
     agebRawData = null;
 
     var container = document.getElementById('filter-buttons-container');
@@ -101,6 +103,37 @@ function iniciarLogicaMunicipio() {
                     var controlesAdicionales = document.createElement("div");
                     controlesAdicionales.style.display = "none";
 
+                    if (!document.getElementById('delegacion-style')) {
+                        var style = document.createElement('style');
+                        style.id = 'delegacion-style';
+                        style.innerHTML = '.delegacion-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; color: #aaa; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center; }';
+                        document.head.appendChild(style);
+                    }
+                    
+                    if (!window.limiteDelegacionalLayer) {
+                        fetch('limite_delegacional_Tijuana.geojson')
+                            .then(r => r.json())
+                            .then(data => {
+                                window.limiteDelegacionalLayer = L.geoJSON(data, {
+                                    style: { color: '#aaaaaa', weight: 2, fillOpacity: 0.05, opacity: 0.8, dashArray: '' },
+                                    onEachFeature: function(feature, layer) {
+                                        var nom = feature.properties.name || feature.properties.NOMGEO || "";
+                                        if (nom) {
+                                            layer.bindTooltip(nom, {
+                                                permanent: true,
+                                                direction: 'center',
+                                                className: 'delegacion-tooltip'
+                                            });
+                                        }
+                                    }
+                                }).addTo(map);
+                                window.limiteDelegacionalLayer.bringToFront();
+                            });
+                    } else {
+                        window.limiteDelegacionalLayer.addTo(map);
+                        window.limiteDelegacionalLayer.bringToFront();
+                    }
+
                     toggleEquip.onchange = function () {
                         if (this.value === "on") {
                             controlesAdicionales.style.display = "block";
@@ -109,21 +142,120 @@ function iniciarLogicaMunicipio() {
                             controlesAdicionales.style.display = "none";
                             if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
                             if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
+                            
+                            var legDiv = document.getElementById('legend-content');
+                            if (legDiv) {
+                                var eqLeg = document.getElementById('eq-legend-content');
+                                if (eqLeg) eqLeg.remove();
+                            }
                             var chartContainer = document.getElementById('equipamiento-chart-container');
                             if (chartContainer) chartContainer.style.display = 'none';
-                            var eqLegend = document.getElementById('equip-legend-content');
-                            if (eqLegend) eqLegend.remove();
                         }
                     };
 
                     equipWrapper.appendChild(lbl);
                     equipWrapper.appendChild(toggleEquip);
                     equipWrapper.appendChild(controlesAdicionales);
+                    
+                    // Cartografía Participativa
+                    var lblLev = document.createElement("small");
+                    lblLev.style.cssText = "color:#ff9800; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; margin-top:15px; display:block;";
+                    lblLev.innerText = "Cartografía Participativa";
+
+                    var toggleLev = document.createElement("select");
+                    toggleLev.className = "dynamic-filter-select";
+                    toggleLev.innerHTML = `
+                        <option value="off" selected>Apagado</option>
+                        <option value="on">Mostrar Levantamiento</option>
+                    `;
+                    
+                    toggleLev.onchange = function() {
+                        if (this.value === "on") {
+                            fetch('levantamiento.geojson')
+                                .then(r => r.json())
+                                .then(data => {
+                                    if (window.levantamientoLayer) map.removeLayer(window.levantamientoLayer);
+                                    window.levantamientoLayer = L.geoJSON(data, {
+                                        pointToLayer: function(feature, latlng) {
+                                            var situacion = feature.properties['Situación'] || '';
+                                            var pColor = '#ff9800'; // default naranja
+                                            if (situacion === 'Riesgo geológico y falta de servicios') pColor = '#e53935'; // rojo
+                                            else if (situacion === 'Asentamiento irregular y falta de servicios') pColor = '#8e24aa'; // morado
+                                            else if (situacion === 'Inseguridad') pColor = '#1e88e5'; // azul
+                                            else if (situacion === 'Inseguridad y falta de servicios') pColor = '#3949ab'; // indigo
+                                            else if (situacion === 'Sin transporte') pColor = '#fdd835'; // amarillo
+
+                                            return L.circleMarker(latlng, {
+                                                radius: 6,
+                                                fillColor: pColor,
+                                                color: '#fff',
+                                                weight: 1,
+                                                opacity: 1,
+                                                fillOpacity: 0.8
+                                            });
+                                        },
+                                        onEachFeature: function(feature, layer) {
+                                            var content = `<div style="font-family:'Noto Sans'; font-size:12px; max-height: 200px; overflow-y: auto;">`;
+                                            content += `<strong style="color:#ff9800; font-size:14px;">Levantamiento</strong><hr style="border:0; border-top:1px solid #555; margin:5px 0;">`;
+                                            for(var key in feature.properties) {
+                                                if(feature.properties[key]) {
+                                                    content += `<b>${key}:</b> ${feature.properties[key]}<br>`;
+                                                }
+                                            }
+                                            content += `</div>`;
+                                            layer.bindPopup(content);
+                                        }
+                                    }).addTo(map);
+
+                                    var legDiv = document.getElementById('legend-content');
+                                    if (legDiv && !document.getElementById('lev-legend-content')) {
+                                        var levLeg = document.createElement('div');
+                                        levLeg.id = 'lev-legend-content';
+                                        levLeg.style.marginTop = "15px";
+                                        levLeg.style.paddingTop = "10px";
+                                        levLeg.style.borderTop = "1px solid #444";
+                                        levLeg.innerHTML = `
+                                            <div style="font-size:13px; font-weight:bold; color:#ddd; margin-bottom:10px;">Cartografía Participativa</div>
+                                            <div style="display:flex; align-items:center; margin-bottom:5px;"><div style="width:14px; height:14px; border-radius:50%; background:#e53935; border:1px solid #fff; margin-right:8px;"></div><span style="color:#ccc; font-size:12px;">Riesgo geológico y falta de servicios</span></div>
+                                            <div style="display:flex; align-items:center; margin-bottom:5px;"><div style="width:14px; height:14px; border-radius:50%; background:#8e24aa; border:1px solid #fff; margin-right:8px;"></div><span style="color:#ccc; font-size:12px;">Asentamiento irregular y falta de servicios</span></div>
+                                            <div style="display:flex; align-items:center; margin-bottom:5px;"><div style="width:14px; height:14px; border-radius:50%; background:#1e88e5; border:1px solid #fff; margin-right:8px;"></div><span style="color:#ccc; font-size:12px;">Inseguridad</span></div>
+                                            <div style="display:flex; align-items:center; margin-bottom:5px;"><div style="width:14px; height:14px; border-radius:50%; background:#3949ab; border:1px solid #fff; margin-right:8px;"></div><span style="color:#ccc; font-size:12px;">Inseguridad y falta de servicios</span></div>
+                                            <div style="display:flex; align-items:center; margin-bottom:5px;"><div style="width:14px; height:14px; border-radius:50%; background:#fdd835; border:1px solid #fff; margin-right:8px;"></div><span style="color:#ccc; font-size:12px;">Sin transporte</span></div>
+                                            <div style="margin-top:10px; display:flex; align-items:center; justify-content:space-between;">
+                                                <span style="font-size: 11px; color: #aaa;">Opacidad:</span>
+                                                <input type="range" min="0" max="1" step="0.1" value="0.8" style="width: 50%; cursor: pointer;" 
+                                                    oninput="if(window.levantamientoLayer) { window.levantamientoLayer.eachLayer(l => l.setStyle({fillOpacity: this.value, opacity: this.value})); }">
+                                            </div>
+                                        `;
+                                        legDiv.appendChild(levLeg);
+                                    }
+                                });
+                        } else {
+                            if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
+                            var levLeg = document.getElementById('lev-legend-content');
+                            if (levLeg) levLeg.remove();
+                        }
+                    };
+                    
+                    equipWrapper.appendChild(lblLev);
+                    equipWrapper.appendChild(toggleLev);
                 }
             } else {
                 equipWrapper.style.display = "none";
                 if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
                 if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
+                if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
+                if (window.limiteDelegacionalLayer) { map.removeLayer(window.limiteDelegacionalLayer); window.limiteDelegacionalLayer = null; }
+                var eqLeg = document.getElementById('eq-legend-content');
+                if (eqLeg) eqLeg.remove();
+                var levLeg = document.getElementById('lev-legend-content');
+                if (levLeg) levLeg.remove();
+                
+                // Reset select dropdowns visually if user comes back
+                var selects = equipWrapper.getElementsByTagName('select');
+                for(var i=0; i<selects.length; i++){
+                    selects[i].value = "off";
+                }
                 var chartContainer = document.getElementById('equipamiento-chart-container');
                 if (chartContainer) chartContainer.style.display = 'none';
             }
@@ -145,6 +277,16 @@ function iniciarLogicaMunicipio() {
 
     container.appendChild(selectEstado);
     container.appendChild(selectIndice);
+
+    var opacityControl = document.createElement('div');
+    opacityControl.style.cssText = "margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: space-between;";
+    opacityControl.innerHTML = `
+        <span style="font-size: 11px; color: #aaa;">Opacidad Base:</span>
+        <input type="range" id="ageb-opacity" min="0" max="1" step="0.1" value="0.85" style="width: 60%; cursor: pointer;" 
+            oninput="if(window.agebLayer) { window.agebLayer.eachLayer(l => { if(l.options.interactive) l.setStyle({fillOpacity: this.value}); }); }">
+    `;
+    container.appendChild(opacityControl);
+
     container.appendChild(equipWrapper);
 
 
@@ -1053,6 +1195,16 @@ function pintarEquipamientoEnMapa(data, tipoFiltro) {
                     <div style="width:14px; height:14px; background:${window.tipoEquipColorMap[tipoFiltro]}44; border:2px dashed ${window.tipoEquipColorMap[tipoFiltro]}; margin-right:8px;"></div>
                     <span style="color:#ccc; font-size:12px;">Área de Impacto (1.5 km)</span>
                 </div>
+                <div style="margin-top:10px; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size: 11px; color: #aaa;">Opacidad Puntos:</span>
+                    <input type="range" min="0" max="1" step="0.1" value="0.9" style="width: 50%; cursor: pointer;" 
+                        oninput="if(window.equipamientoLayer) { window.equipamientoLayer.eachLayer(l => l.setStyle({fillOpacity: this.value, opacity: this.value})); }">
+                </div>
+                <div style="margin-top:5px; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size: 11px; color: #aaa;">Opacidad Área:</span>
+                    <input type="range" min="0" max="1" step="0.1" value="0.2" style="width: 50%; cursor: pointer;" 
+                        oninput="if(window.equipamientoBufferLayer) { window.equipamientoBufferLayer.eachLayer(l => l.setStyle({fillOpacity: this.value, opacity: this.value})); }">
+                </div>
             `;
         } else {
             Object.keys(window.tipoEquipColorMap).forEach(t => {
@@ -1065,6 +1217,13 @@ function pintarEquipamientoEnMapa(data, tipoFiltro) {
                     </div>
                 `;
             });
+            equipLegend.innerHTML += `
+                <div style="margin-top:10px; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size: 11px; color: #aaa;">Opacidad Puntos:</span>
+                    <input type="range" min="0" max="1" step="0.1" value="0.9" style="width: 50%; cursor: pointer;" 
+                        oninput="if(window.equipamientoLayer) { window.equipamientoLayer.eachLayer(l => l.setStyle({fillOpacity: this.value, opacity: this.value})); }">
+                </div>
+            `;
         }
     }
 }

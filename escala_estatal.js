@@ -75,6 +75,16 @@ function generarMenuEstados(data) {
 
     select.onchange = function () { if (this.value) filtrarPorEstado(this.value); };
     container.appendChild(select);
+
+    window.currentDenueOpacity = 0.9;
+    var opacityControl = document.createElement('div');
+    opacityControl.style.cssText = "margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: space-between;";
+    opacityControl.innerHTML = `
+        <span style="font-size: 11px; color: #aaa;">Opacidad Empresas:</span>
+        <input type="range" min="0" max="1" step="0.1" value="0.9" style="width: 55%; cursor: pointer;" 
+            oninput="window.currentDenueOpacity = this.value; if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();">
+    `;
+    container.appendChild(opacityControl);
 }
 
 function normalizarTexto(texto) {
@@ -642,6 +652,12 @@ function actualizarLeyendaIsocronas() {
             <input type="checkbox" id="chk-iso-out" checked onchange="if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas()"> <span class="legend-color" style="background:transparent; border:1px dashed #aaa"></span> Fuera de Isócronas
         </label>
         
+        <div style="margin-top:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+            <span style="font-size: 11px; color: #aaa;">Opacidad Isócronas:</span>
+            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 50%; cursor: pointer;" 
+                oninput="window.currentIsoOpacityMult = this.value; if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();">
+        </div>
+
         <div style="display:flex; justify-content:space-between; margin-top:10px; gap: 10px;">
             <div style="flex:1;">
                 <div style="margin:0 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Proveedores</div>
@@ -686,10 +702,12 @@ window.actualizarVisibilidadIsocronas = function() {
     var show60 = document.getElementById('chk-iso-60') ? document.getElementById('chk-iso-60').checked : true;
     var showOut = document.getElementById('chk-iso-out') ? document.getElementById('chk-iso-out').checked : true;
 
-    if (window.animIso15) window.animIso15.forEach(l => l.setStyle({ opacity: show15 ? 1 : 0, fillOpacity: show15 ? 0.8 : 0 }));
-    if (window.animIso30) window.animIso30.forEach(l => l.setStyle({ opacity: show30 ? 1 : 0, fillOpacity: show30 ? 0.4 : 0 }));
-    if (window.animIso60) window.animIso60.forEach(l => l.setStyle({ opacity: show60 ? 1 : 0, fillOpacity: show60 ? 0.25 : 0 }));
+    var isoMult = window.currentIsoOpacityMult !== undefined ? window.currentIsoOpacityMult : 1;
+    if (window.animIso15) window.animIso15.forEach(l => l.setStyle({ opacity: show15 ? isoMult : 0, fillOpacity: show15 ? 0.8 * isoMult : 0 }));
+    if (window.animIso30) window.animIso30.forEach(l => l.setStyle({ opacity: show30 ? isoMult : 0, fillOpacity: show30 ? 0.4 * isoMult : 0 }));
+    if (window.animIso60) window.animIso60.forEach(l => l.setStyle({ opacity: show60 ? isoMult : 0, fillOpacity: show60 ? 0.25 * isoMult : 0 }));
 
+    var denueOp = window.currentDenueOpacity !== undefined ? window.currentDenueOpacity : 0.9;
     if (window.animDenue) {
         window.animDenue.forEach(l => {
             var mins = l.feature._isocrona || 999;
@@ -700,7 +718,7 @@ window.actualizarVisibilidadIsocronas = function() {
             else if (mins > 60 && showOut) visible = true;
 
             if (visible) {
-                l.setStyle({ opacity: 1, fillOpacity: 0.9 });
+                l.setStyle({ opacity: denueOp > 0 ? 1 : 0, fillOpacity: denueOp });
             } else {
                 l.setStyle({ opacity: 0, fillOpacity: 0 });
             }
