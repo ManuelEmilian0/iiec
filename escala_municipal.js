@@ -55,13 +55,54 @@ function iniciarLogicaMunicipio() {
     // Mantenemos la lista visual de todos los estados para el usuario final
     var nombresEstados = Object.keys(ESTADOS_POR_REGION).sort();
 
+    var estadoContainer = document.createElement("div");
+    estadoContainer.style.display = "flex";
+    estadoContainer.style.alignItems = "center";
+    estadoContainer.style.width = "100%";
+    estadoContainer.style.gap = "10px";
+
     var selectEstado = document.createElement("select");
     selectEstado.className = "dynamic-filter-select";
+    selectEstado.style.flex = "1";
+    selectEstado.style.marginBottom = "0"; // Override if any
     selectEstado.innerHTML = `<option value="" disabled selected>-- Entidad Federativa --</option>`;
     nombresEstados.forEach(nombre => {
         var regionAsociada = ESTADOS_POR_REGION[nombre];
         selectEstado.innerHTML += `<option value="${regionAsociada}">${nombre}</option>`;
     });
+
+    var insigniaBadge = document.createElement("div");
+    insigniaBadge.id = "insignia-badge";
+    insigniaBadge.style.cssText = "display:none; background:#111; border:1px solid #00e5ff; color:#fff; font-size:10px; font-weight:bold; padding:4px 8px; border-radius:4px; text-transform:uppercase; box-shadow:0 0 5px rgba(0,229,255,0.4); white-space: nowrap; cursor: pointer;";
+    insigniaBadge.innerHTML = `<span style="-webkit-text-stroke: 1px #00e5ff; color: black; font-size: 14px; margin-right: 4px; vertical-align: bottom;">★</span>Proyecto Ensignia`;
+
+    insigniaBadge.onclick = function() {
+        var modal = document.getElementById("ensignia-modal");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "ensignia-modal";
+            modal.className = "dashboard-box";
+            modal.style.cssText = "display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; max-width:500px; width:90%; padding:20px; box-shadow:0 0 20px rgba(0,229,255,0.6); background:rgba(20,20,20,0.95); border:1px solid #00e5ff; border-radius:8px;";
+            modal.innerHTML = `
+                <h3 style="color:#00e5ff; margin-top:0; border-bottom:1px solid #444; padding-bottom:10px; font-size:16px;">
+                    <span style="-webkit-text-stroke: 1px #00e5ff; color: black; font-size: 18px; margin-right: 6px;">★</span>Proyecto Ensignia: Síntesis
+                </h3>
+                <div style="font-size:12px; color:#ddd; line-height:1.5; text-align:justify; max-height:60vh; overflow-y:auto; padding-right:5px;">
+                    <p><strong style="color:#e53935;">Resultado Cuantitativo:</strong> Análisis integral de cientos de AGEBs, procesamiento de múltiples variables censales e integración con el Directorio Estadístico Nacional de Unidades Económicas (DENUE). Cuantificación exacta de población y vivienda expuesta en diferentes niveles de riesgo espacial.</p>
+                    <p><strong style="color:#fdd835;">Resultado Cualitativo:</strong> Identificación precisa de patrones de vulnerabilidad territorial, segregación socioespacial y déficits en infraestructura básica. Se evidencia la interacción entre la forma urbana y la fragilidad social para una focalización estratégica de recursos.</p>
+                    <p><strong style="color:#4caf50;">Resultado Normativo:</strong> Evaluación multiescalar del territorio que permite sustentar planes de desarrollo y verificar el cumplimiento de normas de accesibilidad, ofreciendo evidencia cartográfica sólida para la intervención gubernamental e inversión privada.</p>
+                </div>
+                <div style="text-align:right; margin-top:20px;">
+                    <button onclick="document.getElementById('ensignia-modal').style.display='none';" style="background:#000; color:#00e5ff; border:1px solid #00e5ff; padding:6px 20px; cursor:pointer; font-weight:bold; border-radius:4px; transition:0.3s;" onmouseover="this.style.background='#00e5ff'; this.style.color='#000';" onmouseout="this.style.background='#000'; this.style.color='#00e5ff';">Cerrar</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        modal.style.display = "block";
+    };
+
+    estadoContainer.appendChild(selectEstado);
+    estadoContainer.appendChild(insigniaBadge);
 
     var selectIndice = document.createElement("select");
     selectIndice.className = "dynamic-filter-select";
@@ -106,7 +147,7 @@ function iniciarLogicaMunicipio() {
                     if (!document.getElementById('delegacion-style')) {
                         var style = document.createElement('style');
                         style.id = 'delegacion-style';
-                        style.innerHTML = '.delegacion-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; color: #aaa; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center; }';
+                        style.innerHTML = '.delegacion-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; color: #aaa; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center; pointer-events: none; }';
                         document.head.appendChild(style);
                     }
                     
@@ -115,9 +156,10 @@ function iniciarLogicaMunicipio() {
                             .then(r => r.json())
                             .then(data => {
                                 window.limiteDelegacionalLayer = L.geoJSON(data, {
-                                    style: { color: '#aaaaaa', weight: 2, fillOpacity: 0.05, opacity: 0.8, dashArray: '' },
+                                    interactive: false,
+                                    style: { color: '#000000', weight: 3, fillOpacity: 0.05, opacity: 0.5, dashArray: '5, 15' },
                                     onEachFeature: function(feature, layer) {
-                                        var nom = feature.properties.name || feature.properties.NOMGEO || "";
+                                        var nom = feature.properties.Nombre || feature.properties.name || feature.properties.NOMGEO || "";
                                         if (nom) {
                                             layer.bindTooltip(nom, {
                                                 permanent: true,
@@ -258,6 +300,13 @@ function iniciarLogicaMunicipio() {
                 }
                 var chartContainer = document.getElementById('equipamiento-chart-container');
                 if (chartContainer) chartContainer.style.display = 'none';
+                if (typeof munWrapper !== 'undefined' && munWrapper) munWrapper.style.display = "block";
+            }
+
+            if (nombreEst === "Baja California") {
+                insigniaBadge.style.display = "block";
+            } else {
+                insigniaBadge.style.display = "none";
             }
 
             var regionKey = this.value;
@@ -275,7 +324,7 @@ function iniciarLogicaMunicipio() {
         }
     };
 
-    container.appendChild(selectEstado);
+    container.appendChild(estadoContainer);
     container.appendChild(selectIndice);
 
     var opacityControl = document.createElement('div');
@@ -470,8 +519,8 @@ function renderizarMapaAgeb(atributo, labelNombre, nombreEstado) {
         style: function (feature) {
             var valorCategoria = feature.properties[atributo] || "Sin dato";
             return {
-                color: "#111",
-                weight: 0.5,
+                color: "transparent",
+                weight: 0,
                 fillColor: getColorVulnerabilidad(valorCategoria),
                 fillOpacity: 0.85,
                 className: 'flujo-interactivo'
@@ -495,13 +544,25 @@ function renderizarMapaAgeb(atributo, labelNombre, nombreEstado) {
             layer.bindPopup(popupContent);
 
             layer.on({
-                mouseover: function (e) { e.target.setStyle({ weight: 2, color: '#fff' }); e.target.bringToFront(); },
-                mouseout: function (e) { agebLayer.resetStyle(e.target); }
+                mouseover: function (e) { 
+                    e.target.setStyle({ weight: 2, color: '#fff' }); 
+                    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                        e.target.bringToFront();
+                    }
+                    if (window.limiteDelegacionalLayer) window.limiteDelegacionalLayer.bringToFront();
+                    if (armadorasLayer) armadorasLayer.bringToFront();
+                },
+                mouseout: function (e) { 
+                    agebLayer.resetStyle(e.target); 
+                    if (window.limiteDelegacionalLayer) window.limiteDelegacionalLayer.bringToFront();
+                    if (armadorasLayer) armadorasLayer.bringToFront();
+                }
             });
         }
     }).addTo(map);
 
     agebLayer.bringToBack();
+    if (window.limiteDelegacionalLayer) window.limiteDelegacionalLayer.bringToFront();
     if (armadorasLayer) armadorasLayer.bringToFront();
 
     // Calcular frecuencias para leyenda
@@ -794,6 +855,131 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
         }
     }
 
+    // Chart 4: Delegacional Vulnerabilidad Cruzada
+    var hrDelRes = document.getElementById('hr-del-res');
+    var tituloDelRes = document.getElementById('titulo-del-res');
+    var delResContainer = document.getElementById('delResumenChartContainer');
+    var canvasDelRes = document.getElementById('delResumenChart');
+    var sintesisDelRes = document.getElementById('sintesis-del-res');
+    
+    if (hrDelRes) hrDelRes.style.display = 'none';
+    if (tituloDelRes) tituloDelRes.style.display = 'none';
+    if (delResContainer) delResContainer.style.display = 'none';
+    if (sintesisDelRes) sintesisDelRes.style.display = 'none';
+
+    // Verify if limiteDelegacionalLayer exists and we are in Tijuana
+    if (window.limiteDelegacionalLayer && typeof turf !== 'undefined' && nombreEstado === 'Baja California') {
+        if (hrDelRes) hrDelRes.style.display = 'block';
+        if (tituloDelRes) tituloDelRes.style.display = 'block';
+        if (delResContainer) delResContainer.style.display = 'block';
+
+        if (canvasDelRes) {
+            var ctxDel = canvasDelRes.getContext('2d');
+            if (window.delResumenChartInstance) window.delResumenChartInstance.destroy();
+
+            var delData = {};
+            
+            // Loop through delegaciones
+            window.limiteDelegacionalLayer.eachLayer(function(delLayer) {
+                var delNom = delLayer.feature.properties.Nombre || delLayer.feature.properties.name || delLayer.feature.properties.NOMGEO || "Desconocida";
+                delData[delNom] = { agebs: 0, pob: 0, vulnSum: 0, vulnValidos: 0, poly: delLayer.feature };
+            });
+
+            // Associate each AGEB with a delegation using Turf.js
+            agebRawData.features.forEach(f => {
+                try {
+                    var centroid = turf.centroid(f);
+                    var assignedDel = null;
+                    for (var delNom in delData) {
+                        if (turf.booleanPointInPolygon(centroid, delData[delNom].poly)) {
+                            assignedDel = delNom;
+                            break;
+                        }
+                    }
+                    if (assignedDel) {
+                        var p = f.properties;
+                        delData[assignedDel].agebs++;
+                        delData[assignedDel].pob += parseFloat(p.POB1_x) || 0;
+                        
+                        var valCat = p[atributo] || "Sin dato";
+                        var vStr = valCat.toString().trim().toUpperCase();
+                        var numVul = 0;
+                        if (vStr === 'MUY ALTO') numVul = 5;
+                        else if (vStr === 'ALTO') numVul = 4;
+                        else if (vStr === 'MEDIO') numVul = 3;
+                        else if (vStr === 'BAJO') numVul = 2;
+                        else if (vStr === 'MUY BAJO') numVul = 1;
+
+                        if (numVul > 0) {
+                            delData[assignedDel].vulnSum += numVul;
+                            delData[assignedDel].vulnValidos++;
+                        }
+                    }
+                } catch(e) { } // Ignore geometries that turf can't process
+            });
+
+            var sortedDels = Object.keys(delData).map(k => { return { name: k, agebs: delData[k].agebs, pob: delData[k].pob, vulnSum: delData[k].vulnSum, vulnValidos: delData[k].vulnValidos }; }).filter(d => d.agebs > 0).sort((a, b) => b.pob - a.pob);
+
+            var labelsDel = sortedDels.map(d => d.name);
+            var dataAgebsDel = sortedDels.map(d => d.agebs);
+            var dataPobDel = sortedDels.map(d => d.pob);
+            var dataVulnDel = sortedDels.map(d => d.vulnValidos > 0 ? parseFloat((d.vulnSum / d.vulnValidos).toFixed(1)) : 0);
+
+            window.delResumenChartInstance = new Chart(ctxDel, {
+                type: 'bar',
+                data: {
+                    labels: labelsDel,
+                    datasets: [
+                        {
+                            label: 'Población Total',
+                            data: dataPobDel,
+                            backgroundColor: '#0277bd',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Vuln. Promedio',
+                            data: dataVulnDel,
+                            backgroundColor: '#e53935',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#ddd', font: { size: 10 } }, position: 'bottom' },
+                        datalabels: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#ccc', font: { size: 9 } }, grid: { display: false } },
+                        y: {
+                            type: 'linear', display: true, position: 'left',
+                            ticks: { color: '#ccc', font: { size: 10 } }, grid: { color: '#333' },
+                            title: { display: true, text: 'Población', color: '#0277bd' }
+                        },
+                        y1: {
+                            type: 'linear', display: true, position: 'right',
+                            ticks: { color: '#ccc', font: { size: 10 } },
+                            title: { display: true, text: 'Vuln. (1-5)', color: '#e53935' },
+                            grid: { drawOnChartArea: false },
+                            min: 0, max: 5
+                        }
+                    }
+                }
+            });
+
+            if (sintesisDelRes && sortedDels.length > 0) {
+                sintesisDelRes.style.display = 'block';
+                var delMax = sortedDels[0];
+                sintesisDelRes.innerHTML = `La delegación <b>${delMax.name}</b> concentra la mayor población analizada con <b>${delMax.pob.toLocaleString('en-US')}</b> habitantes distribuidos en <b>${delMax.agebs}</b> AGEBs, presentando un nivel de vulnerabilidad promedio de <b>${(delMax.vulnValidos > 0 ? (delMax.vulnSum/delMax.vulnValidos).toFixed(1) : "N/A")}</b>.`;
+            }
+        }
+    }
+
     // --- SÍNTESIS VULNERABILIDAD ---
     var sintesisVuln = document.getElementById('sintesis-vuln');
     if (sintesisVuln) {
@@ -1025,18 +1211,21 @@ window.toggleAgebNivel = function (nivelText) {
 
             if (aplicarFiltro && !window.filtroAgebNiveles.has(normalizado)) {
                 // Feature Oculto
-                layer.setStyle({ opacity: 0, fillOpacity: 0, weight: 0 });
+                layer.setStyle({ opacity: 0, fillOpacity: 0, weight: 0, color: 'transparent' });
                 layer.options.interactive = false;
             } else {
                 // Feature Visible Default
                 layer.setStyle({
-                    color: "#111", weight: 0.5, opacity: 1,
+                    color: "transparent", weight: 0, opacity: 1,
                     fillColor: getColorVulnerabilidad(valCat), fillOpacity: 0.85
                 });
                 layer.options.interactive = true;
             }
         });
     }
+
+    if (window.limiteDelegacionalLayer) window.limiteDelegacionalLayer.bringToFront();
+    if (armadorasLayer) armadorasLayer.bringToFront();
 
     // Estilo Visual de la Leyenda
     var legendItems = document.querySelectorAll('.ageb-legend-item');

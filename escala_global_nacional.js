@@ -180,16 +180,15 @@ function initMap() {
     };
 
     // Control de Fuente dinamico
-    fuenteControl = L.control({ position: 'bottomright' });
-    fuenteControl.onAdd = function (map) {
-        this._div = L.DomUtil.create('div', 'fuente-control');
-        this.update(''); return this._div;
+    fuenteControl = {
+        update: function (texto) {
+            var fDiv = document.getElementById('fuente-div');
+            if (fDiv) {
+                if (texto) { fDiv.innerHTML = `Fuente: ${texto}`; fDiv.style.display = 'block'; }
+                else { fDiv.style.display = 'none'; }
+            }
+        }
     };
-    fuenteControl.update = function (texto) {
-        if (texto) { this._div.innerHTML = `Fuente: ${texto}`; this._div.style.display = 'block'; }
-        else { this._div.style.display = 'none'; }
-    };
-    fuenteControl.addTo(map);
 
     setupUI();
     // Esta función está en escala_estatal.js, verificamos si existe
@@ -214,7 +213,7 @@ function initMap() {
         doubleClickZoom: false,
         boxZoom: false
     });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         subdomains: 'abcd', maxZoom: 19
     }).addTo(minimap);
 
@@ -1403,6 +1402,7 @@ function setupUI() {
                 <span id="filter-title">Filtros</span> <span id="filter-arrow" class="drop-arrow">▼</span>
             </h4>
             <div id="filter-buttons-container" class="dropdown-content show" style="width: 100%;"></div>
+            <div id="fuente-div" class="fuente-control" style="display:none; margin-top:10px; width:100%; box-sizing:border-box;"></div>
         `;
         leftContainer.appendChild(filterBox);
     }
@@ -1468,6 +1468,10 @@ function setupUI() {
                     <h4 class="panel-title" id="titulo-mun-res" style="font-size:12px; margin-bottom:8px;">Resumen por Municipio</h4>
                     <div style="height:300px; position:relative;"><canvas id="munResumenChart"></canvas></div>
                     <div id="sintesis-mun-res" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
+                    <hr style="border:0; border-top:1px solid #444; margin:12px 0;" id="hr-del-res">
+                    <h4 class="panel-title" id="titulo-del-res" style="font-size:12px; margin-bottom:8px;">Vulnerabilidad Cruzada por Delegación</h4>
+                    <div style="height:300px; position:relative;" id="delResumenChartContainer"><canvas id="delResumenChart"></canvas></div>
+                    <div id="sintesis-del-res" class="dynamic-summary-box" style="margin-top:10px; display:none; text-align: justify;"></div>
                 </div>
             </div>
         `;

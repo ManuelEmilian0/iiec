@@ -828,22 +828,6 @@ path.leaflet-interactive {
    10. CONTROL DE FUENTE Y RESUMEN DINÁMICO
    ========================================= */
 
-/* Estilo para el recuadrito de Fuente en la esquina inferior izquierda */
-.fuente-control {
-  background: rgba(30, 30, 30, 0.9);
-  color: #ccc;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-family: "Noto Sans", sans-serif;
-  font-style: italic;
-  border: 1px solid #555;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-  /* Para que no bloquee los clics en el mapa por debajo */
-  max-width: 350px;
-}
-
 /* Estilo para el párrafo resumen (Ej: Alemania, mayor intercambio...) */
 .dynamic-summary-box {
   margin-top: 15px;
@@ -867,8 +851,8 @@ path.leaflet-interactive {
   flex-direction: column !important;
   align-items: flex-end !important;
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 75px !important;
+  right: 170px !important;
   pointer-events: none;
 }
 
@@ -879,30 +863,74 @@ path.leaflet-interactive {
 /* 1. Zoom en la parte superior del grupo inferior derecho */
 .leaflet-control-zoom {
   order: 1;
-  margin-bottom: 10px !important;
-  margin-right: 10px !important;
+  margin-bottom: 0px !important;
+  margin-right: 0px !important;
 }
 
-/* 2. Recuadro de fuentes debajo del zoom */
+/* Custom Zoom Buttons, Geoman Controls & Layers Control */
+.leaflet-control-zoom a,
+.leaflet-pm-toolbar .button-container a,
+.leaflet-control-layers,
+.leaflet-control-layers-expanded {
+  background-color: #000 !important;
+  color: #00e5ff !important;
+  border: 1px solid #00e5ff !important;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4) !important;
+  border-radius: 4px !important;
+}
+
+.leaflet-control-zoom a:hover,
+.leaflet-pm-toolbar .button-container a:hover,
+.leaflet-control-layers:hover {
+  background-color: #222 !important;
+  color: #00e5ff !important;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.8) !important;
+}
+
+/* Geoman icon coloring */
+.leaflet-pm-toolbar .button-container a .action-icon,
+.leaflet-pm-toolbar .button-container a .leaflet-pm-icon {
+  filter: invert(65%) sepia(85%) saturate(3000%) hue-rotate(140deg) brightness(1.2) contrast(1.1) !important;
+}
+
+/* Layers icon coloring */
+.leaflet-control-layers-toggle {
+  filter: invert(1) drop-shadow(0 0 3px #00e5ff) !important;
+}
+
+/* Remover doble borde de container de geoman */
+.leaflet-pm-toolbar {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 2. Recuadro de fuentes - Se mueve al menu izquierdo */
 .fuente-control {
-  order: 2;
-  margin-bottom: 10px !important;
-  margin-right: 10px !important;
+  background: rgba(30, 30, 30, 0.9);
+  color: #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: "Noto Sans", sans-serif;
+  font-style: italic;
+  border: 1px solid #555;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  max-width: 100%;
 }
 
-/* 3. Atribución de Leaflet a la izquierda del cuadro de fuentes */
+/* 3. Atribución de Leaflet (Fuente mapa base) */
 .leaflet-control-attribution {
-  position: absolute !important;
-  right: 100% !important;
-  /* Empuja el texto a la izquierda de la fuente */
-  bottom: 10px !important;
-  /* Misma base que la fuente */
-  margin-right: 10px !important;
-  /* Espacio de separación */
+  position: fixed !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  margin: 0 !important;
   white-space: nowrap;
   background: rgba(30, 30, 30, 0.7) !important;
   color: #aaa !important;
-  border-radius: 4px;
+  border-radius: 4px 0 0 0 !important;
+  padding: 2px 5px !important;
+  font-size: 10px !important;
 }
 
 /* =========================================
