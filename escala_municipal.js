@@ -589,6 +589,15 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
 
+    var ianBox = document.getElementById('ian-dashboard-box');
+    if (ianBox) {
+        if (nombreEstado === "Baja California" || nombreEstado === "Baja_California") {
+            ianBox.style.display = 'block';
+        } else {
+            ianBox.style.display = 'none';
+        }
+    }
+
     var titleDiv = document.getElementById('stats-title-text');
     if (titleDiv) titleDiv.innerHTML = `<span style="font-size:18px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br><span style="font-size:13px; color:#ddd">Resumen Demográfico</span>`;
 

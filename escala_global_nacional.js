@@ -268,6 +268,9 @@ function loadLayer(scaleType) {
         statsDiv.style.display = 'none';
     }
 
+    var ianBox = document.getElementById('ian-dashboard-box');
+    if (ianBox) ianBox.style.display = 'none';
+
     var legendDiv = document.getElementById('legend-overlay');
     if (legendDiv) legendDiv.style.display = 'none';
 
@@ -1476,6 +1479,22 @@ function setupUI() {
             </div>
         `;
         leftContainer.appendChild(statsBox);
+    }
+
+    if (!document.getElementById('ian-dashboard-box')) {
+        // Tablero Índice de Alineación Normativa (IAN)
+        var ianBox = document.createElement('div');
+        ianBox.id = 'ian-dashboard-box';
+        ianBox.className = 'dashboard-box';
+        ianBox.innerHTML = `
+            <h4 class="panel-title toggleable" onclick="toggleDropdown('ian-dashboard-content', 'ian-arrow')" title="Ocultar/Mostrar IAN">
+                <span style="font-size: 13px;">Matriz IAN (Índice de Alineación Normativa)</span> <span id="ian-arrow" class="drop-arrow">▼</span>
+            </h4>
+            <div id="ian-dashboard-content" class="dropdown-content show">
+                <!-- Se inyecta dinámicamente desde ian_dashboard.js -->
+            </div>
+        `;
+        leftContainer.appendChild(ianBox);
     }
 
     if (!document.getElementById('fin-overlay')) {
