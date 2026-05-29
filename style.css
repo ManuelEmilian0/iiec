@@ -35,19 +35,20 @@ body {
   display: flex;
   align-items: center;
   overflow-x: auto;
+  width: 100%;
 }
 
 .nav-button {
   background: none;
   border: none;
-  padding: 0 15px;
+  padding: 0 10px;
   height: 40px;
   line-height: 40px;
   color: #ccc;
   cursor: pointer;
   font-weight: 700;
   font-family: "Noto Sans", sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   text-transform: uppercase;
   border-bottom: 3px solid transparent;
   transition: all 0.2s;
@@ -1522,3 +1523,17 @@ path.leaflet-interactive {
 .dynamic-summary-box { text-align: justify; }
 #leyenda-sintesis { text-align: justify; }
 #leyenda-sintesis-fin { text-align: justify; }
+
+@keyframes slideUpModulos {
+    0% { transform: translateY(150px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+#modulos-container.animating .modulo-card {
+    animation: slideUpModulos 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+#modulos-container.animating .modulo-card:nth-child(4) { animation-delay: 0s; }
+#modulos-container.animating .modulo-card:nth-child(3) { animation-delay: 0.1s; }
+#modulos-container.animating .modulo-card:nth-child(2) { animation-delay: 0.2s; }
+#modulos-container.animating .modulo-card:nth-child(1) { animation-delay: 0.3s; }

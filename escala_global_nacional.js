@@ -27,6 +27,12 @@ var fuenteControl = null;
 const RampaRojos = ['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'];
 const Grosores = [1, 2, 4, 6, 8];
 
+const CATALOGO_ZONAS_METROPOLITANAS = {
+    "ZM Valle de México": ["09", "15"], // CDMX + Edomex (simplificado para abarcar ambos completos como antes)
+    "ZM Tijuana": ["02004", "02003", "02005"], // Tijuana, Tecate, Playas de Rosarito
+    "ZM Monterrey": ["19039", "19006", "19018", "19019", "19021", "19026", "19031", "19045", "19046", "19048", "19049", "19012", "19010", "19025", "19042"] // Principales municipios ZMM
+};
+
 // ==========================================
 // INICIALIZACIÓN
 // ==========================================
@@ -245,6 +251,9 @@ function initMap() {
 // CONTROLADOR DE CAPAS (MULTIESCALAR)
 // ==========================================
 function loadLayer(scaleType) {
+    var modulos = document.getElementById('modulos-container');
+    if (modulos) modulos.style.display = 'none';
+
     document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
     var activeBtn = document.getElementById('btn-' + scaleType);
     if (activeBtn) activeBtn.classList.add('active');
@@ -432,12 +441,14 @@ window.dibujarLimiteMunicipal = function (nombreEstado) {
         if (window.municipiosPolygonsGeoJSON) {
             resolve(window.municipiosPolygonsGeoJSON);
         } else {
-            fetch('Limite_municipal_opt.geojson')
-                .then(res => res.json())
-                .then(geo => {
-                    window.municipiosPolygonsGeoJSON = geo;
-                    resolve(geo);
-                }).catch(e => resolve(null));
+            Promise.all([
+                fetch('Limite_municipal_opt.geojson').then(res => res.json()),
+                fetch('Limite_municipal_CDMX.geojson').then(res => res.json()).catch(e => ({ type: "FeatureCollection", features: [] }))
+            ]).then(([geoOpt, geoCdmx]) => {
+                geoOpt.features = geoOpt.features.concat(geoCdmx.features);
+                window.municipiosPolygonsGeoJSON = geoOpt;
+                resolve(geoOpt);
+            }).catch(e => resolve(null));
         }
     });
 
@@ -446,12 +457,39 @@ window.dibujarLimiteMunicipal = function (nombreEstado) {
         if (window.limiteMunicipalLayer) map.removeLayer(window.limiteMunicipalLayer);
 
         var estadoBusqueda = normalizarEstadoNombre(nombreEstado);
+        
+        if (CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+            var firstCode = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado][0].substring(0, 2);
+            if (nombreEstado === "ZM Valle de México") estadoBusqueda = "ZMVM";
+            else if (firstCode === "02") estadoBusqueda = "BAJA CALIFORNIA";
+            else if (firstCode === "19") estadoBusqueda = "NUEVO LEON";
+        }
 
-        // Filtrar municipios cuyo estado coincida con estadoBusqueda
+        if (estadoBusqueda === "ZONA METROPOLITANA DEL VALLE DE MEXICO") {
+            estadoBusqueda = "ZMVM";
+        }
+
+        // Filtrar municipios
         var munFeatures = geo.features.filter(f => {
             var n = normalizarEstadoNombre(f.properties.NOMGEO || "");
-            // Si el geojson tiene NOMGEO para el estado, o cve_ent para cruzar.
-            // Dado que vimos que NOMGEO coincide con el nombre del estado (ej. "México"):
+            var cveMun = f.properties.cve_umun || f.properties.CVEGEO || f.properties.CVE_MUN;
+
+            if (!n && cveMun) {
+                if (cveMun.substring(0, 2) === "09") n = normalizarEstadoNombre("CIUDAD DE MEXICO");
+            }
+
+            if (CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+                var catalogList = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado];
+                var cveEnt = cveMun ? cveMun.substring(0, 2) : null;
+                if (cveEnt && catalogList.includes(cveEnt)) return true;
+                if (cveMun && catalogList.includes(cveMun)) return true;
+                if (nombreEstado === "ZM Valle de México") {
+                    return n === normalizarEstadoNombre("MEXICO") || n === normalizarEstadoNombre("CIUDAD DE MEXICO");
+                }
+                return false;
+            }
+
+            if (estadoBusqueda === "ZMVM") return n === normalizarEstadoNombre("MEXICO") || n === normalizarEstadoNombre("CIUDAD DE MEXICO");
             return n === estadoBusqueda;
         });
 
@@ -3035,3 +3073,78 @@ function dibujarGraficaEvolucion(estadosSeleccionados, anioDestacado) {
         summaryDiv.style.display = 'block';
     }
 }
+
+// ==========================================
+// 4. MÓDULOS DATOS DUROS
+// ==========================================
+const POBLACION_ESTATAL = {
+    "CIUDAD DE MEXICO": 9209944,
+    "ESTADO DE MEXICO": 16992418,
+    "NUEVO LEON": 5784442,
+    "BAJA CALIFORNIA": 3769020,
+    "JALISCO": 8348151,
+    "PUEBLA": 6583278,
+    "GUANAJUATO": 6166934,
+    "COAHUILA": 3146771,
+    "SONORA": 2944840,
+    "SAN LUIS POTOSI": 2822255,
+    "AGUASCALIENTES": 1425607,
+    "MORELOS": 1971520,
+    "ZM Valle de México": 21804515,
+    "ZM Tijuana": 2157853,
+    "ZM Monterrey": 5341171
+};
+
+window.actualizarModulosDatosDuros = function(features, escala, nombreEstado) {
+    var container = document.getElementById('modulos-container');
+    if (!container) return;
+    
+    // Si no hay features ni nombreEstado, ocultar
+    if ((!features || features.length === 0) && !nombreEstado) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    var totalPoblacion = 0;
+    
+    if (escala === "Estatal" && nombreEstado) {
+        var key = normalizarEstadoNombre(nombreEstado);
+        if (POBLACION_ESTATAL[nombreEstado]) totalPoblacion = POBLACION_ESTATAL[nombreEstado];
+        else if (POBLACION_ESTATAL[key]) totalPoblacion = POBLACION_ESTATAL[key];
+    } else {
+        if (features) {
+            features.forEach(f => {
+                if (f.properties && f.properties.POB1_x && !isNaN(f.properties.POB1_x)) {
+                    totalPoblacion += parseFloat(f.properties.POB1_x);
+                }
+            });
+        }
+    }
+
+    var formatNum = (num) => {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+        return num.toLocaleString();
+    };
+
+    document.getElementById('val-mod-social').innerText = totalPoblacion > 0 ? formatNum(totalPoblacion) : "N/D";
+    
+    // Simulando PIB estatal basado en población (Placeholder a la espera de datos reales)
+    // Se usa el PIB estatal en ambos casos como solicitó el usuario, calculándolo como proporción de población si no hay más info
+    var pibSimulado = totalPoblacion * 0.15; // Placeholder
+    document.getElementById('val-mod-eco').innerText = totalPoblacion > 0 ? '$' + formatNum(pibSimulado) + ' MDP' : "N/D";
+    
+    // Suelo simulado
+    var sueloSimulado = totalPoblacion * 0.05; 
+    document.getElementById('val-mod-amb').innerText = totalPoblacion > 0 ? formatNum(sueloSimulado) + ' ha' : "N/D";
+    
+    // Exportación simulada
+    var expSimulada = totalPoblacion * 0.08; 
+    document.getElementById('val-mod-exp').innerText = totalPoblacion > 0 ? '$' + formatNum(expSimulada) + ' MDP' : "N/D";
+    
+    // Restart animation
+    container.classList.remove('animating');
+    void container.offsetWidth;
+    container.classList.add('animating');
+    container.style.display = 'flex';
+};

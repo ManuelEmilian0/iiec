@@ -6,7 +6,8 @@
 const REGIONES_AGEB = {
     "Region Norte": "region_Norte.geojson",
     "Region Centro": "region_Centro.geojson",
-    "Region Occidente": "region_Occidente.geojson"
+    "Region Occidente": "region_Occidente.geojson",
+    "CDMX": "CDMX.geojson"
 };
 
 // Mapeo inverso de qué estados le tocan a qué región.
@@ -17,6 +18,7 @@ const ESTADOS_POR_REGION = {
     "San Luis Potosí": "Region Norte",
     "Sonora": "Region Norte",
     "Estado de México": "Region Centro",
+    "Ciudad de México": "CDMX",
     "Morelos": "Region Centro",
     "Puebla": "Region Centro",
     "Aguascalientes": "Region Occidente",
@@ -33,6 +35,7 @@ const CVE_ENT_ESTADOS = {
     "San Luis Potosí": "24",
     "Sonora": "26",
     "Estado de México": "15",
+    "Ciudad de México": "09",
     "Morelos": "17",
     "Puebla": "21",
     "Guanajuato": "11",
@@ -101,7 +104,35 @@ function iniciarLogicaMunicipio() {
         modal.style.display = "block";
     };
 
+    var selectZm = document.createElement("select");
+    selectZm.className = "dynamic-filter-select";
+    selectZm.id = "select-zm-muni";
+    var defaultZmMuni = document.createElement("option");
+    defaultZmMuni.innerText = "-- Zona Metropolitana --";
+    defaultZmMuni.value = ""; defaultZmMuni.disabled = true; defaultZmMuni.selected = true;
+    selectZm.appendChild(defaultZmMuni);
+
+    Object.keys(CATALOGO_ZONAS_METROPOLITANAS).forEach(zm => {
+        var opt = document.createElement("option"); 
+        opt.value = zm; 
+        opt.innerText = zm;
+        selectZm.appendChild(opt);
+    });
+
+    selectZm.onchange = function () {
+        if (this.value) {
+            selectEstado.value = ""; // Deseleccionar entidad federativa
+            var regionToLoad = "Region Centro"; // Default para ZMVM
+            var firstCode = CATALOGO_ZONAS_METROPOLITANAS[this.value][0].substring(0, 2);
+            if (firstCode === "02") regionToLoad = "Region Norte"; // ZM Tijuana -> BC -> Norte
+            else if (firstCode === "19") regionToLoad = "Region Norte"; // ZM Monterrey -> NL -> Norte
+
+            cargarAgebEstadoRegional(this.value, REGIONES_AGEB[regionToLoad] || "agebmex.geojson", selectIndice, opcionesAgeb);
+        }
+    };
+
     estadoContainer.appendChild(selectEstado);
+    estadoContainer.appendChild(selectZm);
     estadoContainer.appendChild(insigniaBadge);
 
     var selectIndice = document.createElement("select");
@@ -123,16 +154,20 @@ function iniciarLogicaMunicipio() {
     equipWrapper.style.borderTop = "1px solid #444";
 
     selectEstado.onchange = function () {
-        if (this.value) {
-            var nombreEst = this.options[this.selectedIndex].text;
+        if (!this.value) return;
+        var regionFile = this.value;
+        var nombreEst = this.options[this.selectedIndex].text;
+        
+        var zmSel = document.getElementById("select-zm-muni");
+        if(zmSel) zmSel.value = "";
 
-            if (nombreEst === "Baja California") {
-                equipWrapper.style.display = "block";
-                if (equipWrapper.innerHTML === "") {
-                    // Inicializar controles de equipamiento
-                    var lbl = document.createElement("small");
-                    lbl.style.cssText = "color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;";
-                    lbl.innerText = "Equipamiento Tijuana";
+        if (nombreEst === "Baja California") {
+            equipWrapper.style.display = "block";
+            if (equipWrapper.innerHTML === "") {
+                // Inicializar controles de equipamiento
+                var lbl = document.createElement("small");
+                lbl.style.cssText = "color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;";
+                lbl.innerText = "Equipamiento Tijuana";
 
                     var toggleEquip = document.createElement("select");
                     toggleEquip.className = "dynamic-filter-select";
@@ -313,7 +348,6 @@ function iniciarLogicaMunicipio() {
             var archivoGeojson = REGIONES_AGEB[regionKey] || "agebmex.geojson";
             document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
             cargarAgebEstadoRegional(nombreEst, archivoGeojson, selectIndice, opcionesAgeb);
-        }
     };
 
     selectIndice.onchange = function () {
@@ -324,7 +358,8 @@ function iniciarLogicaMunicipio() {
         }
     };
 
-    container.appendChild(estadoContainer);
+    container.appendChild(selectZm);
+    container.appendChild(selectEstado);
     container.appendChild(selectIndice);
 
     var opacityControl = document.createElement('div');
@@ -408,12 +443,22 @@ var currentRegionCache = null;
 function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, opcionesAgeb) {
     var promises = [];
 
-    // Lazy Loading: Solo descarga si la región en caché es diferente a la solicitada
-    // Así aprovechamos que agrupaste los GeoJSON!
     var necesitaDescargaGeojson = !currentRegionCache || currentRegionCache.filename !== archivoGeojson;
 
     if (necesitaDescargaGeojson) {
-        promises.push(fetch(archivoGeojson).then(r => r.json()));
+        if (nombreEstado === "ZM Valle de México") {
+            promises.push(
+                Promise.all([
+                    fetch(archivoGeojson).then(r => r.json()),
+                    fetch("CDMX.geojson").then(r => r.json())
+                ]).then(results => {
+                    var mergedFeatures = results[0].features.concat(results[1].features);
+                    return { type: "FeatureCollection", features: mergedFeatures };
+                })
+            );
+        } else {
+            promises.push(fetch(archivoGeojson).then(r => r.json()));
+        }
     } else {
         promises.push(Promise.resolve(currentRegionCache.data));
     }
@@ -424,9 +469,13 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
     // Cargar Limite_municipal.geojson sincrónicamente para los gráficos
     promises.push(
         window.municipiosPolygonsGeoJSON ? Promise.resolve(window.municipiosPolygonsGeoJSON) :
-            fetch('Limite_municipal_opt.geojson').then(r => r.json()).then(geo => {
-                window.municipiosPolygonsGeoJSON = geo;
-                return geo;
+            Promise.all([
+                fetch('Limite_municipal_opt.geojson').then(r => r.json()),
+                fetch('Limite_municipal_CDMX.geojson').then(r => r.json()).catch(e => ({ type: "FeatureCollection", features: [] }))
+            ]).then(([geoOpt, geoCdmx]) => {
+                geoOpt.features = geoOpt.features.concat(geoCdmx.features);
+                window.municipiosPolygonsGeoJSON = geoOpt;
+                return geoOpt;
             }).catch(e => null)
     );
 
@@ -442,13 +491,29 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
             // Filtramos de forma INTELIGENTE para quedarnos solo con el Estado que eligió el usuario
             var estadoBusqueda = (typeof normalizarTexto !== 'undefined') ? normalizarTexto(nombreEstado) : nombreEstado.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-            // Obtenemos la clave numérica del estado (05, 19, etc) desde nuestro diccionario
             var cveEntBusqueda = CVE_ENT_ESTADOS[nombreEstado];
 
-            // Filtramos para aislar los AGEB de ESTE ESTADO especifico y no pintar toda la región
+            // Filtramos para aislar los AGEB de ESTE ESTADO o ZM especifico y no pintar toda la región
             var featuresFiltradas = agebDataRegional.features.filter(f => {
-                // Evaluamos la coincidencia exacta por el identificador numérico (05, 19, etc)
+                if (archivoGeojson === "CDMX.geojson") return true; // CDMX.geojson ya viene filtrado
+
                 var cveNum = f.properties.CVE_ENT || (f.properties.CVEGEO ? f.properties.CVEGEO.substring(0, 2) : null);
+                var cveMun = f.properties.CVEGEO ? f.properties.CVEGEO.substring(0, 5) : null;
+
+                if (CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+                    var catalogList = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado];
+                    if (cveNum && catalogList.includes(cveNum)) return true;
+                    if (cveMun && catalogList.includes(cveMun)) return true;
+                    
+                    // Fallback para nombres
+                    var propEstado = f.properties.NOM_ENT || f.properties.ENTIDAD || f.properties.NOMGEO || "Desconocido";
+                    var normalizado = (typeof normalizarTexto !== 'undefined') ? normalizarTexto(propEstado) : propEstado.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                    if (nombreEstado === "ZM Valle de México") {
+                        return normalizado.includes("MEXICO") || normalizado.includes("CIUDAD DE MEXICO");
+                    }
+                    return false;
+                }
+
                 if (cveNum && cveEntBusqueda && cveNum === cveEntBusqueda) return true;
 
                 // Respaldo (Failsafe): Búsqueda tradicional por su nombre de tabla de atributos
@@ -458,7 +523,8 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
             });
 
             // Si por alguna razón los GeoJSON agrupados ya NO pueden dividirse, enviamos toda la región
-            if (featuresFiltradas.length === 0) {
+            if (featuresFiltradas.length === 0 && estadoBusqueda !== "CIUDAD DE MEXICO" && !CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+                // Sólo hacemos fallback si NO es CDMX para evitar pintar Puebla accidentalmente.
                 featuresFiltradas = agebDataRegional.features;
             }
 
@@ -469,16 +535,26 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
 
             var armadorasFiltradas = armadorasRawData.features.filter(f => {
                 var estadoArmadora = (typeof normalizarTexto !== 'undefined') ? normalizarTexto(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO) : (f.properties.Estado || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                if (cveEntBusqueda === "ZMVM") return estadoArmadora.includes("MEXICO") || estadoArmadora.includes("CIUDAD DE MEXICO");
                 if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
                 return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
             });
 
             if (typeof dibujarArmadorasPuntos === "function") dibujarArmadorasPuntos(armadorasFiltradas);
 
-            var bounds = L.geoJSON(agebRawData).getBounds();
-            // Calcula el zoom ideal y fuerza un nivel adicional de acercamiento (+1)
-            var zoomProfundo = map.getBoundsZoom(bounds) + 1;
-            map.flyTo(bounds.getCenter(), zoomProfundo, { duration: 1.5 });
+            if (agebRawData.features.length > 0) {
+                var bounds = L.geoJSON(agebRawData).getBounds();
+                if (bounds.isValid()) {
+                    var zoomProfundo = map.getBoundsZoom(bounds) + 1;
+                    map.flyTo(bounds.getCenter(), zoomProfundo, { duration: 1.5 });
+                }
+            } else {
+                console.warn("No se encontraron AGEBs para el filtro seleccionado.");
+            }
+
+            if (typeof window.actualizarModulosDatosDuros === 'function') {
+                window.actualizarModulosDatosDuros(featuresFiltradas);
+            }
 
             selectIndice.innerHTML = `<option value="" disabled>-- Índice --</option>`;
             opcionesAgeb.forEach((opc, idx) => {
@@ -650,9 +726,10 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
         }
 
         totalPob += pobFeature;
-        totalDisc += parseFloat(p.DISC1) || 0;
-        totalEdu += parseFloat(p.EDU46) || 0;
-        totalEco += parseFloat(p.ECO4) || 0;
+        // CDMX.geojson lacks DISC1, EDU46, ECO4, fallback to POB24, POB42, POB84 based on data mapping
+        totalDisc += parseFloat(p.DISC1) || parseFloat(p.POB24) || 0;
+        totalEdu += parseFloat(p.EDU46) || parseFloat(p.POB42) || 0;
+        totalEco += parseFloat(p.ECO4) || parseFloat(p.POB84) || 0;
     });
 
     var canvasVuln = document.getElementById('vulnChart');
@@ -1067,9 +1144,14 @@ function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {
         `;
     }
 
+    var totalAgebs = cMB + cB + cM + cA + cMA + (conteo['Sin dato'] || 0);
+
     var html = `
-        <div style="display:flex; align-items:center; margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px;">
+        <div style="display:flex; align-items:center; margin-bottom:4px; font-weight:bold; color:#ddd; font-size:14px;">
             ${titulo} ${infoButtonHtml}
+        </div>
+        <div style="font-size: 12px; color: #aaa; margin-bottom: 12px; font-weight: normal;">
+            Total de AGEBs: <b>${totalAgebs}</b>
         </div>
         <div style="width: 100%; padding: 0 5px; box-sizing: border-box; margin-bottom: 15px;">
             <div style="display: flex; width: 100%; height: 22px; border-radius: 4px; border: 1px solid #555; overflow: hidden; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold; color: #111;">

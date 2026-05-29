@@ -52,7 +52,8 @@ function generarMenuEstados(data) {
                     if (nombreMostrar.includes("DE OCAMPO")) nombreMostrar = "MICHOACÁN";
                     if (nombreMostrar.includes("DE ZARAGOZA")) nombreMostrar = "COAHUILA";
                     if (nombreMostrar.includes("DE ARTEAGA")) nombreMostrar = "QUERÉTARO";
-                    if (nombreMostrar === "ESTADO DE MEXICO" || nombreMostrar === "MEXICO" || nombreMostrar === "ESTADO DE MÉXICO" || nombreMostrar === "MÉXICO") nombreMostrar = "MÉXICO";
+                    if (nombreMostrar === "ESTADO DE MEXICO" || nombreMostrar === "MEXICO" || nombreMostrar === "ESTADO DE MÉXICO" || nombreMostrar === "MÉXICO") nombreMostrar = "ESTADO DE MÉXICO";
+                    if (nombreMostrar === "CIUDAD DE MEXICO" || nombreMostrar === "CIUDAD DE MÉXICO") nombreMostrar = "CIUDAD DE MÉXICO";
                     estadosMap.set(nameNorm, nombreMostrar);
                 }
             }
@@ -73,7 +74,36 @@ function generarMenuEstados(data) {
         select.appendChild(opt);
     });
 
-    select.onchange = function () { if (this.value) filtrarPorEstado(this.value); };
+    // Selector de Zona Metropolitana
+    var selectZm = document.createElement("select");
+    selectZm.className = "dynamic-filter-select";
+    selectZm.id = "select-zm-estatal";
+    var defaultZm = document.createElement("option");
+    defaultZm.innerText = "-- Zona Metropolitana --";
+    defaultZm.value = ""; defaultZm.disabled = true; defaultZm.selected = true;
+    selectZm.appendChild(defaultZm);
+
+    Object.keys(CATALOGO_ZONAS_METROPOLITANAS).forEach(zm => {
+        var opt = document.createElement("option"); 
+        opt.value = zm; 
+        opt.innerText = zm;
+        selectZm.appendChild(opt);
+    });
+
+    selectZm.onchange = function () {
+        if (this.value) {
+            select.value = ""; // Deseleccionar entidad federativa
+            filtrarPorEstado(this.value);
+        }
+    };
+    container.appendChild(selectZm);
+
+    select.onchange = function () { 
+        if (this.value) {
+            selectZm.value = ""; // Deseleccionar ZM
+            filtrarPorEstado(this.value); 
+        }
+    };
     container.appendChild(select);
 
     window.currentDenueOpacity = 0.9;
@@ -93,12 +123,14 @@ function normalizarTexto(texto) {
 }
 
 function obtenerNombreEstandarEstado(nombre) {
+    if (nombre === "ZMVM") return "ZMVM";
     let n = normalizarTexto(nombre);
     if (n === "VERACRUZ DE IGNACIO DE LA LLAVE") return "VERACRUZ";
     if (n === "MICHOACAN DE OCAMPO") return "MICHOACAN";
     if (n === "COAHUILA DE ZARAGOZA") return "COAHUILA";
     if (n === "ESTADO DE MEXICO") return "MEXICO";
     if (n === "QUERETARO DE ARTEAGA") return "QUERETARO";
+    if (n === "CIUDAD DE MEXICO") return "CIUDAD DE MEXICO";
     return n;
 }
 
@@ -128,13 +160,29 @@ function procesarYUnirIsocronas(features) {
 function filtrarPorEstado(nombreEstado) {
     var estadoBusqueda = obtenerNombreEstandarEstado(nombreEstado);
 
-    var denueEstado = denueRawData.features.filter(f => obtenerNombreEstandarEstado(f.properties.NOMGEO || f.properties.Entidad || f.properties.ENTIDAD || f.properties.ESTADO) === estadoBusqueda);
+    if (CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+        var firstCode = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado][0].substring(0, 2);
+        if (nombreEstado === "ZM Valle de México") estadoBusqueda = "ZMVM";
+        else if (firstCode === "02") estadoBusqueda = "BAJA CALIFORNIA";
+        else if (firstCode === "19") estadoBusqueda = "NUEVO LEON";
+    }
+
+    var denueEstado = denueRawData.features.filter(f => {
+        let n = obtenerNombreEstandarEstado(f.properties.NOMGEO || f.properties.Entidad || f.properties.ENTIDAD || f.properties.ESTADO);
+        if (estadoBusqueda === "ZMVM") return n === "MEXICO" || n === "CIUDAD DE MEXICO";
+        return n === estadoBusqueda;
+    });
     var armadorasEstado = armadorasRawData.features.filter(f => {
         var estadoArmadora = obtenerNombreEstandarEstado(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
+        if (estadoBusqueda === "ZMVM") return estadoArmadora === "MEXICO" || estadoArmadora === "CIUDAD DE MEXICO" || estadoArmadora.includes("MEXICO") || estadoArmadora.includes("CIUDAD DE MEXICO");
         if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
         return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
     });
-    var isocronasRawList = isocronasRawData.features.filter(f => obtenerNombreEstandarEstado(f.properties.NOMGEO || f.properties.Entidad || f.properties.Estado || f.properties.ESTADO || f.properties.ENTIDAD) === estadoBusqueda);
+    var isocronasRawList = isocronasRawData.features.filter(f => {
+        let n = obtenerNombreEstandarEstado(f.properties.NOMGEO || f.properties.Entidad || f.properties.Estado || f.properties.ESTADO || f.properties.ENTIDAD);
+        if (estadoBusqueda === "ZMVM") return n === "MEXICO" || n === "CIUDAD DE MEXICO";
+        return n === estadoBusqueda;
+    });
     var isocronasEstado = procesarYUnirIsocronas(isocronasRawList);
 
     isocronasEstado.sort((a, b) => parseInt(b.properties.AA_MINS || 0) - parseInt(a.properties.AA_MINS || 0));
@@ -248,6 +296,10 @@ function filtrarPorEstado(nombreEstado) {
     if (typeof window.dibujarLimiteMunicipal === 'function') {
         window.dibujarLimiteMunicipal(nombreEstado);
     }
+
+    if (typeof window.actualizarModulosDatosDuros === 'function') {
+        window.actualizarModulosDatosDuros([], "Estatal", nombreEstado);
+    }
 }
 
 function dibujarArmadorasPuntos(features) {
@@ -332,8 +384,17 @@ function actualizarGraficasVinculacion(nombreEstado, isocronasEstado) {
     if (!container || !vinculacionRawData || !vinculacionRawData.features) { if (container) container.style.display = 'none'; return; }
 
     var estadoBusqueda = obtenerNombreEstandarEstado(nombreEstado);
+
+    if (CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+        var firstCode = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado][0].substring(0, 2);
+        if (nombreEstado === "ZM Valle de México") estadoBusqueda = "ZMVM";
+        else if (firstCode === "02") estadoBusqueda = "BAJA CALIFORNIA";
+        else if (firstCode === "19") estadoBusqueda = "NUEVO LEON";
+    }
+
     var featuresEstado = vinculacionRawData.features.filter(f => {
         var entidad = obtenerNombreEstandarEstado(f.properties.Entidad);
+        if (estadoBusqueda === "ZMVM") return entidad === "MEXICO" || entidad === "CIUDAD DE MEXICO";
         if (estadoBusqueda === "BAJA CALIFORNIA" && entidad.includes("SUR")) return false;
         return entidad === estadoBusqueda || entidad.includes(estadoBusqueda) || estadoBusqueda.includes(entidad);
     });
