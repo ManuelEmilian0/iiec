@@ -1,0 +1,433 @@
+/* =========================================
+   1. RESET Y ESTILOS GENERALES
+   ========================================= */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Noto Sans", sans-serif;
+  background-color: #333;
+  color: #eee;
+  overflow: hidden;
+  /* IMPORTANTE: Evita scroll en toda la página */
+}
+
+/* =========================================
+   2. ENCABEZADO Y NAVEGACIÓN
+   ========================================= */
+
+/* Barra de Navegación principal - Altura: 40px */
+#nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: #003366;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.nav-buttons-container {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  padding: 0 10px;
+  height: 40px;
+  line-height: 40px;
+  color: #ccc;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.nav-button:hover {
+  color: #fff;
+  border-bottom-color: #555;
+}
+
+.nav-button.active {
+  color: #fff;
+  border-bottom-color: #a50f15;
+}
+
+/* =========================================
+   3. CONTENEDOR PRINCIPAL
+   ========================================= */
+#main-container {
+  padding-top: 40px;
+  /* Espacio solo para nav-bar */
+  height: 100vh;
+  /* Ocupa toda la altura */
+  box-sizing: border-box;
+  position: relative;
+  background-color: #222;
+}
+
+.main-content-panel {
+  display: none;
+  /* Se activa con JS */
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow-y: auto;
+  /* Permite scroll en secciones de texto */
+}
+
+.active-panel {
+  display: block;
+}
+
+/* --- CORRECCIÓN CRÍTICA PARA EL MAPA --- */
+/* Esto obliga al mapa a ocupar todo el espacio disponible sin colapsar */
+#inicio {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* El mapa no debe tener scrollbars nativos */
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: #222;
+  z-index: 1;
+}
+
+/* =========================================
+   4. ESTRUCTURA DE PANELES (FIXED LAYOUT)
+   ========================================= */
+
+/* --- CONTENEDOR IZQUIERDO: CONTROLES --- */
+#left-sidebar-container {
+  position: absolute;
+  top: 40px;
+  /* Comienza justo debajo de la barra de navegación que mide 40px */
+  left: 0;
+  /* Pegado al borde */
+  width: 450px !important;
+  /* Ancho ampliado para llegar cerca del botón Contacto */
+  bottom: 0;
+  /* Ocupa hasta abajo */
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* Separación entre cajas */
+  padding: 20px;
+  /* Espacio para que las cajas no toquen los bordes del panel */
+  background: rgba(35, 35, 35, 0.95);
+  /* Fondo sólido semitransparente oscuro */
+  backdrop-filter: blur(5px);
+  border-right: 1px solid #444;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
+  overflow-y: auto;
+  /* El GRAN scroll del panel principal */
+  pointer-events: auto;
+  /* Ahora el panel bloquea los clicks hácia el mapa debajo de él */
+}
+
+/* --- CONTENEDOR DERECHO: RESULTADOS --- */
+#right-sidebar-container {
+  display: none;
+  /* Inactivado ya que paneles se movieron a la izquierda */
+}
+
+/* --- CAJAS (Dashboard Boxes) --- */
+.dashboard-box,
+.control-box {
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  padding: 10px 15px;
+  /* Ligeramente más compacto el padding vertical */
+  border-radius: 8px;
+  border: 1px solid #555;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  /* Reactiva clicks */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  /* Evita que se aplasten si es posible */
+
+  /* Al eliminarse max-height y overflow, el scroll pasa al #left-sidebar-container */
+}
+
+/* Permitir que el recuadro de gráficas adopte tamaño natural */
+
+
+/* --- ESTILO ELEGANTE PARA EL SCROLL (Webkit) --- */
+.dashboard-box::-webkit-scrollbar,
+.control-box::-webkit-scrollbar {
+  width: 6px;
+  /* Barra fina */
+}
+
+.dashboard-box::-webkit-scrollbar-track,
+.control-box::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  /* Fondo del riel */
+  border-radius: 3px;
+}
+
+.dashboard-box::-webkit-scrollbar-thumb,
+.control-box::-webkit-scrollbar-thumb {
+  background: #00e5ff;
+  border-radius: 4px;
+}
+
+.dashboard-box::-webkit-scrollbar-thumb:hover,
+.control-box::-webkit-scrollbar-thumb:hover {
+  background: #00b3cc;
+}
+
+/* Scroll global del panel izquierdo muy llamativo */
+#left-sidebar-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+#left-sidebar-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+}
+
+#left-sidebar-container::-webkit-scrollbar-thumb {
+  background: #00e5ff;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+}
+
+#left-sidebar-container::-webkit-scrollbar-thumb:hover {
+  background: #00b3cc;
+}
+
+/* Títulos */
+.panel-title,
+#filter-title,
+#stats-title-text {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #fcae91;
+  padding-bottom: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  /* Centrar todos los subtítulos */
+  width: 100%;
+  display: inline-block;
+}
+
+.toggleable {
+  cursor: pointer;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  position: relative;
+  /* Clave para que la flecha flote al borde */
+}
+
+.drop-arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 12px;
+  color: #888;
+  position: absolute;
+  /* Arroja la flecha al extremo derecho independientemente del texto centrado */
+  right: 0;
+}
+
+.toggleable:hover {
+  filter: brightness(1.2);
+}
+
+/* Scroll interno para filtros - Removido el comportamiento de scroll aquí para pasarlo al panel global */
+#filter-buttons-container {
+  padding-right: 5px;
+}
+
+/* Botones de Escala */
+.scale-icons-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.scale-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  background: #002b56;
+  color: #ddd;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: all 0.2s;
+  padding: 8px;
+}
+
+.scale-btn svg {
+  width: 100%;
+  height: 100%;
+  max-width: 24px;
+  max-height: 24px;
+}
+
+.scale-btn:hover {
+  background: #004080;
+  color: #fff;
+  border-color: #aaa;
+}
+
+.scale-btn.active {
+  background: #d59f0f;
+  color: #222;
+  border-color: #d59f0f;
+  box-shadow: 0 0 10px rgba(213, 159, 15, 0.5);
+}
+
+/* Botones de Filtro (Unificados) */
+.dynamic-filter-btn {
+  display: block;
+  width: 100%;
+  margin: 4px 0;
+  padding: 8px;
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.dynamic-filter-btn:hover {
+  background: #555;
+  border-color: #aaa;
+}
+
+.dynamic-filter-btn.active {
+  background: #a50f15;
+  border-color: #fff;
+  font-weight: bold;
+}
+
+/* Menú Select Desplegable */
+.dynamic-filter-select {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: "Noto Sans", sans-serif;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  /* Estilo nativo oculto */
+  background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+  background-repeat: no-repeat;
+  background-position-x: 95%;
+  background-position-y: 5px;
+}
+
+.dynamic-filter-select:hover {
+  background-color: #444;
+  border-color: #aaa;
+}
+
+.dynamic-filter-select:focus {
+  border-color: #008cff;
+}
+
+.dynamic-filter-select option {
+  background: #222;
+  color: #eee;
+  padding: 5px;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: #555;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.back-btn:hover {
+  background: #777;
+}
+
+/* Botón de Descarga */
+.download-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.download-btn:hover {
+  background: #1b5e20;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #222;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+/* =========================================

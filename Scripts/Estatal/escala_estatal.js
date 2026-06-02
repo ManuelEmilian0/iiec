@@ -3,7 +3,7 @@
 // ==========================================
 
 function cargarArmadorasContexto() {
-    fetch('armadoras.geojson').then(r => r.json()).then(data => {
+    fetch('carto/armadoras.geojson').then(r => r.json()).then(data => {
         window.armadorasContextoGlobalLayer = L.geoJSON(data, {
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng, { radius: 2, fillColor: "#fff", color: "#fff", weight: 0, opacity: 0.3, fillOpacity: 0.3 });
@@ -17,10 +17,10 @@ function cargarArmadorasContexto() {
 
 function iniciarLogicaEstatal() {
     Promise.all([
-        fetch('denue.geojson').then(r => r.json()),
-        fetch('armadoras.geojson').then(r => r.json()),
-        fetch('isocronas.geojson').then(r => r.json()),
-        fetch('Vinculacion_empresas_DENUE_2026.geojson').then(r => r.json())
+        fetch('carto/denue.geojson').then(r => r.json()),
+        fetch('carto/armadoras.geojson').then(r => r.json()),
+        fetch('carto/isocronas.geojson').then(r => r.json()),
+        fetch('carto/Vinculacion_empresas_DENUE_2026.geojson').then(r => r.json())
     ]).then(([denueData, armadorasData, isocronasData, vinculacionData]) => {
         denueRawData = denueData;
         armadorasRawData = armadorasData;

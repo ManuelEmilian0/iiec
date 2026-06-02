@@ -7,7 +7,7 @@
     <title>Geovisualizador Multiescalar</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="icon" href="favicon_multiescalar.png" type="image/png">
+    <link rel="icon" href="assets/favicon_multiescalar.png" type="image/png">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
     <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
@@ -33,10 +33,10 @@
         <div class="splash-content">
             <div class="splash-logos">
                 <a href="https://www.unam.mx/" target="_blank">
-                    <img src="logo_unam.png" alt="UNAM" class="splash-logo">
+                    <img src="assets/logo_unam.png" alt="UNAM" class="splash-logo">
                 </a>
                 <a href="https://www.iiec.unam.mx/" target="_blank">
-                    <img src="logo_iiec.png" alt="IIEc" class="splash-logo" style="margin-left: 30px;">
+                    <img src="assets/logo_iiec.png" alt="IIEc" class="splash-logo" style="margin-left: 30px;">
                 </a>
             </div>
             <h1 class="splash-title">Atlas de inteligencia multiescalar</h1>
@@ -406,14 +406,14 @@
                         style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px;">
                         <div
                             style="flex: 1 1 calc(50% - 20px); text-align: center; background: rgba(20,20,20,0.8); padding: 10px; border-radius: 8px; border: 1px solid #333;">
-                            <img src="Modelo_Comunicaci%C3%B3n_Cartografica.png" alt="Modelo Comunicación Cartográfica"
+                            <img src="assets/Modelo_Comunicaci%C3%B3n_Cartografica.png" alt="Modelo Comunicación Cartográfica"
                                 style="max-width: 100%; border-radius: 4px;">
                             <p style="color: #ccc; font-size: 12px; margin-top: 10px; font-weight: bold;">Modelo de
                                 Comunicación Cartográfica</p>
                         </div>
                         <div
                             style="flex: 1 1 calc(50% - 20px); text-align: center; background: rgba(20,20,20,0.8); padding: 10px; border-radius: 8px; border: 1px solid #333;">
-                            <img src="Proceso%20de%20Geointeligencia%20Multiescalar.png"
+                            <img src="assets/Proceso%20de%20Geointeligencia%20Multiescalar.png"
                                 alt="Proceso de Geointeligencia Multiescalar"
                                 style="max-width: 100%; border-radius: 4px;">
                             <p style="color: #ccc; font-size: 12px; margin-top: 10px; font-weight: bold;">Proceso de
@@ -421,14 +421,14 @@
                         </div>
                         <div
                             style="flex: 1 1 calc(50% - 20px); text-align: center; background: rgba(20,20,20,0.8); padding: 10px; border-radius: 8px; border: 1px solid #333;">
-                            <img src="Proceso_Desarrollo.png" alt="Proceso de Desarrollo"
+                            <img src="assets/Proceso_Desarrollo.png" alt="Proceso de Desarrollo"
                                 style="max-width: 100%; border-radius: 4px;">
                             <p style="color: #ccc; font-size: 12px; margin-top: 10px; font-weight: bold;">Proceso de
                                 Desarrollo</p>
                         </div>
                         <div
                             style="flex: 1 1 calc(50% - 20px); text-align: center; background: rgba(20,20,20,0.8); padding: 10px; border-radius: 8px; border: 1px solid #333;">
-                            <img src="Bloque_Historico_Gramsciano.png" alt="Bloque Histórico Gramsciano"
+                            <img src="assets/Bloque_Historico_Gramsciano.png" alt="Bloque Histórico Gramsciano"
                                 style="max-width: 100%; border-radius: 4px;">
                             <p style="color: #ccc; font-size: 12px; margin-top: 10px; font-weight: bold;">Bloque
                                 Histórico Gramsciano</p>
@@ -657,11 +657,12 @@
         </div>
     </div>
 
-    <script src="auth.js"></script>
-    <script src="escala_global_nacional.js"></script>
-    <script src="escala_estatal.js"></script>
-    <script src="escala_municipal.js"></script>
-    <script src="ian_dashboard.js"></script>
+    <script src="Scripts/auth.js"></script>
+    <script src="Scripts/utils.js"></script>
+    <script src="Scripts/Global/escala_global_nacional.js"></script>
+    <script src="Scripts/Estatal/escala_estatal.js"></script>
+    <script src="Scripts/Municipal/escala_municipal.js"></script>
+    <script src="Scripts/Municipal/ian_dashboard.js"></script>
 </body>
 
 </html>

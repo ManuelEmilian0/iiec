@@ -1,0 +1,356 @@
+   5. LEYENDA Y OTROS ESTILOS
+   ========================================= */
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  border-radius: 4px;
+  border: 1px solid #777;
+  display: inline-block;
+}
+
+.legend-gradient-container {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.legend-gradient-bar {
+  width: 100%;
+  height: 15px;
+  border-radius: 4px;
+  border: 1px solid #777;
+  margin-bottom: 5px;
+}
+
+.legend-gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #ddd;
+  font-weight: 600;
+}
+
+#legend-overlay {
+  display: none;
+}
+
+.dropdown-content {
+  display: none;
+  flex-direction: column;
+}
+
+.dropdown-content.show {
+  display: flex;
+}
+
+.panel-title.toggleable {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =========================================
+   6. CONTENIDO DE TEXTO (Marco, Metodología)
+   ========================================= */
+.panel-inner-content {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px 60px 20px;
+  line-height: 1.7;
+  font-size: 16px;
+  color: #ddd;
+}
+
+.panel-inner-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  border-bottom: 2px solid #a50f15;
+  padding-bottom: 10px;
+}
+
+.panel-inner-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fcae91;
+  margin-top: 30px;
+}
+
+.panel-inner-content p {
+  text-align: justify;
+  margin-bottom: 15px;
+}
+
+.panel-inner-content b,
+strong {
+  color: #fff;
+}
+
+.credits-content p {
+  margin-bottom: 5px;
+}
+
+.credits-content h3 {
+  color: #ffffff;
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+/* Ajustes de Leaflet Popup y Tooltips */
+.leaflet-popup-content-wrapper {
+  background: #333;
+  color: #eee;
+  border-radius: 4px;
+  border: 1px solid #555;
+}
+
+.leaflet-popup-tip {
+  background: #333;
+  border: 1px solid #555;
+  border-top: none;
+  border-left: none;
+}
+
+.leaflet-container {
+  font-family: "Noto Sans", sans-serif;
+}
+
+.leaflet-tooltip {
+  background: rgba(30, 30, 30, 0.9);
+  border: 1px solid #555;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Botón de Captura (Azul) */
+.screenshot-btn {
+  width: 100%;
+  margin-top: 10px;
+  /* ESPACIO VITAL */
+  padding: 10px;
+  background: #0277bd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.screenshot-btn:hover {
+  background: #01579b;
+}
+
+/* Estilo limpio para nombres de Armadoras */
+.etiqueta-armadora {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: rgba(0, 162, 255, 0.7);
+  font-weight: 800;
+  font-size: 11px;
+  text-shadow: 1px 1px 2px #000;
+  font-family: sans-serif;
+}
+
+/* Etiqueta para Destino de Intercambios */
+.etiqueta-destino {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #fff;
+  font-weight: bold;
+  font-size: 10px;
+  text-shadow: 1px 1px 3px #000;
+  font-family: sans-serif;
+}
+
+/* Ocultar la flecha pequeña del tooltip por defecto */
+.leaflet-tooltip-top:before {
+  display: none;
+}
+
+/* CLASE MÁGICA: Hace que los elementos sean "invisibles" al mouse */
+.sin-interaccion {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+/* Enlace Portafolio */
+.portfolio-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.portfolio-link:hover {
+  color: #008cff;
+  /* Color Azul */
+  text-decoration: underline;
+}
+
+/* =========================================
+   7. ANIMACIONES Y FLUIDEZ (MEJORAS UX)
+   ========================================= */
+
+/* A) Fade-in suave para el cambio de pestañas (Inicio, Marco, Metodología) */
+@keyframes fadeInSuave {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bouncePop {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.active-panel {
+  display: block;
+  animation: fadeInSuave 0.4s ease-in-out forwards;
+}
+
+/* B) Efecto de entrada (Slide-in) para el panel lateral izquierdo */
+@keyframes slideInIzquierda {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+#left-sidebar-container {
+  /* Le aplicamos la animación para que entre flotando de izquierda a derecha */
+  animation: slideInIzquierda 0.5s ease-out forwards;
+  transition: transform 0.4s ease-in-out;
+}
+
+/* Botón flotante para Ocultar/Mostrar el slide */
+@keyframes slideInBottonIzquierda {
+  from {
+    left: -30px;
+    opacity: 0;
+  }
+
+  to {
+    left: 450px;
+    opacity: 1;
+  }
+}
+
+#sidebar-toggle-tab {
+  position: absolute;
+  top: 110px;
+  /* Lado superior derecho (ahora referenciado a left) */
+  left: 450px;
+  /* Igual al ancho del left-sidebar para que nazca pegado externamente */
+  width: 30px;
+  height: 50px;
+  background: rgba(35, 35, 35, 0.95);
+  border: 1px solid #444;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 2000;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s ease-in-out;
+  animation: slideInBottonIzquierda 0.5s ease-out forwards;
+}
+
+#sidebar-toggle-tab.hidden-btn {
+  left: 0 !important;
+  /* Retorna al borde izquierdo cuando el panel desaparece */
+}
+
+#sidebar-toggle-tab:hover {
+  background: #555;
+  color: #fcae91;
+}
+
+.hidden-panel {
+  transform: translateX(-100%) !important;
+}
+
+/* C) Botones Vivos: Animaciones interactivas (Hover) */
+
+/* 1. Botones de Filtro: Que se deslicen un poquito a la derecha */
+.dynamic-filter-btn {
+  transition: all 0.3s ease !important;
+  /* Transición suave */
+}
+
+.dynamic-filter-btn:hover {
+  background: #555;
+  border-color: #aaa;
+  transform: translateX(4px);
+  /* Se mueve 4px a la derecha */
+}
+
+/* 2. Botones de Escala (Mundial, Nacional, etc.): Que "salten" un poquito hacia arriba */
+.scale-btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.scale-btn:hover {
+  background: #004080;
+  color: #fff;
+  border-color: #aaa;
+  transform: translateY(-3px);
+  /* Se eleva 3px */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  /* Sombra extra al flotar */
+}
+
+/* 3. Botones de Descarga/Cámara: Efecto de presionado y flote */
+.download-btn,
+.screenshot-btn {
+  transition: all 0.2s ease !important;
+}
+
+.download-btn:hover,
+.screenshot-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  /* Lo hace un poco más brillante */
+}
+
+.download-btn:active,
+.screenshot-btn:active {
+  transform: translateY(1px);
+  /* Efecto de hundimiento al hacer clic */
+}
+
+/* =========================================

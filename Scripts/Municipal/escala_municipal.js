@@ -4,10 +4,10 @@
 
 // Diccionario de los nuevos archivos regionales (Lazy Loading structure).
 const REGIONES_AGEB = {
-    "Region Norte": "region_Norte.geojson",
-    "Region Centro": "region_Centro.geojson",
-    "Region Occidente": "region_Occidente.geojson",
-    "CDMX": "CDMX.geojson"
+    "Region Norte": 'carto/region_Norte.geojson',
+    "Region Centro": 'carto/region_Centro.geojson',
+    "Region Occidente": 'carto/region_Occidente.geojson',
+    "CDMX": 'carto/CDMX.geojson'
 };
 
 // Mapeo inverso de qué estados le tocan a qué región.
@@ -127,7 +127,7 @@ function iniciarLogicaMunicipio() {
             if (firstCode === "02") regionToLoad = "Region Norte"; // ZM Tijuana -> BC -> Norte
             else if (firstCode === "19") regionToLoad = "Region Norte"; // ZM Monterrey -> NL -> Norte
 
-            cargarAgebEstadoRegional(this.value, REGIONES_AGEB[regionToLoad] || "agebmex.geojson", selectIndice, opcionesAgeb);
+            cargarAgebEstadoRegional(this.value, REGIONES_AGEB[regionToLoad] || 'carto/agebmex.geojson', selectIndice, opcionesAgeb);
         }
     };
 
@@ -187,7 +187,7 @@ function iniciarLogicaMunicipio() {
                     }
                     
                     if (!window.limiteDelegacionalLayer) {
-                        fetch('limite_delegacional_Tijuana.geojson')
+                        fetch('carto/limite_delegacional_Tijuana.geojson')
                             .then(r => r.json())
                             .then(data => {
                                 window.limiteDelegacionalLayer = L.geoJSON(data, {
@@ -248,7 +248,7 @@ function iniciarLogicaMunicipio() {
                     
                     toggleLev.onchange = function() {
                         if (this.value === "on") {
-                            fetch('levantamiento.geojson')
+                            fetch('carto/levantamiento.geojson')
                                 .then(r => r.json())
                                 .then(data => {
                                     if (window.levantamientoLayer) map.removeLayer(window.levantamientoLayer);
@@ -345,7 +345,7 @@ function iniciarLogicaMunicipio() {
             }
 
             var regionKey = this.value;
-            var archivoGeojson = REGIONES_AGEB[regionKey] || "agebmex.geojson";
+            var archivoGeojson = REGIONES_AGEB[regionKey] || 'carto/agebmex.geojson';
             document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
             cargarAgebEstadoRegional(nombreEst, archivoGeojson, selectIndice, opcionesAgeb);
     };
@@ -450,7 +450,7 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
             promises.push(
                 Promise.all([
                     fetch(archivoGeojson).then(r => r.json()),
-                    fetch("CDMX.geojson").then(r => r.json())
+                    fetch('carto/CDMX.geojson').then(r => r.json())
                 ]).then(results => {
                     var mergedFeatures = results[0].features.concat(results[1].features);
                     return { type: "FeatureCollection", features: mergedFeatures };
@@ -464,14 +464,14 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
     }
 
     // Armadoras siempre lo cargamos o lo abstraemos también
-    promises.push(fetch('armadoras.geojson').then(r => r.json()));
+    promises.push(fetch('carto/armadoras.geojson').then(r => r.json()));
 
     // Cargar Limite_municipal.geojson sincrónicamente para los gráficos
     promises.push(
         window.municipiosPolygonsGeoJSON ? Promise.resolve(window.municipiosPolygonsGeoJSON) :
             Promise.all([
-                fetch('Limite_municipal_opt.geojson').then(r => r.json()),
-                fetch('Limite_municipal_CDMX.geojson').then(r => r.json()).catch(e => ({ type: "FeatureCollection", features: [] }))
+                fetch('carto/Limite_municipal_opt.geojson').then(r => r.json()),
+                fetch('carto/Limite_municipal_CDMX.geojson').then(r => r.json()).catch(e => ({ type: "FeatureCollection", features: [] }))
             ]).then(([geoOpt, geoCdmx]) => {
                 geoOpt.features = geoOpt.features.concat(geoCdmx.features);
                 window.municipiosPolygonsGeoJSON = geoOpt;
@@ -495,7 +495,7 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
 
             // Filtramos para aislar los AGEB de ESTE ESTADO o ZM especifico y no pintar toda la región
             var featuresFiltradas = agebDataRegional.features.filter(f => {
-                if (archivoGeojson === "CDMX.geojson") return true; // CDMX.geojson ya viene filtrado
+                if (archivoGeojson === 'carto/CDMX.geojson') return true; // CDMX.geojson ya viene filtrado
 
                 var cveNum = f.properties.CVE_ENT || (f.properties.CVEGEO ? f.properties.CVEGEO.substring(0, 2) : null);
                 var cveMun = f.properties.CVEGEO ? f.properties.CVEGEO.substring(0, 5) : null;
@@ -1127,11 +1127,11 @@ function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {
 
     var tituloLimpio = titulo.trim();
     if (tituloLimpio === 'Vulnerabilidad en Hogar' || tituloLimpio === 'Vulnerabilidad en el hogar') {
-        imageName = 'Vuln_hogar.png';
+        imageName = 'assets/Vuln_hogar.png';
     } else if (tituloLimpio === 'Deficiencias en Infraestructura' || tituloLimpio === 'Deficiencia de infraestructura') {
-        imageName = 'Vuln_Urbana.png';
+        imageName = 'assets/Vuln_Urbana.png';
     } else if (tituloLimpio === 'Sin Oportunidades' || tituloLimpio === 'Sin oportunidades') {
-        imageName = 'Vuln_oportunidades.png';
+        imageName = 'assets/Vuln_oportunidades.png';
     }
 
     if (imageName) {
@@ -1224,11 +1224,11 @@ function mostrarImagenInfo(imageName) {
     var textResumen = "";
     var conclusion = "La combinación de estos indicadores produjo un Índice de Vulnerabilidad Global que distingue con precisión los territorios consolidados con cualidades a atender.";
 
-    if (imageName === 'Vuln_hogar.png') {
+    if (imageName === 'assets/Vuln_hogar.png') {
         textResumen = "La Físico-Espacial igual a “Vulnerabilidad en Hogar” refleja las condiciones materiales y de ocupación del territorio. Se construyó a partir de variables como: nuevas áreas de crecimiento urbano, la pavimentación, el alumbrado público, la densidad de vivienda, las viviendas deshabitadas y el hacinamiento. Los resultados de esta vulnerabilidad evidencian procesos de dispersión y vaciamiento urbano que afectan la eficiencia territorial. También mayores riesgos, asociados a carencias en infraestructura doméstica, inseguridad y pérdida de cohesión social.<br><br><b>" + conclusion + "</b>";
-    } else if (imageName === 'Vuln_Urbana.png') {
+    } else if (imageName === 'assets/Vuln_Urbana.png') {
         textResumen = "La Urbana igual a “Deficiencia en Infraestructura” se compone en tres variables ponderadas: Vivienda sin drenaje, asociadas a riesgos sanitarios y contaminación ambiental, vivienda sin agua entubada, refleja la desigualdad en el acceso al recurso más esencial para la salud pública y el bienestar doméstico y vivienda sin electricidad que representa la carencia más crítica, limita la integración productiva, educativa y social de los hogares.<br><br><b>" + conclusion + "</b>";
-    } else if (imageName === 'Vuln_oportunidades.png') {
+    } else if (imageName === 'assets/Vuln_oportunidades.png') {
         textResumen = "La dimensión Socioeconómica igual a “Sin oportunidades” se calculó a partir de la ponderación de siete variables, se identificaron zonas con alta densidad poblacional, nivel de ingresos, población con dependencia económica, población sin afiliación a servicios de salud, población desocupada, población con discapacidad y bajo grado promedio de escolaridad. Permitió identificar áreas con mayor fragilidad social y económica.<br><br><b>" + conclusion + "</b>";
     }
 
@@ -1343,7 +1343,7 @@ function renderizarEquipamientoTijuana(wrapper) {
         return;
     }
 
-    fetch('Equipamiento_Tijuana.geojson')
+    fetch('carto/Equipamiento_Tijuana.geojson')
         .then(r => r.json())
         .then(data => {
             window.equipamientoDataCache = data;
