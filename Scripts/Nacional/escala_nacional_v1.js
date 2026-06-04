@@ -153,6 +153,7 @@ function iniciarFiltroNacional_Paso1(data) {
         <option value="" disabled selected>-- Seleccione Industria --</option>
         <option value="IC_AUTOMOTRIZ">Automotriz</option>
         <option value="IC_ELECTRICA">Eléctrica</option>
+        <option value="IC_ELECTRONICA">Electrónica</option>
         <option value="IC_SEIT">Servicios SEIT</option>
     `;
 
@@ -790,7 +791,7 @@ function renderizarMapaProductividad(industria, anio) {
     var filterTitle = document.getElementById('filter-title');
     filterTitle.innerText = "Cargando datos CSV...";
 
-    var filename = industria + '.csv';
+    var filename = 'Tablas/' + industria + '.csv';
 
     fetch(filename)
         .then(response => {
@@ -996,10 +997,15 @@ function dibujarGraficaEvolucion(estadosSeleccionados, anioDestacado) {
     var chartContainer = document.getElementById('topGlobalChartContainer');
     if (chartContainer) chartContainer.style.display = 'block';
 
-    var ind = window.industriaActual ? window.industriaActual.toUpperCase() : "SECTOR";
+    var indFriendly = "SECTOR";
+    if (window.industriaActual === "IC_AUTOMOTRIZ") indFriendly = "AUTOMOTRIZ";
+    else if (window.industriaActual === "IC_ELECTRICA") indFriendly = "ELÉCTRICA";
+    else if (window.industriaActual === "IC_ELECTRONICA") indFriendly = "ELECTRÓNICA";
+    else if (window.industriaActual === "IC_SEIT") indFriendly = "SERVICIOS SEIT";
+
     var chartTitle = document.getElementById('topGlobalChartTitle');
     if (chartTitle) {
-        chartTitle.innerHTML = 'EVOLUCIÓN TEMPORAL: CRECIMIENTO EN ' + ind;
+        chartTitle.innerHTML = 'EVOLUCIÓN TEMPORAL: CRECIMIENTO EN ' + indFriendly;
         chartTitle.style.display = 'block';
     }
 
@@ -1098,7 +1104,12 @@ function dibujarGraficaEvolucion(estadosSeleccionados, anioDestacado) {
         var lider = estadosSeleccionados[0];
         var primerAnio = labels[0] || "";
         var ultimoAnio = labels[labels.length - 1] || "";
-        var indNombre = window.industriaActual ? window.industriaActual.toLowerCase() : "la industria seleccionada";
+        
+        var indNombre = "la industria seleccionada";
+        if (window.industriaActual === "IC_AUTOMOTRIZ") indNombre = "la industria automotriz";
+        else if (window.industriaActual === "IC_ELECTRICA") indNombre = "la industria eléctrica";
+        else if (window.industriaActual === "IC_ELECTRONICA") indNombre = "la industria electrónica";
+        else if (window.industriaActual === "IC_SEIT") indNombre = "los servicios SEIT";
         
         var texto = `A lo largo del periodo analizado (${primerAnio} - ${ultimoAnio}), el estado de <b style="color:#00e5ff;">${lider}</b> se ha mantenido como el nodo más competitivo en <b style="color:#fcae91;">${indNombre}</b>, liderando la eficiencia del sector a nivel nacional. Las variaciones en la curva reflejan su resiliencia y adaptabilidad a los ciclos económicos globales.`;
 
