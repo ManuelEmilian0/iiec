@@ -1,4 +1,4 @@
-   5. LEYENDA Y OTROS ESTILOS
+ /* 5. LEYENDA Y OTROS ESTILOS
    ========================================= */
 .legend-item {
   display: flex;
@@ -57,13 +57,26 @@
   align-items: center;
 }
 
+.instrumento-seccion-title {
+  color: #dbc682;
+  font-size: 12px;
+  margin: 20px 0 5px 0;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
+}
+
+.instrumento-seccion-title.first {
+  margin-top: 0;
+}
+
 /* =========================================
    6. CONTENIDO DE TEXTO (Marco, Metodología)
    ========================================= */
 .panel-inner-content {
-  max-width: 900px;
+  max-width: 1400px;
+  width: 95%;
   margin: 40px auto;
-  padding: 0 20px 60px 20px;
+  padding: 0 30px 60px 30px;
   line-height: 1.7;
   font-size: 16px;
   color: #ddd;
@@ -296,8 +309,10 @@ strong {
 }
 
 #sidebar-toggle-tab:hover {
-  background: #555;
-  color: #fcae91;
+  background: #232323;
+  color: #0277bd;
+  border-color: #0277bd;
+  box-shadow: 0 0 10px rgba(2, 119, 189, 0.6);
 }
 
 .hidden-panel {

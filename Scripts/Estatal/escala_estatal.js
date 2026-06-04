@@ -74,33 +74,8 @@ function generarMenuEstados(data) {
         select.appendChild(opt);
     });
 
-    // Selector de Zona Metropolitana
-    var selectZm = document.createElement("select");
-    selectZm.className = "dynamic-filter-select";
-    selectZm.id = "select-zm-estatal";
-    var defaultZm = document.createElement("option");
-    defaultZm.innerText = "-- Zona Metropolitana --";
-    defaultZm.value = ""; defaultZm.disabled = true; defaultZm.selected = true;
-    selectZm.appendChild(defaultZm);
-
-    Object.keys(CATALOGO_ZONAS_METROPOLITANAS).forEach(zm => {
-        var opt = document.createElement("option"); 
-        opt.value = zm; 
-        opt.innerText = zm;
-        selectZm.appendChild(opt);
-    });
-
-    selectZm.onchange = function () {
-        if (this.value) {
-            select.value = ""; // Deseleccionar entidad federativa
-            filtrarPorEstado(this.value);
-        }
-    };
-    container.appendChild(selectZm);
-
     select.onchange = function () { 
         if (this.value) {
-            selectZm.value = ""; // Deseleccionar ZM
             filtrarPorEstado(this.value); 
         }
     };

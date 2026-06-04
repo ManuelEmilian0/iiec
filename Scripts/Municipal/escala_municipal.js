@@ -104,35 +104,7 @@ function iniciarLogicaMunicipio() {
         modal.style.display = "block";
     };
 
-    var selectZm = document.createElement("select");
-    selectZm.className = "dynamic-filter-select";
-    selectZm.id = "select-zm-muni";
-    var defaultZmMuni = document.createElement("option");
-    defaultZmMuni.innerText = "-- Zona Metropolitana --";
-    defaultZmMuni.value = ""; defaultZmMuni.disabled = true; defaultZmMuni.selected = true;
-    selectZm.appendChild(defaultZmMuni);
-
-    Object.keys(CATALOGO_ZONAS_METROPOLITANAS).forEach(zm => {
-        var opt = document.createElement("option"); 
-        opt.value = zm; 
-        opt.innerText = zm;
-        selectZm.appendChild(opt);
-    });
-
-    selectZm.onchange = function () {
-        if (this.value) {
-            selectEstado.value = ""; // Deseleccionar entidad federativa
-            var regionToLoad = "Region Centro"; // Default para ZMVM
-            var firstCode = CATALOGO_ZONAS_METROPOLITANAS[this.value][0].substring(0, 2);
-            if (firstCode === "02") regionToLoad = "Region Norte"; // ZM Tijuana -> BC -> Norte
-            else if (firstCode === "19") regionToLoad = "Region Norte"; // ZM Monterrey -> NL -> Norte
-
-            cargarAgebEstadoRegional(this.value, REGIONES_AGEB[regionToLoad] || 'carto/agebmex.geojson', selectIndice, opcionesAgeb);
-        }
-    };
-
     estadoContainer.appendChild(selectEstado);
-    estadoContainer.appendChild(selectZm);
     estadoContainer.appendChild(insigniaBadge);
 
     var selectIndice = document.createElement("select");
@@ -157,9 +129,6 @@ function iniciarLogicaMunicipio() {
         if (!this.value) return;
         var regionFile = this.value;
         var nombreEst = this.options[this.selectedIndex].text;
-        
-        var zmSel = document.getElementById("select-zm-muni");
-        if(zmSel) zmSel.value = "";
 
         if (nombreEst === "Baja California") {
             equipWrapper.style.display = "block";
@@ -358,18 +327,10 @@ function iniciarLogicaMunicipio() {
         }
     };
 
-    container.appendChild(selectZm);
     container.appendChild(selectEstado);
     container.appendChild(selectIndice);
 
-    var opacityControl = document.createElement('div');
-    opacityControl.style.cssText = "margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: space-between;";
-    opacityControl.innerHTML = `
-        <span style="font-size: 11px; color: #aaa;">Opacidad Base:</span>
-        <input type="range" id="ageb-opacity" min="0" max="1" step="0.1" value="0.85" style="width: 60%; cursor: pointer;" 
-            oninput="if(window.agebLayer) { window.agebLayer.eachLayer(l => { if(l.options.interactive) l.setStyle({fillOpacity: this.value}); }); }">
-    `;
-    container.appendChild(opacityControl);
+
 
     container.appendChild(equipWrapper);
 
@@ -467,17 +428,7 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
     promises.push(fetch('carto/armadoras.geojson').then(r => r.json()));
 
     // Cargar Limite_municipal.geojson sincrónicamente para los gráficos
-    promises.push(
-        window.municipiosPolygonsGeoJSON ? Promise.resolve(window.municipiosPolygonsGeoJSON) :
-            Promise.all([
-                fetch('carto/Limite_municipal_opt.geojson').then(r => r.json()),
-                fetch('carto/Limite_municipal_CDMX.geojson').then(r => r.json()).catch(e => ({ type: "FeatureCollection", features: [] }))
-            ]).then(([geoOpt, geoCdmx]) => {
-                geoOpt.features = geoOpt.features.concat(geoCdmx.features);
-                window.municipiosPolygonsGeoJSON = geoOpt;
-                return geoOpt;
-            }).catch(e => null)
-    );
+    promises.push(window.cargarLimiteMunicipalGeoJSON());
 
     Promise.all(promises)
         .then(([agebDataRegional, armadorasData]) => {

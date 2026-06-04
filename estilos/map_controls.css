@@ -1,4 +1,4 @@
-   8. TRANSICIONES GLOBALES DE LEAFLET
+/* 8. TRANSICIONES GLOBALES DE LEAFLET
    ========================================= */
 path.leaflet-interactive {
   transition: fill-opacity 0.6s ease-in-out, stroke-opacity 0.6s ease-in-out, opacity 0.6s ease-in-out !important;
@@ -79,9 +79,8 @@ path.leaflet-interactive {
   margin-right: 0px !important;
 }
 
-/* Custom Zoom Buttons, Geoman Controls & Layers Control */
+/* Custom Zoom Buttons & Layers Control */
 .leaflet-control-zoom a,
-.leaflet-pm-toolbar .button-container a,
 .leaflet-control-layers,
 .leaflet-control-layers-expanded {
   background-color: #000 !important;
@@ -92,22 +91,43 @@ path.leaflet-interactive {
 }
 
 .leaflet-control-zoom a:hover,
-.leaflet-pm-toolbar .button-container a:hover,
 .leaflet-control-layers:hover {
   background-color: #222 !important;
   color: #00e5ff !important;
   box-shadow: 0 0 15px rgba(0, 229, 255, 0.8) !important;
 }
 
-/* Geoman icon coloring */
-.leaflet-pm-toolbar .button-container a .action-icon,
-.leaflet-pm-toolbar .button-container a .leaflet-pm-icon {
-  filter: invert(65%) sepia(85%) saturate(3000%) hue-rotate(140deg) brightness(1.2) contrast(1.1) !important;
+/* Rediseño de botones de dibujo Geoman (transparentes con borde neon) */
+.leaflet-buttons-control-button {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: brightness(0)
+          drop-shadow(1px 0 0 #00e5ff) drop-shadow(-1px 0 0 #00e5ff) drop-shadow(0 1px 0 #00e5ff) drop-shadow(0 -1px 0 #00e5ff) !important;
+  transition: filter 0.2s ease-in-out;
+}
+
+.leaflet-buttons-control-button:hover {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  filter: brightness(0)
+          drop-shadow(1px 0 0 #00e5ff) drop-shadow(-1px 0 0 #00e5ff) drop-shadow(0 1px 0 #00e5ff) drop-shadow(0 -1px 0 #00e5ff)
+          drop-shadow(0 0 4px #00e5ff) !important;
+}
+
+/* Control de visibilidad condicional según escala activa en body */
+body:not(.scale-municipio) .leaflet-pm-toolbar,
+body:not(.scale-municipio) .leaflet-buttons-control-button {
+  display: none !important;
 }
 
 /* Layers icon coloring */
 .leaflet-control-layers-toggle {
-  filter: invert(1) drop-shadow(0 0 3px #00e5ff) !important;
+  filter: invert(0.8) !important;
+}
+
+.leaflet-control-layers-toggle:hover {
+  filter: invert(1) !important;
 }
 
 /* Remover doble borde de container de geoman */
@@ -401,7 +421,7 @@ path.leaflet-interactive {
 .marco-legal-tree {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
   padding: 5px;
 }
 
@@ -441,25 +461,9 @@ path.leaflet-interactive {
 
 .legal-card:hover {
   background: rgba(50, 50, 50, 0.8);
-  transform: scale(1.02);
   color: #fff;
-  border-left-width: 6px;
 }
 
-.legal-card::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: -2px;
-  width: 2px;
-  height: 10px;
-  background: #555;
-  display: none;
-}
-
-.legal-card:not(:first-child)::before {
-  display: block;
-}
 
 @keyframes fadeInDown {
   to {
@@ -472,7 +476,7 @@ path.leaflet-interactive {
 .penta-helix-container {
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 290px; /* Incrementado para dar más holgura vertical */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -493,8 +497,8 @@ path.leaflet-interactive {
 
 .penta-node {
   position: absolute;
-  width: 55px;
-  height: 55px;
+  width: 44px; /* Circulo más pequeño */
+  height: 44px; /* Circulo más pequeño */
   background: rgba(20, 20, 20, 0.9);
   border: 2px solid #555;
   border-radius: 50%;
@@ -503,7 +507,7 @@ path.leaflet-interactive {
   justify-content: center;
   align-items: center;
   color: #aaa;
-  font-size: 10px;
+  font-size: 8px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s;
@@ -515,12 +519,11 @@ path.leaflet-interactive {
   border-color: #00e5ff;
   color: #fff;
   box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
-  transform: scale(1.15);
   z-index: 3;
 }
 
 .penta-node i {
-  font-size: 24px;
+  font-size: 18px; /* Icono más pequeño */
 }
 
 .penta-label {
@@ -542,7 +545,6 @@ path.leaflet-interactive {
 
 .penta-node:hover .penta-label {
   color: #fff;
-  text-shadow: 0 0 5px #00e5ff;
 }
 
 
@@ -570,32 +572,38 @@ path.leaflet-interactive {
   opacity: 1;
 }
 
-/* Node Positioning */
+/* Node Positioning (Coordenadas de Pentágono Regular con centro 50%, 50%) */
 .node-gov {
-  top: 10px;
+  top: 18%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .node-aca {
-  top: 80px;
-  right: 20px;
+  top: 40%;
+  left: 80%;
+  transform: translate(-50%, -50%);
   border-color: #9c27b0;
 }
 
 .node-pri {
-  bottom: 20px;
-  right: 50px;
+  top: 76%;
+  left: 68%;
+  transform: translate(-50%, -50%);
   border-color: #2196f3;
 }
 
 .node-soc {
-  bottom: 20px;
-  left: 50px;
+  top: 76%;
+  left: 32%;
+  transform: translate(-50%, -50%);
   border-color: #ffeb3b;
 }
 
 .node-env {
-  top: 80px;
-  left: 20px;
+  top: 40%;
+  left: 20%;
+  transform: translate(-50%, -50%);
   border-color: #4caf50;
 }
 
@@ -660,22 +668,26 @@ path.leaflet-interactive {
 /* =========================================
    10. GALERÍA DE MAPAS BASE (CUSTOM CONTROL)
    ========================================= */
-.basemap-gallery-container {
-  background: rgba(30, 30, 30, 0.95);
-  border: 1px solid #555;
-  border-radius: 4px;
+.basemap-gallery-container,
+.basemap-gallery-container:hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Se reutiliza el icono nativo de leaflet-control-layers-toggle (el recuadro con líneas) */
-.basemap-toggle-btn {
-  width: 36px;
-  height: 36px;
-  background-color: transparent;
-}
-
+.basemap-toggle-btn,
 .basemap-toggle-btn:hover {
-  background-color: #444;
-  border-radius: 4px;
+  width: 64px !important;
+  height: 64px !important;
+  background-color: transparent !important;
+  background-image: url('../assets/layers_icon.png') !important;
+  background-size: 54px 54px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  filter: drop-shadow(1px 0 0 #00e5ff) drop-shadow(-1px 0 0 #00e5ff) drop-shadow(0 1px 0 #00e5ff) drop-shadow(0 -1px 0 #00e5ff) !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .basemap-gallery-panel {
@@ -686,7 +698,7 @@ path.leaflet-interactive {
   padding: 8px;
   position: absolute;
   top: 0;
-  right: 40px;
+  right: 72px;
   background: rgba(30, 30, 30, 0.95);
   border: 1px solid #555;
   border-radius: 4px;

@@ -125,16 +125,15 @@ body {
   left: 0;
   /* Pegado al borde */
   width: 450px !important;
-  /* Ancho ampliado para llegar cerca del botón Contacto */
+  /* Ancho original del panel */
   bottom: 0;
   /* Ocupa hasta abajo */
   z-index: 2000;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  /* Separación entre cajas */
-  padding: 20px;
-  /* Espacio para que las cajas no toquen los bordes del panel */
+  gap: 15px;
+  /* Separación vertical de las cajas */
+  padding: 5px 15px 15px 15px; /* Reducido el padding superior de 15px a 5px */
   background: rgba(35, 35, 35, 0.95);
   /* Fondo sólido semitransparente oscuro */
   backdrop-filter: blur(5px);
@@ -142,9 +141,10 @@ body {
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.8);
   box-sizing: border-box;
   overflow-y: auto;
-  /* El GRAN scroll del panel principal */
+  overflow-x: hidden; /* Oculta cualquier barra horizontal residual */
+  /* Habilita scroll vertical en todo el panel */
   pointer-events: auto;
-  /* Ahora el panel bloquea los clicks hácia el mapa debajo de él */
+  /* Bloquea clicks hacia el mapa debajo de él */
 }
 
 /* --- CONTENEDOR DERECHO: RESULTADOS --- */
@@ -156,13 +156,13 @@ body {
 /* --- CAJAS (Dashboard Boxes) --- */
 .dashboard-box,
 .control-box {
-  background: rgba(30, 30, 30, 0.95);
+  background: transparent; /* Mismo fondo del sidebar */
   color: #fff;
-  padding: 10px 15px;
-  /* Ligeramente más compacto el padding vertical */
-  border-radius: 8px;
-  border: 1px solid #555;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  padding: 12px 0; /* Padding horizontal removido para abarcar todo el ancho */
+  border-radius: 0; /* Sin esquinas redondeadas */
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15); /* Línea gris divisoria horizontal */
+  box-shadow: none; /* Sin sombras */
   pointer-events: auto;
   /* Reactiva clicks */
   display: block;
@@ -170,70 +170,76 @@ body {
   box-sizing: border-box;
   flex-shrink: 0;
   /* Evita que se aplasten si es posible */
-
-  /* Al eliminarse max-height y overflow, el scroll pasa al #left-sidebar-container */
 }
 
 /* Permitir que el recuadro de gráficas adopte tamaño natural */
 
 
-/* --- ESTILO ELEGANTE PARA EL SCROLL (Webkit) --- */
 .dashboard-box::-webkit-scrollbar,
 .control-box::-webkit-scrollbar {
-  width: 6px;
-  /* Barra fina */
+  width: 4px; /* Barra delgada */
 }
 
 .dashboard-box::-webkit-scrollbar-track,
 .control-box::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.2);
-  /* Fondo del riel */
   border-radius: 3px;
 }
 
 .dashboard-box::-webkit-scrollbar-thumb,
 .control-box::-webkit-scrollbar-thumb {
-  background: #00e5ff;
+  background: #0277bd; /* Azul guardado */
   border-radius: 4px;
 }
 
 .dashboard-box::-webkit-scrollbar-thumb:hover,
 .control-box::-webkit-scrollbar-thumb:hover {
-  background: #00b3cc;
+  background: #002b56;
 }
 
-/* Scroll global del panel izquierdo muy llamativo */
-#left-sidebar-container::-webkit-scrollbar {
-  width: 8px;
+/* Scroll global del panel de contenido muy llamativo */
+#content-sidebar-column::-webkit-scrollbar {
+  width: 4px; /* Barra delgada */
 }
 
-#left-sidebar-container::-webkit-scrollbar-track {
+#content-sidebar-column::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
 }
 
-#left-sidebar-container::-webkit-scrollbar-thumb {
-  background: #00e5ff;
+#content-sidebar-column::-webkit-scrollbar-thumb {
+  background: #0277bd; /* Azul guardado en el estilo hover del toggle */
   border-radius: 4px;
-  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+  box-shadow: 0 0 4px rgba(2, 119, 189, 0.8);
 }
 
-#left-sidebar-container::-webkit-scrollbar-thumb:hover {
-  background: #00b3cc;
+#content-sidebar-column::-webkit-scrollbar-thumb:hover {
+  background: #002b56; /* Azul oscuro */
 }
 
 /* Títulos */
 .panel-title,
-#filter-title,
 #stats-title-text {
   margin: 0 0 10px 0;
   font-size: 14px;
-  color: #fcae91;
+  color: #dfc16f;
   padding-bottom: 5px;
   font-weight: 700;
   text-transform: uppercase;
   text-align: center;
   /* Centrar todos los subtítulos */
+  width: 100%;
+  display: inline-block;
+}
+
+#filter-title {
+  margin: 0 0 2px 0; /* Margen inferior muy reducido para compactar */
+  font-size: 14px;
+  color: #dfc16f;
+  padding-bottom: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
   width: 100%;
   display: inline-block;
 }
@@ -250,11 +256,12 @@ body {
 .drop-arrow {
   display: inline-block;
   transition: transform 0.3s ease;
-  font-size: 12px;
-  color: #888;
+  font-size: 16px; /* Más grandes para que se noten */
+  font-weight: bold;
+  color: #aaa;
   position: absolute;
-  /* Arroja la flecha al extremo derecho independientemente del texto centrado */
-  right: 0;
+  /* Arroja la flecha al extremo derecho con una separación del borde */
+  right: 15px; /* Movido más a la izquierda */
 }
 
 .toggleable:hover {
@@ -270,31 +277,57 @@ body {
 .scale-icons-container {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
+  align-items: center;
+  gap: 10px; /* Separación horizontal en fila */
+  margin-top: 5px;
+  position: relative; /* Clave para posicionar la línea detrás */
+}
+
+.scale-icons-container::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1px;
+  border-top: 1px dotted rgba(255, 255, 255, 0.3); /* Línea punteada horizontal detrás */
+  z-index: 0; /* Por detrás de los botones */
+  pointer-events: none;
 }
 
 .scale-btn {
-  flex: 1;
-  aspect-ratio: 1;
+  width: 72px; /* Ancho fijo para que no parezcan rectángulos largos */
+  height: 48px; /* Alto original restaurado */
   background: #002b56;
   color: #ddd;
   border: 1px solid #444;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   transition: all 0.2s;
-  padding: 8px;
+  padding: 4px;
+  gap: 2px;
+  position: relative; /* Asegura el contexto de apilamiento */
+  z-index: 1; /* Por encima de la línea punteada */
 }
 
-.scale-btn svg {
-  width: 100%;
-  height: 100%;
-  max-width: 24px;
-  max-height: 24px;
+.scale-btn svg,
+.scale-btn img {
+  width: 20px; /* Iconos originales */
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.scale-btn span {
+  font-size: 8px; /* Texto original */
+  font-weight: bold;
+  text-align: center;
+  line-height: 1;
 }
 
 .scale-btn:hover {
@@ -308,6 +341,44 @@ body {
   color: #222;
   border-color: #d59f0f;
   box-shadow: 0 0 10px rgba(213, 159, 15, 0.5);
+}
+
+/* Colorea el mapa de México en negro cuando está activo (filtro invert 0) */
+.scale-btn.active img {
+  filter: invert(0) !important;
+}
+
+.filter-item-wrapper {
+  display: block;
+  width: 100%;
+}
+
+.filter-item-wrapper + .filter-item-wrapper {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.filter-item-wrapper:has(> [style*="display: none"]),
+.filter-item-wrapper:has(> [style*="display:none"]) {
+  display: none;
+}
+
+#filter-container-box,
+#metro-zm-box,
+#metro-acc-box,
+#metro-vuln-box {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0 0 10px 0; /* Padding compacto de 10px/20px a 0px/10px */
+  margin-bottom: 5px; /* Reducido de 10px a 5px */
+}
+
+#scale-box {
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.15); /* mantiene línea sutil punteada horizontal */
 }
 
 /* Botones de Filtro (Unificados) */
@@ -341,7 +412,7 @@ body {
 .dynamic-filter-select {
   display: block;
   width: 100%;
-  margin: 10px 0;
+  margin: 2px 0 10px 0; /* Margen superior reducido de 10px a 2px */
   padding: 10px;
   background: #333;
   color: #eee;
@@ -393,6 +464,8 @@ body {
   background: #777;
 }
 
+/* Reglas específicas de marco-legal-box se heredan ahora de .dashboard-box */
+
 /* Botón de Descarga */
 .download-btn {
   width: 100%;
@@ -418,7 +491,7 @@ body {
 
 /* Scrollbar personalizado */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px; /* Barra delgada */
 }
 
 ::-webkit-scrollbar-track {
@@ -426,8 +499,19 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #555;
+  background: #0277bd; /* Azul guardado */
   border-radius: 3px;
+}
+
+/* Estilos personalizados para controles de opacidad (input range) */
+input[type="range"] {
+  accent-color: #e4e3ba;
+  background-color: #040835;
+  height: 4px; /* Línea más delgada */
+  border-radius: 2px;
+  cursor: pointer;
+  border: none;
+  outline: none;
 }
 
 /* =========================================
