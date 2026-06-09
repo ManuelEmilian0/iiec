@@ -92,20 +92,11 @@ function generarMenuEstados(data) {
     container.appendChild(opacityControl);
 }
 
-function normalizarTexto(texto) {
-    if (!texto) return "";
-    return texto.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-}
-
 function obtenerNombreEstandarEstado(nombre) {
     if (nombre === "ZMVM") return "ZMVM";
-    let n = normalizarTexto(nombre);
-    if (n === "VERACRUZ DE IGNACIO DE LA LLAVE") return "VERACRUZ";
-    if (n === "MICHOACAN DE OCAMPO") return "MICHOACAN";
-    if (n === "COAHUILA DE ZARAGOZA") return "COAHUILA";
-    if (n === "ESTADO DE MEXICO") return "MEXICO";
+    var normalized = normalizarEstadoNombre(nombre);
+    var n = normalized.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     if (n === "QUERETARO DE ARTEAGA") return "QUERETARO";
-    if (n === "CIUDAD DE MEXICO") return "CIUDAD DE MEXICO";
     return n;
 }
 

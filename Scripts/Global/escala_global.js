@@ -239,6 +239,11 @@ function initMap() {
     
     map.on('move', updateMinimap);
     map.on('zoom', updateMinimap);
+    map.on('zoomend', function () {
+        if (currentScaleType === 'mundial' || currentScaleType === 'nacional') {
+            actualizarGrosoresPorZoom();
+        }
+    });
     // Para asegurar que el minimapa se posicione bien tras cargar css
     setTimeout(() => {
         if (minimap) minimap.invalidateSize();
@@ -660,8 +665,9 @@ function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino
             coords.reverse();
 
             var polyline = L.polyline(coords, {
-                color: RampaRojos[clase], weight: Grosores[clase] + 1, opacity: 0.8, className: 'flujo-animado'
+                color: RampaRojos[clase], weight: calcularGrosorDinamico(clase, map.getZoom()), opacity: 0.8, className: 'flujo-animado'
             });
+            polyline.clase = clase;
 
             var valFormatted = (val || 0).toLocaleString();
             var popupContent = `
@@ -681,7 +687,7 @@ function renderizarMapaFlujos(features, campoValor, etiquetaMoneda, campoDestino
                 },
                 mouseout: function (e) {
                     var layer = e.target;
-                    layer.setStyle({ weight: Grosores[clase] + 1, color: RampaRojos[clase] });
+                    layer.setStyle({ weight: calcularGrosorDinamico(clase, map.getZoom()), color: RampaRojos[clase] });
                 }
             });
 
@@ -1536,6 +1542,33 @@ function calcularBreaks(valores) {
 
 function getClase(valor, breaks) {
     if (valor <= breaks[0]) return 0; if (valor <= breaks[1]) return 1; if (valor <= breaks[2]) return 2; if (valor <= breaks[3]) return 3; return 4;
+}
+
+function calcularGrosorDinamico(clase, zoom) {
+    if (currentScaleType === 'mundial') {
+        const grosoresBase = [2, 4, 7, 11, 16];
+        const factor = Math.min(4.0, 1 + (zoom - 2) * 0.35);
+        return grosoresBase[clase] * factor;
+    } else if (currentScaleType === 'nacional') {
+        const grosoresBase = [2, 4, 7, 11, 16];
+        const factor = Math.min(4.0, 1 + (zoom - 5) * 0.35);
+        return grosoresBase[clase] * factor;
+    }
+    return Grosores[clase] + 1;
+}
+
+function actualizarGrosoresPorZoom() {
+    if (!currentGeoJSONLayer) return;
+    var currentZoom = map.getZoom();
+    currentGeoJSONLayer.eachLayer(function (layer) {
+        if (layer instanceof L.Polyline && layer.options.className === 'flujo-animado') {
+            var clase = layer.clase;
+            if (clase !== undefined) {
+                var newWeight = calcularGrosorDinamico(clase, currentZoom);
+                layer.setStyle({ weight: newWeight });
+            }
+        }
+    });
 }
 
 function actualizarLeyenda(breaks, moneda) {
