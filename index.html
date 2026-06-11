@@ -234,8 +234,27 @@
             <button class="nav-button active" onclick="showSection('inicio')">Inicio</button>
             <button class="nav-button" onclick="showSection('marco')">Marco Teórico</button>
             <button class="nav-button" onclick="showSection('metodologia')">Metodología</button>
-            <button class="nav-button" onclick="showSection('contacto')">Contacto</button>
+            <!-- Dropdown de Modelos -->
+            <div class="nav-dropdown" id="modelos-dropdown">
+                <button class="nav-button" onclick="toggleModelosDropdown(event)">
+                    Modelos <span style="font-size:8px; margin-left:4px;">▼</span>
+                </button>
+                <div class="nav-dropdown-content">
+                    <button class="nav-dropdown-item" onclick="activarModeloLouvain()">
+                        <span class="item-icon">🔬</span> Modelo de Louvain
+                    </button>
+                    <button class="nav-dropdown-item disabled" title="Próximamente">
+                        <span class="item-icon">🌐</span> Redes de producción global
+                        <span class="item-badge">Próximamente</span>
+                    </button>
+                    <button class="nav-dropdown-item disabled" title="Próximamente">
+                        <span class="item-icon">📊</span> Clusterización
+                        <span class="item-badge">Próximamente</span>
+                    </button>
+                </div>
+            </div>
             <div style="flex-grow: 1;"></div>
+            <button class="nav-button" onclick="showSection('contacto')">Contacto</button>
             <button class="nav-button" id="top-login-btn" style="background:#0277bd; color:#fff;"
                 onclick="openLoginModal()">Iniciar Sesión</button>
         </div>
@@ -665,5 +684,6 @@
     <script src="Scripts/Municipal/escala_municipal.js?v=1.0"></script>
     <script src="Scripts/Metropolitana/escala_metropolitana.js?v=1.0"></script>
     <script src="Scripts/Municipal/ian_dashboard.js?v=1.0"></script>
+    <script src="Scripts/modelos.js?v=1.0"></script>
 </body>
 </html>

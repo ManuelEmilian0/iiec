@@ -1,0 +1,585 @@
+/* =============================================================
+   MODELOS.CSS — Estilos para la funcionalidad de Modelos (redes)
+   Geovisor IIEC · Tema oscuro
+   ============================================================= */
+
+/* ---------------------------------------------------------
+   1. DROPDOWN MENU — Menú desplegable del botón "Modelos"
+   --------------------------------------------------------- */
+
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-dropdown-content {
+    visibility: hidden;
+    position: fixed;
+    top: 40px;
+    left: 0;
+    background: rgba(0, 30, 60, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 0 0 8px 8px;
+    min-width: 240px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 3000;
+    /* Animación slide-down sutil */
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+    pointer-events: none;
+}
+
+/* Estado abierto */
+.nav-dropdown.open .nav-dropdown-content {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Elemento individual del dropdown */
+.nav-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    color: #ccc;
+    text-align: left;
+    font-size: 12px;
+    font-family: 'Noto Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    box-sizing: border-box;
+}
+
+.nav-dropdown-item:hover {
+    background: rgba(0, 229, 255, 0.1);
+    color: #fff;
+    border-left-color: #00e5ff;
+}
+
+/* Item deshabilitado (placeholder "Próximamente") */
+.nav-dropdown-item.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Icono pequeño antes del texto */
+.nav-dropdown-item .item-icon {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+/* Badge "Próximamente" en forma de pastilla */
+.nav-dropdown-item .item-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    background: rgba(213, 159, 15, 0.3);
+    color: #d59f0f;
+    border-radius: 10px;
+    margin-left: 8px;
+    vertical-align: middle;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+
+/* ---------------------------------------------------------
+   2. PANEL DE CONTROL — Sidebar izquierdo (Louvain activo)
+   --------------------------------------------------------- */
+
+#modelos-control-panel {
+    /* Hereda estilo de .dashboard-box */
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px 10px;
+    margin: 0;
+}
+
+#modelos-control-panel .panel-title {
+    color: #eee;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+    font-family: 'Noto Sans', sans-serif;
+    letter-spacing: 0.3px;
+}
+
+/* Slider de año */
+.modelos-year-slider {
+    margin-bottom: 14px;
+}
+
+.modelos-year-slider label {
+    display: block;
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 6px;
+    font-family: 'Noto Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modelos-year-slider input[type="range"] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #444;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.modelos-year-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #00e5ff;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+    transition: box-shadow 0.2s ease;
+}
+
+.modelos-year-slider input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.8);
+}
+
+.modelos-year-slider input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #00e5ff;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+}
+
+/* Grupo de selectores */
+.modelos-select-group {
+    margin-bottom: 14px;
+}
+
+.modelos-select-group > label {
+    display: block;
+    font-size: 10px;
+    color: #dfc16f;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-family: 'Noto Sans', sans-serif;
+}
+
+/* Multi-select: lista de checkboxes con scroll */
+.modelos-multi-select {
+    max-height: 150px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 4px 0;
+}
+
+/* Scrollbar personalizada para la lista */
+.modelos-multi-select::-webkit-scrollbar {
+    width: 5px;
+}
+
+.modelos-multi-select::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modelos-multi-select::-webkit-scrollbar-thumb {
+    background: rgba(0, 229, 255, 0.3);
+    border-radius: 3px;
+}
+
+.modelos-multi-select::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.5);
+}
+
+/* Select dropdown único */
+.modelos-select {
+    width: 100%;
+    padding: 7px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    color: #ccc;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Noto Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.modelos-select:focus {
+    border-color: rgba(0, 229, 255, 0.5);
+}
+
+.modelos-select option {
+    background: #1a1a1a;
+    color: #ccc;
+}
+
+
+/* ---------------------------------------------------------
+   3. BOTÓN "EJECUTAR MODELO"
+   --------------------------------------------------------- */
+
+.modelos-execute-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #0277bd, #00e5ff);
+    color: #fff;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-family: 'Noto Sans', sans-serif;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+    letter-spacing: 0.5px;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    /* Animación pulsante cuando está inactivo */
+    animation: modelos-pulse-glow 2.5s ease-in-out infinite;
+}
+
+.modelos-execute-btn:hover {
+    background: linear-gradient(135deg, #0288d1, #18ffff);
+    box-shadow: 0 6px 20px rgba(0, 229, 255, 0.5);
+    transform: scale(1.02);
+    animation: none;
+}
+
+.modelos-execute-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px rgba(0, 229, 255, 0.25);
+}
+
+@keyframes modelos-pulse-glow {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(0, 229, 255, 0.55);
+    }
+}
+
+/* Estado de carga */
+.modelos-execute-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+    animation: none;
+}
+
+/* Botón cerrar/limpiar */
+.modelos-close-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    background: #555;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'Noto Sans', sans-serif;
+    text-transform: uppercase;
+    transition: background 0.2s ease;
+    letter-spacing: 0.3px;
+}
+
+.modelos-close-btn:hover {
+    background: #a50f15;
+}
+
+
+/* ---------------------------------------------------------
+   4. SPINNER DE CARGA (CSS puro)
+   --------------------------------------------------------- */
+
+.modelos-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid transparent;
+    border-top-color: #00e5ff;
+    border-right-color: rgba(0, 229, 255, 0.3);
+    border-radius: 50%;
+    animation: modelos-spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes modelos-spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+/* ---------------------------------------------------------
+   5. LEYENDA DE MODELOS (comunidades)
+   --------------------------------------------------------- */
+
+#modelos-legend {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 10px;
+    margin: 0;
+    font-family: 'Noto Sans', sans-serif;
+}
+
+#modelos-legend .legend-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #eee;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#modelos-legend .legend-meta {
+    font-size: 10px;
+    color: #aaa;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#modelos-legend .legend-item {
+    display: flex;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 11px;
+    color: #ccc;
+}
+
+#modelos-legend .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#modelos-legend .legend-count {
+    margin-left: auto;
+    font-size: 10px;
+    color: #888;
+    font-weight: 600;
+}
+
+
+/* ---------------------------------------------------------
+   6. BADGE DE AÑO
+   --------------------------------------------------------- */
+
+.year-display {
+    font-size: 22px;
+    color: #00e5ff;
+    font-weight: 700;
+    text-align: center;
+    display: inline-block;
+    font-family: 'Noto Sans', sans-serif;
+    text-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+
+
+/* ---------------------------------------------------------
+   7. CHECKBOXES PERSONALIZADOS (multi-select)
+   --------------------------------------------------------- */
+
+.modelos-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    transition: background 0.15s ease;
+    cursor: pointer;
+}
+
+.modelos-checkbox-item:hover {
+    background: rgba(0, 229, 255, 0.06);
+}
+
+.modelos-checkbox-item input[type="checkbox"] {
+    accent-color: #00e5ff;
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.modelos-checkbox-item label {
+    color: #ccc;
+    font-size: 11px;
+    font-family: 'Noto Sans', sans-serif;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modelos-checkbox-item:hover label {
+    color: #fff;
+}
+
+.modelos-checkbox-item input[type="checkbox"]:checked + label {
+    color: #eee;
+}
+
+
+/* ---------------------------------------------------------
+   8. TOAST NOTIFICATION
+   --------------------------------------------------------- */
+
+.modelos-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #eee;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: 500;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    animation: modelos-toast-in 0.35s ease forwards;
+    pointer-events: none;
+    max-width: 400px;
+    text-align: center;
+    border-left: 3px solid #00e5ff;
+}
+
+/* Variantes por tipo */
+.modelos-toast.success {
+    border-left-color: #2ca02c;
+}
+
+.modelos-toast.error {
+    border-left-color: #a50f15;
+}
+
+.modelos-toast.info {
+    border-left-color: #00e5ff;
+}
+
+/* Animación de entrada */
+@keyframes modelos-toast-in {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Animación de salida (aplicada por JS) */
+.modelos-toast.dismiss {
+    animation: modelos-toast-out 0.3s ease forwards;
+}
+
+@keyframes modelos-toast-out {
+    0% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+}
+
+
+/* ---------------------------------------------------------
+   9. OVERLAY DE CARGA (sobre el mapa)
+   --------------------------------------------------------- */
+
+#modelos-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.modelos-loading-content {
+    text-align: center;
+    color: #fff;
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 28px 36px;
+    background: rgba(0, 30, 60, 0.92);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.3px;
+}
+
+/* Spinner grande para el overlay */
+.modelos-spinner.large {
+    width: 36px;
+    height: 36px;
+    border-width: 3px;
+    display: block;
+    margin: 0 auto;
+}
+
+
+/* ---------------------------------------------------------
+   10. INDUSTRIA COMPRADORA BLOQUEADA
+   --------------------------------------------------------- */
+
+.modelos-locked-industry {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #aaa;
+    font-size: 11px;
+    font-family: 'Noto Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modelos-locked-industry .lock-icon {
+    font-size: 13px;
+}
