@@ -4,89 +4,37 @@
    ============================================================= */
 
 /* ---------------------------------------------------------
-   1. DROPDOWN MENU — Menú desplegable del botón "Modelos"
+   1. INDUSTRIAS BLOQUEADAS (lista en panel de control)
    --------------------------------------------------------- */
 
-.nav-dropdown {
-    position: relative;
-    display: inline-block;
+.modelos-locked-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.nav-dropdown-content {
-    visibility: hidden;
-    position: fixed;
-    top: 40px;
-    left: 0;
-    background: rgba(0, 30, 60, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    border-radius: 0 0 8px 8px;
-    min-width: 240px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    z-index: 3000;
-    /* Animación slide-down sutil */
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
-    pointer-events: none;
-}
-
-/* Estado abierto */
-.nav-dropdown.open .nav-dropdown-content {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-
-/* Elemento individual del dropdown */
-.nav-dropdown-item {
-    display: block;
-    width: 100%;
-    padding: 10px 16px;
-    background: none;
-    border: none;
-    color: #ccc;
-    text-align: left;
-    font-size: 12px;
+.modelos-locked-industry {
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: #aaa;
+    font-size: 11px;
     font-family: 'Noto Sans', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-left: 3px solid transparent;
-    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.nav-dropdown-item:hover {
-    background: rgba(0, 229, 255, 0.1);
-    color: #fff;
-    border-left-color: #00e5ff;
+.modelos-locked-industry .lock-icon {
+    font-size: 12px;
+    flex-shrink: 0;
 }
 
-/* Item deshabilitado (placeholder "Próximamente") */
-.nav-dropdown-item.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-/* Icono pequeño antes del texto */
-.nav-dropdown-item .item-icon {
-    margin-right: 8px;
-    font-size: 14px;
-}
-
-/* Badge "Próximamente" en forma de pastilla */
-.nav-dropdown-item .item-badge {
+.modelos-locked-industry .lock-code {
+    color: #666;
     font-size: 9px;
-    padding: 2px 6px;
-    background: rgba(213, 159, 15, 0.3);
-    color: #d59f0f;
-    border-radius: 10px;
-    margin-left: 8px;
-    vertical-align: middle;
-    font-weight: 600;
-    letter-spacing: 0.3px;
+    margin-left: auto;
 }
 
 
@@ -560,26 +508,4 @@
     border-width: 3px;
     display: block;
     margin: 0 auto;
-}
-
-
-/* ---------------------------------------------------------
-   10. INDUSTRIA COMPRADORA BLOQUEADA
-   --------------------------------------------------------- */
-
-.modelos-locked-industry {
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    color: #aaa;
-    font-size: 11px;
-    font-family: 'Noto Sans', sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.modelos-locked-industry .lock-icon {
-    font-size: 13px;
 }

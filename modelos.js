@@ -1,72 +1,49 @@
 /* =============================================================
-   MODELOS.JS — Módulo de Modelos de red (Louvain) para el Geovisor IIEC
-   Vanilla JS · Leaflet.js · Colores continentales
+   MODELOS.JS — Módulo de Modelos de red para el Geovisor IIEC
+   Se inyecta como filter-item-wrapper dentro del sidebar Global.
+   100% Frontend · Carga GeoJSON estáticos · Sin backend
    ============================================================= */
 
 // ---------------------------------------------------------
 // CONSTANTES
 // ---------------------------------------------------------
 
-const MODELOS_API_BASE = 'http://localhost:8000';
+var GEOJSON_BASE = 'Modelos/carto';
 
-/**
- * Mapeo de países a continentes para colorear nodos y aristas.
- * Asia = rojo, Europa = azul, América = verde, Otros = gris.
- */
-const CONTINENT_MAP = {
-    // Asia (Rojo)
-    'BGD': 'asia', 'BRN': 'asia', 'CHN': 'asia', 'HKG': 'asia',
-    'IDN': 'asia', 'IND': 'asia', 'JPN': 'asia', 'KAZ': 'asia',
-    'KHM': 'asia', 'KOR': 'asia', 'LAO': 'asia', 'MMR': 'asia',
-    'MYS': 'asia', 'PAK': 'asia', 'PHL': 'asia', 'SGP': 'asia',
-    'THA': 'asia', 'TWN': 'asia', 'VNM': 'asia',
-    // Europa (Azul)
-    'AUT': 'europe', 'BEL': 'europe', 'BGR': 'europe', 'BLR': 'europe',
-    'CHE': 'europe', 'CYP': 'europe', 'CZE': 'europe', 'DEU': 'europe',
-    'DNK': 'europe', 'ESP': 'europe', 'EST': 'europe', 'FIN': 'europe',
-    'FRA': 'europe', 'GBR': 'europe', 'GRC': 'europe', 'HRV': 'europe',
-    'HUN': 'europe', 'IRL': 'europe', 'ISL': 'europe', 'ITA': 'europe',
-    'LTU': 'europe', 'LUX': 'europe', 'LVA': 'europe', 'MLT': 'europe',
-    'NLD': 'europe', 'NOR': 'europe', 'POL': 'europe', 'PRT': 'europe',
-    'ROU': 'europe', 'RUS': 'europe', 'SVK': 'europe', 'SVN': 'europe',
-    'SWE': 'europe', 'TUR': 'europe', 'UKR': 'europe',
-    // América (Verde)
-    'ARG': 'america', 'BRA': 'america', 'CAN': 'america', 'CHL': 'america',
-    'COL': 'america', 'CRI': 'america', 'MEX': 'america', 'PER': 'america',
-    'USA': 'america',
-    // Otros (Gris) — Medio Oriente, África, ROW
-    'AGO': 'other', 'ARE': 'other', 'CIV': 'other', 'CMR': 'other',
-    'COD': 'other', 'EGY': 'other', 'ISR': 'other', 'JOR': 'other',
-    'MAR': 'other', 'NGA': 'other', 'SAU': 'other', 'SEN': 'other',
-    'STP': 'other', 'TUN': 'other', 'ZAF': 'other', 'ROW': 'other',
+var CONTINENT_MAP = {
+    'BGD':'asia','BRN':'asia','CHN':'asia','HKG':'asia',
+    'IDN':'asia','IND':'asia','JPN':'asia','KAZ':'asia',
+    'KHM':'asia','KOR':'asia','LAO':'asia','MMR':'asia',
+    'MYS':'asia','PAK':'asia','PHL':'asia','SGP':'asia',
+    'THA':'asia','TWN':'asia','VNM':'asia',
+    'AUT':'europe','BEL':'europe','BGR':'europe','BLR':'europe',
+    'CHE':'europe','CYP':'europe','CZE':'europe','DEU':'europe',
+    'DNK':'europe','ESP':'europe','EST':'europe','FIN':'europe',
+    'FRA':'europe','GBR':'europe','GRC':'europe','HRV':'europe',
+    'HUN':'europe','IRL':'europe','ISL':'europe','ITA':'europe',
+    'LTU':'europe','LUX':'europe','LVA':'europe','MLT':'europe',
+    'NLD':'europe','NOR':'europe','POL':'europe','PRT':'europe',
+    'ROU':'europe','RUS':'europe','SVK':'europe','SVN':'europe',
+    'SWE':'europe','TUR':'europe','UKR':'europe',
+    'ARG':'america','BRA':'america','CAN':'america','CHL':'america',
+    'COL':'america','CRI':'america','MEX':'america','PER':'america',
+    'USA':'america',
+    'AGO':'other','ARE':'other','CIV':'other','CMR':'other',
+    'COD':'other','EGY':'other','ISR':'other','JOR':'other',
+    'MAR':'other','NGA':'other','SAU':'other','SEN':'other',
+    'STP':'other','TUN':'other','ZAF':'other','ROW':'other'
 };
 
-const CONTINENT_COLORS = {
-    'asia':    '#d62728',  // Rojo
-    'europe':  '#1f77b4',  // Azul
-    'america': '#2ca02c',  // Verde
-    'other':   '#888888',  // Gris
+var CONTINENT_COLORS = {
+    'asia':'#d62728','europe':'#1f77b4','america':'#2ca02c','other':'#888888'
 };
 
-const CONTINENT_NAMES = {
-    'asia':    'Asia',
-    'europe':  'Europa',
-    'america': 'América',
-    'other':   'Otros',
+var CONTINENT_NAMES = {
+    'asia':'Asia','europe':'Europa','america':'América','other':'Otros'
 };
 
-/**
- * Industrias vendedoras disponibles para selección.
- * Cada opción puede mapear a uno o más códigos de sector ICIO.
- */
-const INDUSTRIAS_VENDEDORAS = [
-    { id: 'ELCTRI', label: 'Eléctrica',   sectors: ['ELCTRI'] },
-    { id: 'ELCTRO', label: 'Electrónica', sectors: ['ELCTRO'] },
-    { id: 'SEIT',   label: 'SEIT (Serv. Información y Telecom)', sectors: ['ITSERV', 'TELECO'] },
-];
-
-/** Industria compradora fija */
-const INDUSTRIA_COMPRADORA = { id: 'AUTOMO', label: 'Automotriz', sectors: ['AUTOMO'] };
+/** Sectores fijos (bloqueados) — vendedoras + compradora */
+var SECTORES_FIJOS = ['ELCTRI', 'ELCTRO', 'ITSERV', 'TELECO', 'AUTOMO'];
 
 
 // ---------------------------------------------------------
@@ -82,50 +59,129 @@ window._modelosState = {
     metrica: 'EXP',
     _debounceTimer: null,
     _isLoading: false,
+    _geojsonCache: {},
+    _selectorInyectado: false
 };
 
 
 // ---------------------------------------------------------
-// DROPDOWN — Toggle del menú desplegable "Modelos"
+// HOOK: Envolver showSection para limpiar modelos al ir a INICIO
 // ---------------------------------------------------------
 
-function toggleModelosDropdown(event) {
-    if (event) event.stopPropagation();
-
-    var dropdown = document.getElementById('modelos-dropdown');
-    if (!dropdown) return;
-
-    var isOpen = dropdown.classList.contains('open');
-
-    document.querySelectorAll('.nav-dropdown.open').forEach(function(d) {
-        d.classList.remove('open');
-    });
-
-    if (!isOpen) {
-        var btn = dropdown.querySelector('.nav-button');
-        var content = dropdown.querySelector('.nav-dropdown-content');
-        if (btn && content) {
-            var rect = btn.getBoundingClientRect();
-            content.style.top = rect.bottom + 'px';
-            content.style.left = rect.left + 'px';
+(function() {
+    function _esperarYEnvolver() {
+        if (typeof window.showSection === 'function' && !window.showSection._modelosWrapped) {
+            var _orig = window.showSection;
+            window.showSection = function(id) {
+                // Limpiar modelos al ir a INICIO
+                if (id === 'inicio') {
+                    _resetearModelos();
+                }
+                _orig.call(this, id);
+            };
+            window.showSection._modelosWrapped = true;
         }
-        dropdown.classList.add('open');
-        setTimeout(function() {
-            document.addEventListener('click', _cerrarDropdownFuera);
-        }, 0);
-    } else {
-        document.removeEventListener('click', _cerrarDropdownFuera);
+        // Envolver iniciarFiltroMundial_Paso1 para inyectar selector
+        if (typeof window.iniciarFiltroMundial_Paso1 === 'function' && !window.iniciarFiltroMundial_Paso1._modelosWrapped) {
+            var _origFiltro = window.iniciarFiltroMundial_Paso1;
+            window.iniciarFiltroMundial_Paso1 = function(data) {
+                _origFiltro.call(this, data);
+                // Inyectar selector de modelos después de los filtros mundiales
+                setTimeout(function() { inyectarSelectorModelos(); }, 50);
+            };
+            window.iniciarFiltroMundial_Paso1._modelosWrapped = true;
+        }
     }
+
+    // Intentar envolver ahora y también cuando el DOM esté listo
+    _esperarYEnvolver();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            _esperarYEnvolver();
+            // Inyectar si el sidebar ya existe
+            setTimeout(function() { inyectarSelectorModelos(); }, 500);
+        });
+    } else {
+        setTimeout(function() {
+            _esperarYEnvolver();
+            inyectarSelectorModelos();
+        }, 500);
+    }
+})();
+
+
+// ---------------------------------------------------------
+// RESETEAR MODELOS (al hacer clic en INICIO)
+// ---------------------------------------------------------
+
+function _resetearModelos() {
+    clearTimeout(window._modelosState._debounceTimer);
+    limpiarCapaModelos();
+    _ocultarOverlayCarga();
+
+    var panel = document.getElementById('modelos-control-panel');
+    if (panel) panel.remove();
+
+    window._modelosState.isActive = false;
+    window._modelosState.controlPanel = null;
+    window._modelosState._isLoading = false;
+
+    // Reset selector
+    var sel = document.getElementById('modelos-tipo-select');
+    if (sel) sel.selectedIndex = 0;
 }
 
-function _cerrarDropdownFuera(e) {
-    var dropdown = document.getElementById('modelos-dropdown');
-    if (!dropdown) return;
-    var content = dropdown.querySelector('.nav-dropdown-content');
-    if (!dropdown.contains(e.target) && (!content || !content.contains(e.target))) {
-        dropdown.classList.remove('open');
-        document.removeEventListener('click', _cerrarDropdownFuera);
-    }
+
+// ---------------------------------------------------------
+// INYECTAR SELECTOR DE MODELOS en filter-buttons-container
+// ---------------------------------------------------------
+
+function inyectarSelectorModelos() {
+    // No duplicar
+    if (document.getElementById('modelos-tipo-select')) return;
+
+    var container = document.getElementById('filter-buttons-container');
+    if (!container) return;
+
+    // Crear el <select>
+    var select = document.createElement('select');
+    select.id = 'modelos-tipo-select';
+    select.className = 'dynamic-filter-select';
+
+    var optDefault = document.createElement('option');
+    optDefault.value = '';
+    optDefault.disabled = true;
+    optDefault.selected = true;
+    optDefault.textContent = '-- Seleccione tipo de modelo --';
+    select.appendChild(optDefault);
+
+    var optLouvain = document.createElement('option');
+    optLouvain.value = 'louvain';
+    optLouvain.textContent = 'Louvain';
+    select.appendChild(optLouvain);
+
+    var optWard = document.createElement('option');
+    optWard.value = 'ward';
+    optWard.disabled = true;
+    optWard.textContent = 'Ward de Clusterización (Próximamente)';
+    select.appendChild(optWard);
+
+    var optDendro = document.createElement('option');
+    optDendro.value = 'dendrograma';
+    optDendro.disabled = true;
+    optDendro.textContent = 'Dendrogramas (Próximamente)';
+    select.appendChild(optDendro);
+
+    select.addEventListener('change', function() {
+        if (this.value === 'louvain') {
+            activarModeloLouvain();
+        }
+    });
+
+    // Insertar en el container (el monkey-patch lo envuelve en filter-item-wrapper)
+    container.appendChild(select);
+
+    window._modelosState._selectorInyectado = true;
 }
 
 
@@ -134,23 +190,19 @@ function _cerrarDropdownFuera(e) {
 // ---------------------------------------------------------
 
 function activarModeloLouvain() {
-    // Cerrar dropdown
-    var dropdown = document.getElementById('modelos-dropdown');
-    if (dropdown) dropdown.classList.remove('open');
-    document.removeEventListener('click', _cerrarDropdownFuera);
-
-    // Mostrar mapa
     if (typeof showSection === 'function') {
-        showSection('inicio');
+        // No llamar showSection para evitar resetear; solo asegurar que mapa visible
+        var inicio = document.getElementById('inicio');
+        if (inicio) inicio.style.display = 'block';
+        if (typeof map !== 'undefined' && map) {
+            setTimeout(function() { map.invalidateSize(); }, 200);
+        }
     }
 
-    // Si ya está activo, no duplicar
     if (window._modelosState.isActive && document.getElementById('modelos-control-panel')) {
-        mostrarToastModelos('El panel de Louvain ya está abierto', 'info');
         return;
     }
 
-    // Crear panel y auto-ejecutar
     crearPanelControlModelos();
     window._modelosState.isActive = true;
 
@@ -162,7 +214,7 @@ function activarModeloLouvain() {
 
 
 // ---------------------------------------------------------
-// CREAR PANEL DE CONTROL (Insumo-Producto)
+// CREAR PANEL DE CONTROL (industrias bloqueadas)
 // ---------------------------------------------------------
 
 function crearPanelControlModelos() {
@@ -173,16 +225,15 @@ function crearPanelControlModelos() {
     panel.id = 'modelos-control-panel';
     panel.className = 'dashboard-box';
 
-    // --- Título ---
+    // Título
     var titulo = document.createElement('h4');
     titulo.className = 'panel-title';
-    titulo.textContent = '🔬 Modelo de Louvain';
+    titulo.textContent = 'Modelo de Louvain';
     panel.appendChild(titulo);
 
-    // --- Slider de año ---
+    // Slider de año
     var yearContainer = document.createElement('div');
     yearContainer.className = 'modelos-year-slider';
-
     var yearLabel = document.createElement('label');
     yearLabel.innerHTML = 'Año: <span id="modelos-year-value" class="year-display">' +
         window._modelosState.currentYear + '</span>';
@@ -199,8 +250,6 @@ function crearPanelControlModelos() {
         window._modelosState.currentYear = parseInt(val, 10);
         var display = document.getElementById('modelos-year-value');
         if (display) display.textContent = val;
-
-        // Auto-ejecutar con debounce
         clearTimeout(window._modelosState._debounceTimer);
         window._modelosState._debounceTimer = setTimeout(function() {
             ejecutarModeloLouvain();
@@ -209,87 +258,66 @@ function crearPanelControlModelos() {
     yearContainer.appendChild(yearInput);
     panel.appendChild(yearContainer);
 
-    // --- Industria Vendedora (3 checkboxes) ---
+    // ── Industrias vendedoras (bloqueadas) ──
     var vendGroup = document.createElement('div');
     vendGroup.className = 'modelos-select-group';
-
     var vendLabel = document.createElement('label');
     vendLabel.textContent = 'Industria Vendedora';
     vendGroup.appendChild(vendLabel);
 
     var vendList = document.createElement('div');
-    vendList.className = 'modelos-multi-select';
-    vendList.id = 'modelos-vendedoras-list';
+    vendList.className = 'modelos-locked-list';
 
-    INDUSTRIAS_VENDEDORAS.forEach(function(ind) {
+    var vendedoras = [
+        { label: 'Eléctrica', code: 'ELCTRI' },
+        { label: 'Electrónica', code: 'ELCTRO' },
+        { label: 'SEIT (Serv. Información y Telecom)', code: 'ITSERV+TELECO' }
+    ];
+    vendedoras.forEach(function(v) {
         var item = document.createElement('div');
-        item.className = 'modelos-checkbox-item';
-
-        var cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.value = ind.id;
-        cb.id = 'modelos-vend-' + ind.id;
-        cb.checked = true; // Todas pre-seleccionadas
-        cb.dataset.sectors = ind.sectors.join(',');
-
-        var lbl = document.createElement('label');
-        lbl.htmlFor = 'modelos-vend-' + ind.id;
-        lbl.textContent = ind.label;
-
-        item.appendChild(cb);
-        item.appendChild(lbl);
+        item.className = 'modelos-locked-industry';
+        item.innerHTML = '<span class="lock-icon">🔒</span> ' + v.label +
+            ' <span class="lock-code">(' + v.code + ')</span>';
         vendList.appendChild(item);
     });
-
     vendGroup.appendChild(vendList);
     panel.appendChild(vendGroup);
 
-    // --- Industria Compradora (bloqueada) ---
+    // ── Industria compradora (bloqueada) ──
     var compGroup = document.createElement('div');
     compGroup.className = 'modelos-select-group';
-
     var compLabel = document.createElement('label');
     compLabel.textContent = 'Industria Compradora';
     compGroup.appendChild(compLabel);
-
     var compLocked = document.createElement('div');
     compLocked.className = 'modelos-locked-industry';
-    compLocked.innerHTML = '<span class="lock-icon">🔒</span> ' + INDUSTRIA_COMPRADORA.label + ' (' + INDUSTRIA_COMPRADORA.id + ')';
+    compLocked.innerHTML = '<span class="lock-icon">🔒</span> Automotriz <span class="lock-code">(AUTOMO)</span>';
     compGroup.appendChild(compLocked);
-
     panel.appendChild(compGroup);
 
-    // --- Selector de métrica ---
+    // ── Selector de métrica ──
     var metricaGroup = document.createElement('div');
     metricaGroup.className = 'modelos-select-group';
-
     var metricaLabel = document.createElement('label');
     metricaLabel.textContent = 'Métrica';
     metricaGroup.appendChild(metricaLabel);
-
     var metricaSelect = document.createElement('select');
     metricaSelect.id = 'modelos-metrica';
     metricaSelect.className = 'modelos-select';
-
     var optEXP = document.createElement('option');
-    optEXP.value = 'EXP';
-    optEXP.textContent = 'Exportaciones (EXP)';
+    optEXP.value = 'EXP'; optEXP.textContent = 'Exportaciones (EXP)';
     metricaSelect.appendChild(optEXP);
-
     var optVA = document.createElement('option');
-    optVA.value = 'VA';
-    optVA.textContent = 'Valor Agregado (VA)';
+    optVA.value = 'VA'; optVA.textContent = 'Valor Agregado (VA)';
     metricaSelect.appendChild(optVA);
-
     metricaSelect.value = window._modelosState.metrica;
     metricaSelect.addEventListener('change', function() {
         window._modelosState.metrica = this.value;
     });
-
     metricaGroup.appendChild(metricaSelect);
     panel.appendChild(metricaGroup);
 
-    // --- Botón Ejecutar ---
+    // ── Botón Ejecutar ──
     var execBtn = document.createElement('button');
     execBtn.className = 'modelos-execute-btn';
     execBtn.id = 'modelos-exec-btn';
@@ -297,24 +325,24 @@ function crearPanelControlModelos() {
     execBtn.addEventListener('click', ejecutarModeloLouvain);
     panel.appendChild(execBtn);
 
-    // --- Botón Cerrar ---
+    // ── Botón Cerrar ──
     var closeBtn = document.createElement('button');
     closeBtn.className = 'modelos-close-btn';
-    closeBtn.innerHTML = '✕ Cerrar Modelos';
-    closeBtn.addEventListener('click', cerrarModelos);
+    closeBtn.innerHTML = '✕ Cerrar Modelo';
+    closeBtn.addEventListener('click', function() {
+        _resetearModelos();
+        mostrarToastModelos('Modelo cerrado', 'info');
+    });
     panel.appendChild(closeBtn);
 
-    // --- Insertar ANTES de filter-container-box (encima de INTERCAMBIOS GLOBALES) ---
+    // Insertar ANTES del filter-container-box (encima de INTERCAMBIOS GLOBALES)
     var filterBox = document.getElementById('filter-container-box');
     if (filterBox && filterBox.parentNode) {
         filterBox.parentNode.insertBefore(panel, filterBox);
     } else {
         var sidebar = document.getElementById('left-sidebar-container');
-        if (sidebar) {
-            sidebar.prepend(panel);
-        } else {
-            document.body.appendChild(panel);
-        }
+        if (sidebar) { sidebar.prepend(panel); }
+        else { document.body.appendChild(panel); }
     }
 
     window._modelosState.controlPanel = panel;
@@ -322,117 +350,171 @@ function crearPanelControlModelos() {
 
 
 // ---------------------------------------------------------
-// OBTENER SECTORES SELECCIONADOS
+// COLORES
 // ---------------------------------------------------------
 
-function _getSectoresSeleccionados() {
-    var sectores = [];
-    var checkboxes = document.querySelectorAll('#modelos-vendedoras-list input[type="checkbox"]:checked');
-    checkboxes.forEach(function(cb) {
-        var secs = cb.dataset.sectors.split(',');
-        secs.forEach(function(s) {
-            if (sectores.indexOf(s) === -1) sectores.push(s);
-        });
-    });
-    // Siempre incluir la industria compradora
-    INDUSTRIA_COMPRADORA.sectors.forEach(function(s) {
-        if (sectores.indexOf(s) === -1) sectores.push(s);
-    });
-    return sectores;
+function _getColorPais(code) {
+    return CONTINENT_COLORS[CONTINENT_MAP[code] || 'other'] || CONTINENT_COLORS['other'];
+}
+
+function _getContinente(code) {
+    return CONTINENT_MAP[code] || 'other';
 }
 
 
 // ---------------------------------------------------------
-// COLOR POR CONTINENTE
-// ---------------------------------------------------------
-
-function _getColorPais(countryCode) {
-    var continent = CONTINENT_MAP[countryCode] || 'other';
-    return CONTINENT_COLORS[continent] || CONTINENT_COLORS['other'];
-}
-
-function _getContinente(countryCode) {
-    return CONTINENT_MAP[countryCode] || 'other';
-}
-
-
-// ---------------------------------------------------------
-// OVERLAY DE CARGA SOBRE EL MAPA
+// OVERLAY DE CARGA
 // ---------------------------------------------------------
 
 function _mostrarOverlayCarga() {
     if (document.getElementById('modelos-loading-overlay')) return;
-
     var mapEl = document.getElementById('map');
     if (!mapEl) return;
-
     var overlay = document.createElement('div');
     overlay.id = 'modelos-loading-overlay';
     overlay.innerHTML =
         '<div class="modelos-loading-content">' +
-            '<span class="modelos-spinner large"></span>' +
-            '<div style="margin-top:12px;">Ejecutando modelo, por favor espere...</div>' +
+        '<span class="modelos-spinner large"></span>' +
+        '<div style="margin-top:12px;">Ejecutando modelo, por favor espere...</div>' +
         '</div>';
     mapEl.appendChild(overlay);
 }
 
 function _ocultarOverlayCarga() {
-    var overlay = document.getElementById('modelos-loading-overlay');
-    if (overlay) overlay.remove();
+    var el = document.getElementById('modelos-loading-overlay');
+    if (el) el.remove();
 }
 
 
 // ---------------------------------------------------------
-// EJECUTAR MODELO LOUVAIN
+// CARGAR GEOJSON (con cache)
 // ---------------------------------------------------------
 
-function ejecutarModeloLouvain() {
-    // Evitar ejecuciones simultáneas
-    if (window._modelosState._isLoading) return;
-
-    // Obtener parámetros
-    var yearInput = document.getElementById('modelos-year-input');
-    var year = yearInput ? parseInt(yearInput.value, 10) : window._modelosState.currentYear;
-    var sectores = _getSectoresSeleccionados();
-    var metricaSelect = document.getElementById('modelos-metrica');
-    var metrica = metricaSelect ? metricaSelect.value : window._modelosState.metrica;
-
-    // Validar mínimo 1 industria vendedora
-    var vendChecked = document.querySelectorAll('#modelos-vendedoras-list input[type="checkbox"]:checked');
-    if (vendChecked.length < 1) {
-        mostrarToastModelos('Selecciona al menos 1 industria vendedora', 'error');
-        return;
+function _cargarGeoJSON(year) {
+    if (window._modelosState._geojsonCache[year]) {
+        return Promise.resolve(window._modelosState._geojsonCache[year]);
     }
-
-    // Mostrar carga
-    window._modelosState._isLoading = true;
-    _mostrarOverlayCarga();
-    var btn = document.getElementById('modelos-exec-btn');
-    if (btn) {
-        btn.classList.add('loading');
-        btn.innerHTML = '<span class="modelos-spinner"></span> Procesando…';
-    }
-
-    // Actualizar estado
-    window._modelosState.currentYear = year;
-    window._modelosState.metrica = metrica;
-
-    // Fetch
-    var url = MODELOS_API_BASE + '/api/modelo-louvain/' + year +
-              '?sectores=' + sectores.join(',') +
-              '&metrica=' + metrica;
-
-    fetch(url)
+    var url = GEOJSON_BASE + '/ICIO_DATA_' + year + '.geojson';
+    return fetch(url)
         .then(function(res) {
-            if (!res.ok) throw new Error('Error del servidor: ' + res.status);
+            if (!res.ok) throw new Error('No se encontró GeoJSON para ' + year);
             return res.json();
         })
         .then(function(data) {
+            window._modelosState._geojsonCache[year] = data;
+            return data;
+        });
+}
+
+
+// ---------------------------------------------------------
+// CONSTRUIR GRAFO (client-side)
+// ---------------------------------------------------------
+
+function _construirGrafo(geojson, sectores, metrica, topN) {
+    topN = topN || 30;
+
+    var countryData = {};
+    geojson.features.forEach(function(f) {
+        var p = f.properties;
+        var id = p.id;
+        var total = 0;
+        var sectorValues = {};
+        sectores.forEach(function(s) {
+            var val = p[s + '_' + metrica] || 0;
+            total += val;
+            sectorValues[s] = val;
+        });
+        countryData[id] = { total: total, sectors: sectorValues, feature: f };
+    });
+
+    var sorted = Object.keys(countryData)
+        .filter(function(c) { return countryData[c].total > 0; })
+        .sort(function(a, b) { return countryData[b].total - countryData[a].total; })
+        .slice(0, topN);
+
+    if (sorted.length === 0) return { nodes: [], edges: [] };
+
+    // Aristas: Σ min(valor_i, valor_j) por sector compartido
+    var allEdges = [];
+    for (var i = 0; i < sorted.length; i++) {
+        for (var j = i + 1; j < sorted.length; j++) {
+            var ci = sorted[i], cj = sorted[j], weight = 0;
+            sectores.forEach(function(s) {
+                var vi = countryData[ci].sectors[s] || 0;
+                var vj = countryData[cj].sectors[s] || 0;
+                if (vi > 0 && vj > 0) weight += Math.min(vi, vj);
+            });
+            if (weight > 0) allEdges.push({ source: ci, target: cj, weight: Math.round(weight * 100) / 100 });
+        }
+    }
+
+    // Top 5 aristas por nodo
+    var edgesByNode = {};
+    allEdges.forEach(function(e) {
+        if (!edgesByNode[e.source]) edgesByNode[e.source] = [];
+        if (!edgesByNode[e.target]) edgesByNode[e.target] = [];
+        edgesByNode[e.source].push(e);
+        edgesByNode[e.target].push(e);
+    });
+    var selectedKeys = {};
+    Object.keys(edgesByNode).forEach(function(node) {
+        edgesByNode[node].sort(function(a, b) { return b.weight - a.weight; }).slice(0, 5)
+            .forEach(function(e) { selectedKeys[[e.source, e.target].sort().join('|')] = e; });
+    });
+    var edges = Object.keys(selectedKeys).map(function(k) { return selectedKeys[k]; })
+        .sort(function(a, b) { return b.weight - a.weight; });
+
+    // Normalizar tamaños [80, 300]
+    var totals = sorted.map(function(c) { return countryData[c].total; });
+    var minT = Math.min.apply(null, totals);
+    var maxT = Math.max.apply(null, totals);
+    var rangeT = maxT - minT || 1;
+
+    var nodes = sorted.map(function(c) {
+        var f = countryData[c].feature;
+        return {
+            id: c,
+            lat: f.geometry.coordinates[1],
+            lon: f.geometry.coordinates[0],
+            label: f.properties.name,
+            size: Math.round((80 + ((countryData[c].total - minT) / rangeT) * 220) * 100) / 100,
+            continent: f.properties.continent || _getContinente(c)
+        };
+    });
+
+    return { nodes: nodes, edges: edges };
+}
+
+
+// ---------------------------------------------------------
+// EJECUTAR MODELO
+// ---------------------------------------------------------
+
+function ejecutarModeloLouvain() {
+    if (window._modelosState._isLoading) return;
+
+    var yearInput = document.getElementById('modelos-year-input');
+    var year = yearInput ? parseInt(yearInput.value, 10) : window._modelosState.currentYear;
+    var metricaSelect = document.getElementById('modelos-metrica');
+    var metrica = metricaSelect ? metricaSelect.value : window._modelosState.metrica;
+
+    window._modelosState._isLoading = true;
+    _mostrarOverlayCarga();
+    var btn = document.getElementById('modelos-exec-btn');
+    if (btn) { btn.classList.add('loading'); btn.innerHTML = '<span class="modelos-spinner"></span> Procesando…'; }
+
+    window._modelosState.currentYear = year;
+    window._modelosState.metrica = metrica;
+
+    _cargarGeoJSON(year)
+        .then(function(geojson) {
+            var result = _construirGrafo(geojson, SECTORES_FIJOS, metrica);
             limpiarCapaModelos();
-            dibujarEdgesLouvain(data);
-            dibujarNodosLouvain(data);
-            actualizarLeyendaModelos(data);
-            mostrarToastModelos(year + ' — ' + (data.nodes ? data.nodes.length : 0) + ' países', 'success');
+            dibujarEdgesLouvain(result);
+            dibujarNodosLouvain(result);
+            actualizarLeyendaModelos(result);
+            mostrarToastModelos(year + ' — ' + result.nodes.length + ' países', 'success');
         })
         .catch(function(err) {
             console.error('[Modelos] Error:', err);
@@ -441,16 +523,13 @@ function ejecutarModeloLouvain() {
         .finally(function() {
             window._modelosState._isLoading = false;
             _ocultarOverlayCarga();
-            if (btn) {
-                btn.classList.remove('loading');
-                btn.innerHTML = '⚡ Ejecutar Modelo';
-            }
+            if (btn) { btn.classList.remove('loading'); btn.innerHTML = '⚡ Ejecutar Modelo'; }
         });
 }
 
 
 // ---------------------------------------------------------
-// DIBUJAR NODOS — Coloreados por continente
+// DIBUJAR NODOS
 // ---------------------------------------------------------
 
 function dibujarNodosLouvain(data) {
@@ -458,64 +537,48 @@ function dibujarNodosLouvain(data) {
 
     var group = L.featureGroup();
     window._modelosState.layer = group;
-
     var metricLabel = window._modelosState.metrica === 'VA' ? 'Valor Agregado' : 'Exportaciones';
 
-    data.nodes.forEach(function(node) {
-        // Escalar radio: 80-300 → 6-20 px
-        var minSize = 80, maxSize = 300, minR = 6, maxR = 20;
-        var clamped = Math.max(minSize, Math.min(maxSize, node.size || 100));
-        var radius = minR + ((clamped - minSize) / (maxSize - minSize)) * (maxR - minR);
+    // Determinar qué países muestran label permanente:
+    // Top 10 por tamaño + obligatorios (USA, CHN, MEX, JPN)
+    var OBLIGATORIOS = ['USA', 'CHN', 'MEX', 'JPN'];
+    var sortedBySize = data.nodes.slice().sort(function(a, b) { return b.size - a.size; });
+    var top10Ids = {};
+    sortedBySize.slice(0, 10).forEach(function(n) { top10Ids[n.id] = true; });
+    OBLIGATORIOS.forEach(function(id) { top10Ids[id] = true; });
 
-        // Color por continente
+    data.nodes.forEach(function(node) {
+        var minS = 80, maxS = 300, minR = 6, maxR = 20;
+        var clamped = Math.max(minS, Math.min(maxS, node.size || 100));
+        var radius = minR + ((clamped - minS) / (maxS - minS)) * (maxR - minR);
         var color = _getColorPais(node.id);
-        var continente = _getContinente(node.id);
-        var continenteNombre = CONTINENT_NAMES[continente] || 'Otros';
+        var contNombre = CONTINENT_NAMES[_getContinente(node.id)] || 'Otros';
 
         var marker = L.circleMarker([node.lat, node.lon], {
-            radius: radius,
-            fillColor: color,
-            color: '#fff',
-            weight: 1.5,
-            opacity: 1,
-            fillOpacity: 0.85,
+            radius: radius, fillColor: color, color: '#fff',
+            weight: 1.5, opacity: 1, fillOpacity: 0.85
         });
-
-        marker._modelosData = node;
         marker._baseRadius = radius;
 
-        // Popup
-        var value = node.size || 0;
-        var popupHTML =
-            '<div style="font-family:\'Noto Sans\',sans-serif; font-size:13px; color:#222; min-width:160px;">' +
-                '<strong style="color:' + color + '; font-size:14px;">' + (node.label || node.id) + '</strong>' +
-                ' <span style="color:#666;">(' + node.id + ')</span><br>' +
-                '<hr style="border:0; border-top:1px solid #ccc; margin:5px 0;">' +
-                'Región: <b style="color:' + color + '">' + continenteNombre + '</b><br>' +
-                'Comunidad Louvain: <b>' + (node.community + 1) + '</b><br>' +
-                metricLabel + ': <b>$' + Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' MDD</b>' +
-            '</div>';
-        marker.bindPopup(popupHTML, { maxWidth: 280 });
+        marker.bindPopup(
+            '<div style="font-family:\'Noto Sans\',sans-serif;font-size:13px;min-width:160px;">' +
+            '<strong style="color:' + color + ';font-size:14px;">' + (node.label || node.id) + '</strong>' +
+            ' <span style="color:#888;">(' + node.id + ')</span><br>' +
+            '<hr style="border:0;border-top:1px solid #ccc;margin:5px 0;">' +
+            'Región: <b style="color:' + color + '">' + contNombre + '</b><br>' +
+            metricLabel + ': <b>$' + Number(node.size).toLocaleString('en-US', {maximumFractionDigits:1}) + ' MDD</b></div>',
+            { maxWidth: 280 }
+        );
 
-        // Tooltip permanente
+        // Label permanente solo para top 10 + obligatorios; el resto aparece al hover
+        var esPermanente = !!top10Ids[node.id];
         marker.bindTooltip(node.id, {
-            permanent: true,
-            direction: 'top',
-            offset: [0, -radius],
-            className: 'modelos-tooltip',
-            opacity: 0.85,
+            permanent: esPermanente, direction: 'top', offset: [0, -radius],
+            className: 'modelos-tooltip', opacity: 0.85
         });
 
-        // Hover: agrandar
-        marker.on('mouseover', function() {
-            this.setRadius(this._baseRadius * 1.4);
-            this.setStyle({ weight: 2.5, fillOpacity: 1 });
-            this.bringToFront();
-        });
-        marker.on('mouseout', function() {
-            this.setRadius(this._baseRadius);
-            this.setStyle({ weight: 1.5, fillOpacity: 0.85 });
-        });
+        marker.on('mouseover', function() { this.setRadius(this._baseRadius * 1.4); this.setStyle({weight:2.5,fillOpacity:1}); this.bringToFront(); });
+        marker.on('mouseout', function() { this.setRadius(this._baseRadius); this.setStyle({weight:1.5,fillOpacity:0.85}); });
 
         group.addLayer(marker);
     });
@@ -526,7 +589,7 @@ function dibujarNodosLouvain(data) {
 
 
 // ---------------------------------------------------------
-// DIBUJAR ARISTAS — Color continental + grosor por peso
+// DIBUJAR ARISTAS
 // ---------------------------------------------------------
 
 function dibujarEdgesLouvain(data) {
@@ -535,132 +598,87 @@ function dibujarEdgesLouvain(data) {
     var edgesGroup = L.featureGroup();
     window._modelosState.edgesLayer = edgesGroup;
 
-    // Índice de nodos
     var nodeIndex = {};
-    if (data.nodes) {
-        data.nodes.forEach(function(n) { nodeIndex[n.id] = n; });
-    }
+    if (data.nodes) data.nodes.forEach(function(n) { nodeIndex[n.id] = n; });
 
-    // Calcular rango de pesos para normalizar grosor
     var weights = data.edges.map(function(e) { return e.weight || 0; });
     var maxW = Math.max.apply(null, weights);
     var minW = Math.min.apply(null, weights);
     var rangeW = maxW - minW || 1;
 
     data.edges.forEach(function(edge) {
-        var src = nodeIndex[edge.source];
-        var tgt = nodeIndex[edge.target];
+        var src = nodeIndex[edge.source], tgt = nodeIndex[edge.target];
         if (!src || !tgt) return;
 
-        // Color del nodo fuente (por continente)
         var srcColor = _getColorPais(edge.source);
-
-        // Grosor normalizado: 1px (menor peso) a 6px (mayor peso)
         var normalized = (edge.weight - minW) / rangeW;
-        var weight = 1 + normalized * 5;
+        var w = 1 + normalized * 5;
 
-        var line = L.polyline(
-            [[src.lat, src.lon], [tgt.lat, tgt.lon]],
-            {
-                color: srcColor,
-                weight: weight,
-                opacity: 0.4,
-                interactive: true,
-            }
-        );
+        var line = L.polyline([[src.lat, src.lon], [tgt.lat, tgt.lon]], {
+            color: srcColor, weight: w, opacity: 0.4, interactive: true
+        });
+        line._baseWeight = w;
 
-        line._edgeData = edge;
-        line._baseWeight = weight;
-        line._baseOpacity = 0.4;
-
-        // Tooltip con valor
         line.bindTooltip(
             edge.source + ' → ' + edge.target + ': $' +
-            Number(edge.weight).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' MDD',
+            Number(edge.weight).toLocaleString('en-US', {maximumFractionDigits:0}) + ' MDD',
             { sticky: true, className: 'modelos-tooltip' }
         );
 
-        // Hover: resaltar
-        line.on('mouseover', function() {
-            this.setStyle({ opacity: 0.8, weight: this._baseWeight * 1.8 });
-            this.bringToFront();
-        });
-        line.on('mouseout', function() {
-            this.setStyle({ opacity: this._baseOpacity, weight: this._baseWeight });
-        });
+        line.on('mouseover', function() { this.setStyle({opacity:0.8,weight:this._baseWeight*1.8}); this.bringToFront(); });
+        line.on('mouseout', function() { this.setStyle({opacity:0.4,weight:this._baseWeight}); });
 
         edgesGroup.addLayer(line);
     });
 
     edgesGroup.addTo(map);
-
-    // Nodos al frente
-    if (window._modelosState.layer) {
-        window._modelosState.layer.bringToFront();
-    }
+    if (window._modelosState.layer) window._modelosState.layer.bringToFront();
 }
 
 
 // ---------------------------------------------------------
-// LEYENDA — Por continente
+// LEYENDA
 // ---------------------------------------------------------
 
 function actualizarLeyendaModelos(data) {
     var prev = document.getElementById('modelos-legend');
     if (prev) prev.remove();
-
     if (!data || !data.nodes || data.nodes.length === 0) return;
 
-    // Contar nodos por continente
-    var conteo = { asia: 0, europe: 0, america: 0, other: 0 };
-    data.nodes.forEach(function(n) {
-        var c = _getContinente(n.id);
-        conteo[c] = (conteo[c] || 0) + 1;
-    });
+    var conteo = { asia:0, europe:0, america:0, other:0 };
+    data.nodes.forEach(function(n) { var c = _getContinente(n.id); conteo[c] = (conteo[c]||0) + 1; });
 
     var legend = document.createElement('div');
     legend.id = 'modelos-legend';
     legend.className = 'dashboard-box';
 
-    // Título
     var title = document.createElement('div');
     title.className = 'legend-title';
     title.textContent = 'Regiones — ' + window._modelosState.currentYear;
     legend.appendChild(title);
 
-    // Metadata
     var meta = document.createElement('div');
     meta.className = 'legend-meta';
-    var metricName = window._modelosState.metrica === 'VA' ? 'Valor Agregado' : 'Exportaciones';
-    meta.textContent = metricName + ' · ' + data.nodes.length + ' países · ' +
-                       data.communities_count + ' comunidades Louvain';
+    meta.textContent = (window._modelosState.metrica === 'VA' ? 'Valor Agregado' : 'Exportaciones') +
+        ' · ' + data.nodes.length + ' países';
     legend.appendChild(meta);
 
-    // Items por continente
-    var orden = ['asia', 'europe', 'america', 'other'];
-    orden.forEach(function(key) {
+    ['asia','europe','america','other'].forEach(function(key) {
         if (conteo[key] === 0) return;
-
         var item = document.createElement('div');
         item.className = 'legend-item';
-
         var dot = document.createElement('span');
         dot.className = 'legend-dot';
         dot.style.backgroundColor = CONTINENT_COLORS[key];
-
-        var label = document.createTextNode(CONTINENT_NAMES[key]);
-
+        item.appendChild(dot);
+        item.appendChild(document.createTextNode(CONTINENT_NAMES[key]));
         var count = document.createElement('span');
         count.className = 'legend-count';
         count.textContent = conteo[key] + ' países';
-
-        item.appendChild(dot);
-        item.appendChild(label);
         item.appendChild(count);
         legend.appendChild(item);
     });
 
-    // Insertar después del panel de control
     var controlPanel = document.getElementById('modelos-control-panel');
     if (controlPanel && controlPanel.parentNode) {
         controlPanel.parentNode.insertBefore(legend, controlPanel.nextSibling);
@@ -672,68 +690,35 @@ function actualizarLeyendaModelos(data) {
 
 
 // ---------------------------------------------------------
-// LIMPIAR CAPAS
+// LIMPIAR / CERRAR
 // ---------------------------------------------------------
 
 function limpiarCapaModelos() {
-    if (window._modelosState.layer) {
-        map.removeLayer(window._modelosState.layer);
-        window._modelosState.layer = null;
-    }
-    if (window._modelosState.edgesLayer) {
-        map.removeLayer(window._modelosState.edgesLayer);
-        window._modelosState.edgesLayer = null;
-    }
+    if (window._modelosState.layer) { map.removeLayer(window._modelosState.layer); window._modelosState.layer = null; }
+    if (window._modelosState.edgesLayer) { map.removeLayer(window._modelosState.edgesLayer); window._modelosState.edgesLayer = null; }
     var legend = document.getElementById('modelos-legend');
     if (legend) legend.remove();
 }
 
 
 // ---------------------------------------------------------
-// CERRAR MODELOS
-// ---------------------------------------------------------
-
-function cerrarModelos() {
-    clearTimeout(window._modelosState._debounceTimer);
-    limpiarCapaModelos();
-    _ocultarOverlayCarga();
-
-    var panel = document.getElementById('modelos-control-panel');
-    if (panel) panel.remove();
-
-    window._modelosState.isActive = false;
-    window._modelosState.controlPanel = null;
-    window._modelosState._isLoading = false;
-
-    mostrarToastModelos('Modelos cerrado', 'info');
-}
-
-
-// ---------------------------------------------------------
-// TOAST NOTIFICATION
+// TOAST
 // ---------------------------------------------------------
 
 function mostrarToastModelos(message, type) {
     type = type || 'info';
-
-    var prevToast = document.querySelector('.modelos-toast');
-    if (prevToast) prevToast.remove();
-
+    var prev = document.querySelector('.modelos-toast');
+    if (prev) prev.remove();
     var toast = document.createElement('div');
     toast.className = 'modelos-toast ' + type;
     toast.textContent = message;
     document.body.appendChild(toast);
-
     setTimeout(function() {
         toast.classList.add('dismiss');
-        setTimeout(function() {
-            if (toast.parentNode) toast.remove();
-        }, 300);
+        setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
     }, 3000);
 }
 
 
 // ---------------------------------------------------------
-// LOG
-// ---------------------------------------------------------
-console.log('[Modelos] Módulo de Modelos de red cargado correctamente.');
+console.log('[Modelos] Módulo cargado — selector se inyecta en sidebar Global.');
