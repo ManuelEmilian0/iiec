@@ -1,7 +1,0 @@
-[
-    { "nombre": "Plan México 2025", "short": "Plan México", "eco": 3, "ord": 1, "equ": 1, "inf": 2, "gob": 1 },
-    { "nombre": "LGAHOTDU", "short": "LGAHOTDU", "eco": 2, "ord": 3, "equ": 3, "inf": 2, "gob": 3 },
-    { "nombre": "PED BC 2022-2027", "short": "PED BC", "eco": 3, "ord": 2, "equ": 2, "inf": 2, "gob": 2 },
-    { "nombre": "PMDU Tijuana 2025-2027", "short": "PMDU", "eco": 2, "ord": 1, "equ": 2, "inf": 2, "gob": 2 },
-    { "nombre": "PDUCP Tijuana 2010-2030", "short": "PDUCP", "eco": 2, "ord": 3, "equ": 0, "inf": 2, "gob": 1 }
-]
