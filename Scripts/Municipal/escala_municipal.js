@@ -156,8 +156,7 @@ function iniciarLogicaMunicipio() {
                     }
                     
                     if (!window.limiteDelegacionalLayer) {
-                        fetch('carto/limite_delegacional_Tijuana.geojson')
-                            .then(r => r.json())
+                        AppData.load('carto/limite_delegacional_Tijuana.geojson')
                             .then(data => {
                                 window.limiteDelegacionalLayer = L.geoJSON(data, {
                                     interactive: false,
@@ -217,8 +216,7 @@ function iniciarLogicaMunicipio() {
                     
                     toggleLev.onchange = function() {
                         if (this.value === "on") {
-                            fetch('carto/levantamiento.geojson')
-                                .then(r => r.json())
+                            AppData.load('carto/levantamiento.geojson')
                                 .then(data => {
                                     if (window.levantamientoLayer) map.removeLayer(window.levantamientoLayer);
                                     window.levantamientoLayer = L.geoJSON(data, {
@@ -304,7 +302,6 @@ function iniciarLogicaMunicipio() {
                 }
                 var chartContainer = document.getElementById('equipamiento-chart-container');
                 if (chartContainer) chartContainer.style.display = 'none';
-                if (typeof munWrapper !== 'undefined' && munWrapper) munWrapper.style.display = "block";
             }
 
             if (nombreEst === "Baja California") {
@@ -410,22 +407,22 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
         if (nombreEstado === "ZM Valle de México") {
             promises.push(
                 Promise.all([
-                    fetch(archivoGeojson).then(r => r.json()),
-                    fetch('carto/CDMX.geojson').then(r => r.json())
+                    AppData.load(archivoGeojson),
+                    AppData.load('carto/CDMX.geojson')
                 ]).then(results => {
                     var mergedFeatures = results[0].features.concat(results[1].features);
                     return { type: "FeatureCollection", features: mergedFeatures };
                 })
             );
         } else {
-            promises.push(fetch(archivoGeojson).then(r => r.json()));
+            promises.push(AppData.load(archivoGeojson));
         }
     } else {
         promises.push(Promise.resolve(currentRegionCache.data));
     }
 
     // Armadoras siempre lo cargamos o lo abstraemos también
-    promises.push(fetch('carto/armadoras.geojson').then(r => r.json()));
+    promises.push(AppData.load('carto/armadoras.geojson'));
 
     // Cargar Limite_municipal.geojson sincrónicamente para los gráficos
     promises.push(window.cargarLimiteMunicipalGeoJSON());
@@ -523,7 +520,7 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
         })
         .catch(err => {
             console.error("Error cargando capas regionales:", err);
-            document.getElementById('filter-title').innerText = "Archivo " + archivoGeojson + " Inexistente";
+            document.getElementById('filter-title').innerText = "No hay datos de AGEB disponibles para esta región todavía.";
         });
 }
 
@@ -1078,7 +1075,7 @@ function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {
 
     var tituloLimpio = titulo.trim();
     if (tituloLimpio === 'Vulnerabilidad en Hogar' || tituloLimpio === 'Vulnerabilidad en el hogar') {
-        imageName = 'assets/Vuln_hogar.png';
+        imageName = 'assets/Vuln_Hogar.png';
     } else if (tituloLimpio === 'Deficiencias en Infraestructura' || tituloLimpio === 'Deficiencia de infraestructura') {
         imageName = 'assets/Vuln_Urbana.png';
     } else if (tituloLimpio === 'Sin Oportunidades' || tituloLimpio === 'Sin oportunidades') {
@@ -1175,7 +1172,7 @@ function mostrarImagenInfo(imageName) {
     var textResumen = "";
     var conclusion = "La combinación de estos indicadores produjo un Índice de Vulnerabilidad Global que distingue con precisión los territorios consolidados con cualidades a atender.";
 
-    if (imageName === 'assets/Vuln_hogar.png') {
+    if (imageName === 'assets/Vuln_Hogar.png') {
         textResumen = "La Físico-Espacial igual a “Vulnerabilidad en Hogar” refleja las condiciones materiales y de ocupación del territorio. Se construyó a partir de variables como: nuevas áreas de crecimiento urbano, la pavimentación, el alumbrado público, la densidad de vivienda, las viviendas deshabitadas y el hacinamiento. Los resultados de esta vulnerabilidad evidencian procesos de dispersión y vaciamiento urbano que afectan la eficiencia territorial. También mayores riesgos, asociados a carencias en infraestructura doméstica, inseguridad y pérdida de cohesión social.<br><br><b>" + conclusion + "</b>";
     } else if (imageName === 'assets/Vuln_Urbana.png') {
         textResumen = "La Urbana igual a “Deficiencia en Infraestructura” se compone en tres variables ponderadas: Vivienda sin drenaje, asociadas a riesgos sanitarios y contaminación ambiental, vivienda sin agua entubada, refleja la desigualdad en el acceso al recurso más esencial para la salud pública y el bienestar doméstico y vivienda sin electricidad que representa la carencia más crítica, limita la integración productiva, educativa y social de los hogares.<br><br><b>" + conclusion + "</b>";
@@ -1289,13 +1286,7 @@ window.equipamientoBufferLayer = null;
 window.chartEquipamientoInstance = null;
 
 function renderizarEquipamientoTijuana(wrapper) {
-    if (window.equipamientoDataCache) {
-        configurarUIEquipamiento(wrapper, window.equipamientoDataCache);
-        return;
-    }
-
-    fetch('carto/Equipamiento_Tijuana.geojson')
-        .then(r => r.json())
+    AppData.load('carto/Equipamiento_Tijuana.geojson')
         .then(data => {
             window.equipamientoDataCache = data;
             configurarUIEquipamiento(wrapper, data);

@@ -2,40 +2,15 @@
 // 2. ESCALA NACIONAL (LÓGICA ESPECÍFICA)
 // ============================================================================
 
-const FINANZAS_FEDERALES_2025 = {
-    "Aguascalientes": { R28: 10691, R33: 13593 },
-    "Baja California": { R28: 29331, R33: 23325 },
-    "Baja California Sur": { R28: 6514, R33: 9695 },
-    "Campeche": { R28: 7887, R33: 10143 },
-    "Coahuila": { R28: 23264, R33: 23372 },
-    "Colima": { R28: 5723, R33: 7750 },
-    "Chiapas": { R28: 41099, R33: 62561 },
-    "Chihuahua": { R28: 29801, R33: 29187 },
-    "Ciudad de México": { R28: 96602, R33: 19220 },
-    "Durango": { R28: 13199, R33: 18906 },
-    "Guanajuato": { R28: 43938, R33: 40159 },
-    "Guerrero": { R28: 23632, R33: 47937 },
-    "Hidalgo": { R28: 20948, R33: 31474 },
-    "Jalisco": { R28: 66595, R33: 49230 },
-    "México": { R28: 138995, R33: 93509 },
-    "Michoacán": { R28: 32783, R33: 41692 },
-    "Morelos": { R28: 13707, R33: 16447 },
-    "Nayarit": { R28: 9028, R33: 11861 },
-    "Nuevo León": { R28: 48768, R33: 33831 },
-    "Oaxaca": { R28: 28826, R33: 53648 },
-    "Puebla": { R28: 44732, R33: 47071 },
-    "Querétaro": { R28: 18078, R33: 16987 },
-    "Quintana Roo": { R28: 14381, R33: 13969 },
-    "San Luis Potosí": { R28: 20015, R33: 25832 },
-    "Sinaloa": { R28: 22304, R33: 23517 },
-    "Sonora": { R28: 22860, R33: 20226 },
-    "Tabasco": { R28: 23847, R33: 19097 },
-    "Tamaulipas": { R28: 25631, R33: 27201 },
-    "Tlaxcala": { R28: 9994, R33: 13227 },
-    "Veracruz": { R28: 58515, R33: 69105 },
-    "Yucatán": { R28: 17118, R33: 18424 },
-    "Zacatecas": { R28: 11530, R33: 16212 }
-};
+// Antes vivía hardcodeado aquí; ahora se carga de Tablas/finanzas_federales_2025.json
+// (actualizar el dato es editar el JSON, no el código). Se dispara la carga de una vez
+// al analizar este script, muy por delante de que el usuario llegue al modo "Finanzas".
+var FINANZAS_FEDERALES_2025 = {};
+AppData.load('Tablas/finanzas_federales_2025.json').then(function (data) {
+    FINANZAS_FEDERALES_2025 = data;
+}).catch(function (e) {
+    console.error('No se pudo cargar finanzas_federales_2025.json:', e);
+});
 
 window.estadosPolygonsGeoJSON = null;
 
@@ -227,8 +202,7 @@ function renderizarMapaFinanzas(tipo) {
     filterTitle.innerText = "Cargando cartografía...";
 
     if (!window.estadosPolygonsGeoJSON) {
-        fetch('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
-            .then(res => res.json())
+        AppData.load('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
             .then(geo => {
                 window.estadosPolygonsGeoJSON = geo;
                 filterTitle.innerText = "Modo de análisis";
@@ -468,19 +442,13 @@ window.cargarYRenderizarEmpresasCSV = function () {
     var finOverlay = document.getElementById('fin-overlay');
     if (finOverlay) finOverlay.style.display = 'block';
 
-    if (window.empresasCSVDataCache) {
-        window.cambiarIndicadorFinanciero();
-        window.mostrarInstruccionIndicador();
-    } else {
-        fetch('Tablas/empresas.csv')
-            .then(res => res.text())
-            .then(csvText => {
-                window.empresasCSVDataCache = parsearCSVEmpresas(csvText);
-                window.cambiarIndicadorFinanciero();
-                window.mostrarInstruccionIndicador();
-            })
-            .catch(err => console.error("Error cargando empresas.csv:", err));
-    }
+    AppData.load('Tablas/empresas.csv')
+        .then(csvText => {
+            window.empresasCSVDataCache = window.empresasCSVDataCache || parsearCSVEmpresas(csvText);
+            window.cambiarIndicadorFinanciero();
+            window.mostrarInstruccionIndicador();
+        })
+        .catch(err => console.error("Error cargando empresas.csv:", err));
 };
 
 window.parsearCSVEmpresas = function (str) {
@@ -772,14 +740,10 @@ window.iluminarTop5Nacional = function (top5Nombres, colores) {
         window.actualizarLeyendaNodosNacionales(top5Nombres, colores);
     };
 
-    if (window.denueRawData) {
-        cargarLayer(window.denueRawData);
-    } else {
-        fetch('carto/denue.geojson').then(r => r.json()).then(data => {
-            window.denueRawData = data;
-            cargarLayer(data);
-        }).catch(e => console.error("Error al cargar denue.geojson para el top 5:", e));
-    }
+    AppData.load('carto/denue.geojson').then(data => {
+        window.denueRawData = data;
+        cargarLayer(data);
+    }).catch(e => console.error("Error al cargar denue.geojson para el top 5:", e));
 };
 
 window.productDataActual = {};
@@ -793,11 +757,7 @@ function renderizarMapaProductividad(industria, anio) {
 
     var filename = 'Tablas/' + industria + '.csv';
 
-    fetch(filename)
-        .then(response => {
-            if (!response.ok) throw new Error("Archivo " + filename + " no encontrado");
-            return response.text();
-        })
+    AppData.load(filename)
         .then(csvText => {
             var rows = csvText.split('\n');
             var headers = rows[0].split(',');
@@ -837,8 +797,7 @@ function renderizarMapaProductividad(industria, anio) {
             window.industriaActual = industria;
 
             if (!window.estadosPolygonsGeoJSON) {
-                fetch('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
-                    .then(res => res.json())
+                AppData.load('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
                     .then(geo => {
                         window.estadosPolygonsGeoJSON = geo;
                         dibujarCoropletaProductividad(anio);

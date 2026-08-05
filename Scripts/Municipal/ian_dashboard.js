@@ -1,10 +1,5 @@
-const datosIAN = [
-    { nombre: "Plan México 2025", short: "Plan México", eco: 3, ord: 1, equ: 1, inf: 2, gob: 1 },
-    { nombre: "LGAHOTDU", short: "LGAHOTDU", eco: 2, ord: 3, equ: 3, inf: 2, gob: 3 },
-    { nombre: "PED BC 2022-2027", short: "PED BC", eco: 3, ord: 2, equ: 2, inf: 2, gob: 2 },
-    { nombre: "PMDU Tijuana 2025-2027", short: "PMDU", eco: 2, ord: 1, equ: 2, inf: 2, gob: 2 },
-    { nombre: "PDUCP Tijuana 2010-2030", short: "PDUCP", eco: 2, ord: 3, equ: 0, inf: 2, gob: 1 }
-];
+// Los datos de instrumentos (antes hardcodeados aquí) ahora viven en
+// Tablas/ian_instrumentos.json — ver inicializarTableroIAN().
 
 function calcularIANPromedio(inst) {
     return ((inst.eco + inst.ord + inst.equ + inst.inf + inst.gob) / 5).toFixed(1);
@@ -30,6 +25,19 @@ function inicializarTableroIAN() {
     // Si ya tiene contenido, no lo volvemos a generar
     if (container.innerHTML.trim() !== "" && !container.innerHTML.includes("<!-- Se inyecta")) return;
 
+    // datosIAN ahora se carga de Tablas/ian_instrumentos.json. AppData.load cachea la
+    // promesa, así que si el MutationObserver y el polling de abajo disparan esta función
+    // varias veces mientras carga, no se repite la petición de red.
+    AppData.load('Tablas/ian_instrumentos.json').then(function (datos) {
+        // Puede haberse poblado ya en un disparo anterior mientras esta promesa esperaba.
+        if (container.innerHTML.trim() !== "" && !container.innerHTML.includes("<!-- Se inyecta")) return;
+        _construirTableroIAN(container, datos);
+    }).catch(function (e) {
+        console.error('No se pudo cargar ian_instrumentos.json:', e);
+    });
+}
+
+function _construirTableroIAN(container, datosIAN) {
     var html = `
         <div style="overflow-x: auto; font-family: 'Noto Sans', sans-serif; padding-bottom: 10px;">
             <div style="text-align: center; margin-bottom: 6px; font-weight: bold; color: #00e5ff; font-size: 13px; text-transform: uppercase;">Municipio de Tijuana, B.C.</div>

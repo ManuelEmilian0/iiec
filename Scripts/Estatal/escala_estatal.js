@@ -3,7 +3,7 @@
 // ==========================================
 
 function cargarArmadorasContexto() {
-    fetch('carto/armadoras.geojson').then(r => r.json()).then(data => {
+    AppData.load('carto/armadoras.geojson').then(data => {
         window.armadorasContextoGlobalLayer = L.geoJSON(data, {
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng, { radius: 2, fillColor: "#fff", color: "#fff", weight: 0, opacity: 0.3, fillOpacity: 0.3 });
@@ -17,10 +17,10 @@ function cargarArmadorasContexto() {
 
 function iniciarLogicaEstatal() {
     Promise.all([
-        fetch('carto/denue.geojson').then(r => r.json()),
-        fetch('carto/armadoras.geojson').then(r => r.json()),
-        fetch('carto/isocronas.geojson').then(r => r.json()),
-        fetch('carto/Vinculacion_empresas_DENUE_2026.geojson').then(r => r.json())
+        AppData.load('carto/denue.geojson'),
+        AppData.load('carto/armadoras.geojson'),
+        AppData.load('carto/isocronas.geojson'),
+        AppData.load('carto/Vinculacion_empresas_DENUE_2026.geojson')
     ]).then(([denueData, armadorasData, isocronasData, vinculacionData]) => {
         denueRawData = denueData;
         armadorasRawData = armadorasData;
@@ -74,9 +74,9 @@ function generarMenuEstados(data) {
         select.appendChild(opt);
     });
 
-    select.onchange = function () { 
+    select.onchange = function () {
         if (this.value) {
-            filtrarPorEstado(this.value); 
+            filtrarPorEstado(this.value);
         }
     };
     container.appendChild(select);
@@ -115,6 +115,15 @@ function procesarYUnirIsocronas(features) {
         try {
             var unido = lista[0];
             for (var i = 1; i < lista.length; i++) unido = turf.union(unido, lista[i]);
+            // Si el grupo tenía una sola isócrona, turf.union nunca corrió y
+            // `unido` sigue siendo el MISMO objeto que vive en isocronasRawData.
+            // Clonarlo antes de reemplazar sus properties evita corromper el
+            // feature original (perdería Entidad/NOMGEO) para la próxima vez
+            // que se filtre el mismo estado — le pasó a la vista nueva de Red
+            // de Proveeduría al reusar el estado ya consultado por Accesibilidad.
+            if (lista.length === 1) {
+                unido = { type: 'Feature', geometry: unido.geometry, properties: {} };
+            }
             unido.properties = { AA_MINS: minutos };
             featuresUnidas.push(unido);
         } catch (e) { featuresUnidas.push(...lista); }
@@ -327,10 +336,6 @@ function actualizarPanelEstatal(nombreEstado, denueEstado, armadorasEstado, isoc
 // ==========================================
 // VINCULACIÓN EMPRESAS
 // ==========================================
-function normalizarEstadoVinculacion(nombre) {
-    return nombre ? nombre.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() : "";
-}
-
 function normalizarEstrato(estrato) {
     if (!estrato) return "Sin dato";
     var s = estrato.toString().trim().replace(/\s+$/, '');
@@ -752,3 +757,4 @@ window.actualizarVisibilidadIsocronas = function() {
         });
     }
 };
+

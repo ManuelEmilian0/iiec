@@ -44,6 +44,10 @@ function initMap() {
     if (map !== undefined && map !== null) { map.remove(); }
 
     map = L.map('map', { minZoom: 2, maxZoom: 18, zoomControl: false });
+    // Vista inicial garantizada de forma síncrona: si el contenedor #map aún no tiene
+    // un tamaño medido cuando corre fitBounds(), Leaflet puede calcular un centro/zoom
+    // inválido (NaN) que luego rompe el primer flyTo() con "Invalid LatLng object".
+    map.setView([20, 0], 2);
     // Encuadre inicial exacto (América hasta Europa/África)
     map.fitBounds([[-55, -130], [75, 60]]);
 
@@ -347,7 +351,7 @@ function loadLayer(scaleType) {
                 map.addLayer(window.armadorasNacionalTriangulosLayer);
             }
         } else {
-            fetch('carto/armadoras.geojson').then(r => r.json()).then(data => {
+            AppData.load('carto/armadoras.geojson').then(data => {
                 window.armadorasRawData = data; // Cache
                 var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
                 var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
@@ -442,11 +446,21 @@ function loadLayer(scaleType) {
         if (typeof cargarYRenderizarEmpresasCSV === "function") cargarYRenderizarEmpresasCSV();
     }
 
-    fetch(filename)
-        .then(response => response.json())
+    AppData.load(filename)
         .then(data => {
             activeData = data;
-            map.flyTo(zoomCoords, zoomLevel, { duration: 1.5 });
+            try {
+                // Si el contenedor #map no tenía un tamaño medido cuando se creó el mapa,
+                // su transform interno de proyección puede haber quedado inválido; esto lo
+                // recalcula antes de animar la vista.
+                map.invalidateSize();
+                map.flyTo(zoomCoords, zoomLevel, { duration: 1.5 });
+            } catch (flyErr) {
+                // Un flyTo fallido (vista previa inválida) no debe impedir que se
+                // construyan los filtros/datos de la escala.
+                console.warn('flyTo falló, usando setView como respaldo:', flyErr);
+                map.setView(zoomCoords, zoomLevel);
+            }
 
             if (scaleType === 'mundial') iniciarFiltroMundial_Paso1(data);
             else if (scaleType === 'nacional') iniciarFiltroNacional_Paso1(data);
@@ -1963,23 +1977,13 @@ window.industriaActual = '';
 // ==========================================
 // 4. MÓDULOS DATOS DUROS
 // ==========================================
-const POBLACION_ESTATAL = {
-    "CIUDAD DE MEXICO": 9209944,
-    "ESTADO DE MEXICO": 16992418,
-    "NUEVO LEON": 5784442,
-    "BAJA CALIFORNIA": 3769020,
-    "JALISCO": 8348151,
-    "PUEBLA": 6583278,
-    "GUANAJUATO": 6166934,
-    "COAHUILA": 3146771,
-    "SONORA": 2944840,
-    "SAN LUIS POTOSI": 2822255,
-    "AGUASCALIENTES": 1425607,
-    "MORELOS": 1971520,
-    "ZM Valle de México": 21804515,
-    "ZM Tijuana": 2157853,
-    "ZM Monterrey": 5341171
-};
+// Antes vivía hardcodeado aquí; ahora se carga de Tablas/poblacion_estatal.json.
+var POBLACION_ESTATAL = {};
+AppData.load('Tablas/poblacion_estatal.json').then(function (data) {
+    POBLACION_ESTATAL = data;
+}).catch(function (e) {
+    console.error('No se pudo cargar poblacion_estatal.json:', e);
+});
 
 window.actualizarModulosDatosDuros = function(features, escala, nombreEstado) {
     var container = document.getElementById('modulos-container');

@@ -42,10 +42,10 @@ function iniciarLogicaMetropolitana() {
 
     // 4. Cargar datos necesarios en paralelo
     Promise.all([
-        (window.denueRawData ? Promise.resolve(window.denueRawData) : fetch('carto/denue.geojson').then(r => r.json())),
-        (window.armadorasRawData ? Promise.resolve(window.armadorasRawData) : fetch('carto/armadoras.geojson').then(r => r.json())),
-        (window.isocronasRawData ? Promise.resolve(window.isocronasRawData) : fetch('carto/isocronas.geojson').then(r => r.json())),
-        (window.vinculacionRawData ? Promise.resolve(window.vinculacionRawData) : fetch('carto/Vinculacion_empresas_DENUE_2026.geojson').then(r => r.json()))
+        AppData.load('carto/denue.geojson'),
+        AppData.load('carto/armadoras.geojson'),
+        AppData.load('carto/isocronas.geojson'),
+        AppData.load('carto/Vinculacion_empresas_DENUE_2026.geojson')
     ]).then(([denueData, armadorasData, isocronasData, vinculacionData]) => {
         window.denueRawData = denueData;
         window.armadorasRawData = armadorasData;
