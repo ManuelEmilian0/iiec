@@ -201,6 +201,45 @@ body.onboarding-activo .scale-btn {
     color: #111;
 }
 
+/* =========================================
+   AVISO PARA ABRIR EL DASHBOARD (panel lateral)
+   El panel arranca cerrado (ver setupUI en escala_global.js); este globo
+   pulsante junto a la pestaña de apertura invita a desplegarlo. Se quita en
+   cuanto se abre el panel por primera vez.
+   ========================================= */
+#dashboard-open-hint {
+    position: absolute;
+    top: 120px;
+    left: 38px;
+    z-index: 2001;
+    background: #0277bd;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    font-family: "Noto Sans", sans-serif;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    animation: dashboardHintPulse 1.8s ease-in-out infinite;
+}
+
+#dashboard-open-hint .dashboard-open-hint-arrow {
+    display: inline-block;
+    animation: dashboardHintArrow 1.2s ease-in-out infinite;
+}
+
+@keyframes dashboardHintPulse {
+    0%, 100% { box-shadow: 0 2px 10px rgba(0, 229, 255, 0.25); }
+    50% { box-shadow: 0 2px 18px rgba(0, 229, 255, 0.85); }
+}
+
+@keyframes dashboardHintArrow {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-4px); }
+}
+
 @media (max-width: 720px) {
     .onboarding-callout {
         max-width: 170px;

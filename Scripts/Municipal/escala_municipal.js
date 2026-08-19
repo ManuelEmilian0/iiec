@@ -79,7 +79,7 @@ function iniciarLogicaMunicipio() {
     insigniaBadge.style.cssText = "display:none; background:#111; border:1px solid #00e5ff; color:#fff; font-size:10px; font-weight:bold; padding:4px 8px; border-radius:4px; text-transform:uppercase; box-shadow:0 0 5px rgba(0,229,255,0.4); white-space: nowrap; cursor: pointer;";
     insigniaBadge.innerHTML = `<span style="-webkit-text-stroke: 1px #00e5ff; color: black; font-size: 14px; margin-right: 4px; vertical-align: bottom;">★</span>Proyecto Ensignia`;
 
-    insigniaBadge.onclick = function() {
+    insigniaBadge.onclick = function () {
         var modal = document.getElementById("ensignia-modal");
         if (!modal) {
             modal = document.createElement("div");
@@ -105,6 +105,16 @@ function iniciarLogicaMunicipio() {
     };
 
     estadoContainer.appendChild(selectEstado);
+
+    var selectMunicipio = document.createElement("select");
+    selectMunicipio.id = "select-municipio-filter";
+    selectMunicipio.className = "dynamic-filter-select";
+    selectMunicipio.style.flex = "1";
+    selectMunicipio.style.marginBottom = "0";
+    selectMunicipio.style.display = "none";
+    selectMunicipio.innerHTML = `<option value="" disabled selected>-- Municipio --</option>`;
+    estadoContainer.appendChild(selectMunicipio);
+
     estadoContainer.appendChild(insigniaBadge);
 
     var selectIndice = document.createElement("select");
@@ -138,127 +148,127 @@ function iniciarLogicaMunicipio() {
                 lbl.style.cssText = "color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;";
                 lbl.innerText = "Equipamiento Tijuana";
 
-                    var toggleEquip = document.createElement("select");
-                    toggleEquip.className = "dynamic-filter-select";
-                    toggleEquip.innerHTML = `
+                var toggleEquip = document.createElement("select");
+                toggleEquip.className = "dynamic-filter-select";
+                toggleEquip.innerHTML = `
                         <option value="off" selected>Apagado</option>
                         <option value="on">Encender Equipamiento</option>
                     `;
 
-                    var controlesAdicionales = document.createElement("div");
-                    controlesAdicionales.style.display = "none";
+                var controlesAdicionales = document.createElement("div");
+                controlesAdicionales.style.display = "none";
 
-                    if (!document.getElementById('delegacion-style')) {
-                        var style = document.createElement('style');
-                        style.id = 'delegacion-style';
-                        style.innerHTML = '.delegacion-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; color: #aaa; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center; pointer-events: none; }';
-                        document.head.appendChild(style);
-                    }
-                    
-                    if (!window.limiteDelegacionalLayer) {
-                        AppData.load('carto/limite_delegacional_Tijuana.geojson')
-                            .then(data => {
-                                window.limiteDelegacionalLayer = L.geoJSON(data, {
-                                    interactive: false,
-                                    style: { color: '#000000', weight: 3, fillOpacity: 0.05, opacity: 0.5, dashArray: '5, 15' },
-                                    onEachFeature: function(feature, layer) {
-                                        var nom = feature.properties.Nombre || feature.properties.name || feature.properties.NOMGEO || "";
-                                        if (nom) {
-                                            layer.bindTooltip(nom, {
-                                                permanent: true,
-                                                direction: 'center',
-                                                className: 'delegacion-tooltip'
-                                            });
-                                        }
+                if (!document.getElementById('delegacion-style')) {
+                    var style = document.createElement('style');
+                    style.id = 'delegacion-style';
+                    style.innerHTML = '.delegacion-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; color: #aaa; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align: center; pointer-events: none; }';
+                    document.head.appendChild(style);
+                }
+
+                if (!window.limiteDelegacionalLayer) {
+                    AppData.load('carto/limite_delegacional_Tijuana.geojson')
+                        .then(data => {
+                            window.limiteDelegacionalLayer = L.geoJSON(data, {
+                                interactive: false,
+                                style: { color: '#000000', weight: 3, fillOpacity: 0.05, opacity: 0.5, dashArray: '5, 15' },
+                                onEachFeature: function (feature, layer) {
+                                    var nom = feature.properties.Nombre || feature.properties.name || feature.properties.NOMGEO || "";
+                                    if (nom) {
+                                        layer.bindTooltip(nom, {
+                                            permanent: true,
+                                            direction: 'center',
+                                            className: 'delegacion-tooltip'
+                                        });
                                     }
-                                }).addTo(map);
-                                window.limiteDelegacionalLayer.bringToFront();
-                            });
+                                }
+                            }).addTo(map);
+                            window.limiteDelegacionalLayer.bringToFront();
+                        });
+                } else {
+                    window.limiteDelegacionalLayer.addTo(map);
+                    window.limiteDelegacionalLayer.bringToFront();
+                }
+
+                toggleEquip.onchange = function () {
+                    if (this.value === "on") {
+                        controlesAdicionales.style.display = "block";
+                        renderizarEquipamientoTijuana(controlesAdicionales);
                     } else {
-                        window.limiteDelegacionalLayer.addTo(map);
-                        window.limiteDelegacionalLayer.bringToFront();
-                    }
+                        controlesAdicionales.style.display = "none";
+                        if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
+                        if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
 
-                    toggleEquip.onchange = function () {
-                        if (this.value === "on") {
-                            controlesAdicionales.style.display = "block";
-                            renderizarEquipamientoTijuana(controlesAdicionales);
-                        } else {
-                            controlesAdicionales.style.display = "none";
-                            if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
-                            if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
-                            
-                            var legDiv = document.getElementById('legend-content');
-                            if (legDiv) {
-                                var eqLeg = document.getElementById('eq-legend-content');
-                                if (eqLeg) eqLeg.remove();
-                            }
-                            var chartContainer = document.getElementById('equipamiento-chart-container');
-                            if (chartContainer) chartContainer.style.display = 'none';
+                        var legDiv = document.getElementById('legend-content');
+                        if (legDiv) {
+                            var eqLeg = document.getElementById('eq-legend-content');
+                            if (eqLeg) eqLeg.remove();
                         }
-                    };
+                        var chartContainer = document.getElementById('equipamiento-chart-container');
+                        if (chartContainer) chartContainer.style.display = 'none';
+                    }
+                };
 
-                    equipWrapper.appendChild(lbl);
-                    equipWrapper.appendChild(toggleEquip);
-                    equipWrapper.appendChild(controlesAdicionales);
-                    
-                    // Cartografía Participativa
-                    var lblLev = document.createElement("small");
-                    lblLev.style.cssText = "color:#ff9800; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; margin-top:15px; display:block;";
-                    lblLev.innerText = "Cartografía Participativa";
+                equipWrapper.appendChild(lbl);
+                equipWrapper.appendChild(toggleEquip);
+                equipWrapper.appendChild(controlesAdicionales);
 
-                    var toggleLev = document.createElement("select");
-                    toggleLev.className = "dynamic-filter-select";
-                    toggleLev.innerHTML = `
+                // Cartografía Participativa
+                var lblLev = document.createElement("small");
+                lblLev.style.cssText = "color:#ff9800; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; margin-top:15px; display:block;";
+                lblLev.innerText = "Cartografía Participativa";
+
+                var toggleLev = document.createElement("select");
+                toggleLev.className = "dynamic-filter-select";
+                toggleLev.innerHTML = `
                         <option value="off" selected>Apagado</option>
                         <option value="on">Mostrar Levantamiento</option>
                     `;
-                    
-                    toggleLev.onchange = function() {
-                        if (this.value === "on") {
-                            AppData.load('carto/levantamiento.geojson')
-                                .then(data => {
-                                    if (window.levantamientoLayer) map.removeLayer(window.levantamientoLayer);
-                                    window.levantamientoLayer = L.geoJSON(data, {
-                                        pointToLayer: function(feature, latlng) {
-                                            var situacion = feature.properties['Situación'] || '';
-                                            var pColor = '#ff9800'; // default naranja
-                                            if (situacion === 'Riesgo geológico y falta de servicios') pColor = '#e53935'; // rojo
-                                            else if (situacion === 'Asentamiento irregular y falta de servicios') pColor = '#8e24aa'; // morado
-                                            else if (situacion === 'Inseguridad') pColor = '#1e88e5'; // azul
-                                            else if (situacion === 'Inseguridad y falta de servicios') pColor = '#3949ab'; // indigo
-                                            else if (situacion === 'Sin transporte') pColor = '#fdd835'; // amarillo
 
-                                            return L.circleMarker(latlng, {
-                                                radius: 6,
-                                                fillColor: pColor,
-                                                color: '#fff',
-                                                weight: 1,
-                                                opacity: 1,
-                                                fillOpacity: 0.8
-                                            });
-                                        },
-                                        onEachFeature: function(feature, layer) {
-                                            var content = `<div style="font-family:'Noto Sans'; font-size:12px; max-height: 200px; overflow-y: auto;">`;
-                                            content += `<strong style="color:#ff9800; font-size:14px;">Levantamiento</strong><hr style="border:0; border-top:1px solid #555; margin:5px 0;">`;
-                                            for(var key in feature.properties) {
-                                                if(feature.properties[key]) {
-                                                    content += `<b>${key}:</b> ${feature.properties[key]}<br>`;
-                                                }
+                toggleLev.onchange = function () {
+                    if (this.value === "on") {
+                        AppData.load('carto/levantamiento.geojson')
+                            .then(data => {
+                                if (window.levantamientoLayer) map.removeLayer(window.levantamientoLayer);
+                                window.levantamientoLayer = L.geoJSON(data, {
+                                    pointToLayer: function (feature, latlng) {
+                                        var situacion = feature.properties['Situación'] || '';
+                                        var pColor = '#ff9800'; // default naranja
+                                        if (situacion === 'Riesgo geológico y falta de servicios') pColor = '#e53935'; // rojo
+                                        else if (situacion === 'Asentamiento irregular y falta de servicios') pColor = '#8e24aa'; // morado
+                                        else if (situacion === 'Inseguridad') pColor = '#1e88e5'; // azul
+                                        else if (situacion === 'Inseguridad y falta de servicios') pColor = '#3949ab'; // indigo
+                                        else if (situacion === 'Sin transporte') pColor = '#fdd835'; // amarillo
+
+                                        return L.circleMarker(latlng, {
+                                            radius: 6,
+                                            fillColor: pColor,
+                                            color: '#fff',
+                                            weight: 1,
+                                            opacity: 1,
+                                            fillOpacity: 0.8
+                                        });
+                                    },
+                                    onEachFeature: function (feature, layer) {
+                                        var content = `<div style="font-family:'Noto Sans'; font-size:12px; max-height: 200px; overflow-y: auto;">`;
+                                        content += `<strong style="color:#ff9800; font-size:14px;">Levantamiento</strong><hr style="border:0; border-top:1px solid #555; margin:5px 0;">`;
+                                        for (var key in feature.properties) {
+                                            if (feature.properties[key]) {
+                                                content += `<b>${key}:</b> ${feature.properties[key]}<br>`;
                                             }
-                                            content += `</div>`;
-                                            layer.bindPopup(content);
                                         }
-                                    }).addTo(map);
+                                        content += `</div>`;
+                                        layer.bindPopup(content);
+                                    }
+                                }).addTo(map);
 
-                                    var legDiv = document.getElementById('legend-content');
-                                    if (legDiv && !document.getElementById('lev-legend-content')) {
-                                        var levLeg = document.createElement('div');
-                                        levLeg.id = 'lev-legend-content';
-                                        levLeg.style.marginTop = "15px";
-                                        levLeg.style.paddingTop = "10px";
-                                        levLeg.style.borderTop = "1px solid #444";
-                                        levLeg.innerHTML = `
+                                var legDiv = document.getElementById('legend-content');
+                                if (legDiv && !document.getElementById('lev-legend-content')) {
+                                    var levLeg = document.createElement('div');
+                                    levLeg.id = 'lev-legend-content';
+                                    levLeg.style.marginTop = "15px";
+                                    levLeg.style.paddingTop = "10px";
+                                    levLeg.style.borderTop = "1px solid #444";
+                                    levLeg.innerHTML = `
                                             <div style="font-size:13px; font-weight:bold; color:#ddd; margin-bottom:10px;">Cartografía Participativa</div>
                                             <div style="display:flex; align-items:center; margin-bottom:5px;"><div style="width:14px; height:14px; border-radius:50%; background:#e53935; border:1px solid #fff; margin-right:8px;"></div><span style="color:#ccc; font-size:12px;">Riesgo geológico y falta de servicios</span></div>
                                             <div style="display:flex; align-items:center; margin-bottom:5px;"><div style="width:14px; height:14px; border-radius:50%; background:#8e24aa; border:1px solid #fff; margin-right:8px;"></div><span style="color:#ccc; font-size:12px;">Asentamiento irregular y falta de servicios</span></div>
@@ -271,60 +281,76 @@ function iniciarLogicaMunicipio() {
                                                     oninput="if(window.levantamientoLayer) { window.levantamientoLayer.eachLayer(l => l.setStyle({fillOpacity: this.value, opacity: this.value})); }">
                                             </div>
                                         `;
-                                        legDiv.appendChild(levLeg);
-                                    }
-                                });
-                        } else {
-                            if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
-                            var levLeg = document.getElementById('lev-legend-content');
-                            if (levLeg) levLeg.remove();
-                        }
-                    };
-                    
-                    equipWrapper.appendChild(lblLev);
-                    equipWrapper.appendChild(toggleLev);
-                }
-            } else {
-                equipWrapper.style.display = "none";
-                if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
-                if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
-                if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
-                if (window.limiteDelegacionalLayer) { map.removeLayer(window.limiteDelegacionalLayer); window.limiteDelegacionalLayer = null; }
-                var eqLeg = document.getElementById('eq-legend-content');
-                if (eqLeg) eqLeg.remove();
-                var levLeg = document.getElementById('lev-legend-content');
-                if (levLeg) levLeg.remove();
-                
-                // Reset select dropdowns visually if user comes back
-                var selects = equipWrapper.getElementsByTagName('select');
-                for(var i=0; i<selects.length; i++){
-                    selects[i].value = "off";
-                }
-                var chartContainer = document.getElementById('equipamiento-chart-container');
-                if (chartContainer) chartContainer.style.display = 'none';
-            }
+                                    legDiv.appendChild(levLeg);
+                                }
+                            });
+                    } else {
+                        if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
+                        var levLeg = document.getElementById('lev-legend-content');
+                        if (levLeg) levLeg.remove();
+                    }
+                };
 
-            if (nombreEst === "Baja California") {
-                insigniaBadge.style.display = "block";
-            } else {
-                insigniaBadge.style.display = "none";
+                equipWrapper.appendChild(lblLev);
+                equipWrapper.appendChild(toggleLev);
             }
+        } else {
+            equipWrapper.style.display = "none";
+            if (window.equipamientoLayer) { map.removeLayer(window.equipamientoLayer); window.equipamientoLayer = null; }
+            if (window.equipamientoBufferLayer) { map.removeLayer(window.equipamientoBufferLayer); window.equipamientoBufferLayer = null; }
+            if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
+            if (window.limiteDelegacionalLayer) { map.removeLayer(window.limiteDelegacionalLayer); window.limiteDelegacionalLayer = null; }
+            var eqLeg = document.getElementById('eq-legend-content');
+            if (eqLeg) eqLeg.remove();
+            var levLeg = document.getElementById('lev-legend-content');
+            if (levLeg) levLeg.remove();
 
-            var regionKey = this.value;
-            var archivoGeojson = REGIONES_AGEB[regionKey] || 'carto/agebmex.geojson';
-            document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
-            cargarAgebEstadoRegional(nombreEst, archivoGeojson, selectIndice, opcionesAgeb);
+            // Reset select dropdowns visually if user comes back
+            var selects = equipWrapper.getElementsByTagName('select');
+            for (var i = 0; i < selects.length; i++) {
+                selects[i].value = "off";
+            }
+            var chartContainer = document.getElementById('equipamiento-chart-container');
+            if (chartContainer) chartContainer.style.display = 'none';
+        }
+
+        if (nombreEst === "Baja California") {
+            insigniaBadge.style.display = "block";
+        } else {
+            insigniaBadge.style.display = "none";
+        }
+
+        var selectMun = document.getElementById("select-municipio-filter");
+        if (selectMun) {
+            selectMun.style.display = "none";
+            selectMun.innerHTML = `<option value="" disabled selected>-- Municipio --</option>`;
+        }
+        window._agebLugarActual = null; // limpiar etiqueta de municipio del estado anterior
+
+        var regionKey = this.value;
+        var archivoGeojson = REGIONES_AGEB[regionKey] || 'carto/agebmex.geojson';
+        document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
+        cargarAgebEstadoRegional(nombreEst, archivoGeojson, selectIndice, opcionesAgeb);
     };
 
     selectIndice.onchange = function () {
         if (this.value) {
             var labelNombre = this.options[this.selectedIndex].text;
-            renderizarMapaAgeb(this.value, labelNombre, selectEstado.options[selectEstado.selectedIndex].text);
+            // Si hay un municipio filtrado activo, conserva su etiqueta
+            // ("Municipio, Estado") en vez de volver a mostrar solo el estado.
+            var lugar = window._agebLugarActual || selectEstado.options[selectEstado.selectedIndex].text;
+            renderizarMapaAgeb(this.value, labelNombre, lugar);
             if (window.equipamientoLayer) window.equipamientoLayer.bringToFront();
         }
     };
 
-    container.appendChild(selectEstado);
+    // Bug preexistente: solo se insertaba selectEstado suelto; como un
+    // elemento del DOM solo puede tener un padre, esto lo sacaba de
+    // estadoContainer sin llevarse consigo a selectMunicipio ni a
+    // insigniaBadge, que quedaban en un div nunca insertado en la página
+    // (por eso el filtro de municipio nunca aparecía, aunque el código que
+    // lo llena sí corría). Se inserta estadoContainer completo en su lugar.
+    container.appendChild(estadoContainer);
     container.appendChild(selectIndice);
 
 
@@ -428,8 +454,77 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
     promises.push(window.cargarLimiteMunicipalGeoJSON());
 
     Promise.all(promises)
-        .then(([agebDataRegional, armadorasData]) => {
+        .then(([agebDataRegional, armadorasData, muniData]) => {
             document.getElementById('filter-title').innerText = "Vulnerabilidad";
+
+            // Llenar selectMunicipio (M5)
+            var selectMunicipio = document.getElementById("select-municipio-filter");
+            if (selectMunicipio && muniData && muniData.features) {
+                // OJO: en Limite_municipal_opt.geojson / Limite_municipal_CDMX.geojson,
+                // "CVEGEO"/"NOMGEO" en realidad guardan el código/nombre del ESTADO (no
+                // del municipio) — es un dato de origen confuso, heredado del mismo
+                // nombre de campo que sí es correcto en el dataset de AGEB. El
+                // identificador y nombre de MUNICIPIO reales son "cve_umun" (5 dígitos,
+                // entidad+municipio) y "nom_mun".
+                var cveEntBusq = CVE_ENT_ESTADOS[nombreEstado];
+                var munisEstado = muniData.features.filter(f => {
+                    if (CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+                        var catalogList = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado];
+                        return f.properties.cve_umun && catalogList.includes(f.properties.cve_umun);
+                    }
+                    return f.properties.cve_ent === cveEntBusq;
+                });
+
+                selectMunicipio.innerHTML = `<option value="" selected>-- Todos los municipios --</option>`;
+                munisEstado.sort((a, b) => (a.properties.nom_mun || "").localeCompare(b.properties.nom_mun || "")).forEach(m => {
+                    var opt = document.createElement("option");
+                    opt.value = m.properties.cve_umun;
+                    opt.innerText = m.properties.nom_mun;
+                    selectMunicipio.appendChild(opt);
+                });
+                selectMunicipio.style.display = "block";
+
+                selectMunicipio.onchange = function () {
+                    var val = this.value;
+                    var atributoActual = selectIndice.value || (opcionesAgeb[3] ? opcionesAgeb[3].id : 'G_INDICE');
+                    var labelActual = selectIndice.options[selectIndice.selectedIndex]
+                        ? selectIndice.options[selectIndice.selectedIndex].text
+                        : 'Índice Global';
+
+                    if (!val) {
+                        // "Todos los municipios": restaurar el conjunto completo del estado
+                        window._agebLugarActual = null;
+                        agebRawData = window._agebEstadoCompleto;
+                        renderizarMapaAgeb(atributoActual, labelActual, nombreEstado);
+                        if (agebLayer) {
+                            try { map.flyToBounds(agebLayer.getBounds(), { padding: [20, 20], maxZoom: 8 }); } catch (e) { }
+                        }
+                        return;
+                    }
+
+                    var featureMun = munisEstado.find(m => m.properties.cve_umun === val);
+
+                    // Recorta el conjunto completo del estado a solo los AGEB de este
+                    // municipio (los primeros 5 dígitos del CVEGEO de AGEB = entidad+municipio,
+                    // ese sí es el CVEGEO correcto del dataset de AGEB) para que mapa,
+                    // leyenda y gráficas del dashboard se actualicen juntos.
+                    var featuresDelMunicipio = window._agebEstadoCompleto.features.filter(f => {
+                        var cveMun = f.properties.CVEGEO ? f.properties.CVEGEO.substring(0, 5) : null;
+                        return cveMun === val;
+                    });
+                    agebRawData = { type: "FeatureCollection", features: featuresDelMunicipio };
+
+                    var nombreMunicipio = featureMun ? featureMun.properties.nom_mun : '';
+                    var etiquetaLugar = nombreMunicipio ? (nombreMunicipio + ', ' + nombreEstado) : nombreEstado;
+                    window._agebLugarActual = etiquetaLugar;
+                    renderizarMapaAgeb(atributoActual, labelActual, etiquetaLugar);
+
+                    if (featureMun) {
+                        var muniLayer = L.geoJSON(featureMun);
+                        try { map.flyToBounds(muniLayer.getBounds(), { padding: [20, 20], maxZoom: 12 }); } catch (e) { }
+                    }
+                };
+            }
 
             // Guardamos en caché
             if (necesitaDescargaGeojson) {
@@ -452,7 +547,7 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
                     var catalogList = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado];
                     if (cveNum && catalogList.includes(cveNum)) return true;
                     if (cveMun && catalogList.includes(cveMun)) return true;
-                    
+
                     // Fallback para nombres
                     var propEstado = f.properties.NOM_ENT || f.properties.ENTIDAD || f.properties.NOMGEO || "Desconocido";
                     var normalizado = (typeof normalizarTexto !== 'undefined') ? normalizarTexto(propEstado) : propEstado.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -478,6 +573,10 @@ function cargarAgebEstadoRegional(nombreEstado, archivoGeojson, selectIndice, op
 
             // Simular un nuevo feature collection base para agebRawData
             agebRawData = { type: "FeatureCollection", features: featuresFiltradas };
+            // Copia de respaldo a nivel estado completo: cuando se filtre por
+            // municipio (select-municipio-filter) agebRawData se recorta, y
+            // esta copia es lo que permite volver a "Todos los municipios".
+            window._agebEstadoCompleto = agebRawData;
 
             armadorasRawData = armadorasData;
 
@@ -568,16 +667,16 @@ function renderizarMapaAgeb(atributo, labelNombre, nombreEstado) {
             layer.bindPopup(popupContent);
 
             layer.on({
-                mouseover: function (e) { 
-                    e.target.setStyle({ weight: 2, color: '#fff' }); 
+                mouseover: function (e) {
+                    e.target.setStyle({ weight: 2, color: '#fff' });
                     if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
                         e.target.bringToFront();
                     }
                     if (window.limiteDelegacionalLayer) window.limiteDelegacionalLayer.bringToFront();
                     if (armadorasLayer) armadorasLayer.bringToFront();
                 },
-                mouseout: function (e) { 
-                    agebLayer.resetStyle(e.target); 
+                mouseout: function (e) {
+                    agebLayer.resetStyle(e.target);
                     if (window.limiteDelegacionalLayer) window.limiteDelegacionalLayer.bringToFront();
                     if (armadorasLayer) armadorasLayer.bringToFront();
                 }
@@ -895,7 +994,7 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
     var delResContainer = document.getElementById('delResumenChartContainer');
     var canvasDelRes = document.getElementById('delResumenChart');
     var sintesisDelRes = document.getElementById('sintesis-del-res');
-    
+
     if (hrDelRes) hrDelRes.style.display = 'none';
     if (tituloDelRes) tituloDelRes.style.display = 'none';
     if (delResContainer) delResContainer.style.display = 'none';
@@ -912,9 +1011,9 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
             if (window.delResumenChartInstance) window.delResumenChartInstance.destroy();
 
             var delData = {};
-            
+
             // Loop through delegaciones
-            window.limiteDelegacionalLayer.eachLayer(function(delLayer) {
+            window.limiteDelegacionalLayer.eachLayer(function (delLayer) {
                 var delNom = delLayer.feature.properties.Nombre || delLayer.feature.properties.name || delLayer.feature.properties.NOMGEO || "Desconocida";
                 delData[delNom] = { agebs: 0, pob: 0, vulnSum: 0, vulnValidos: 0, poly: delLayer.feature };
             });
@@ -934,7 +1033,7 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                         var p = f.properties;
                         delData[assignedDel].agebs++;
                         delData[assignedDel].pob += parseFloat(p.POB1_x) || 0;
-                        
+
                         var valCat = p[atributo] || "Sin dato";
                         var vStr = valCat.toString().trim().toUpperCase();
                         var numVul = 0;
@@ -949,7 +1048,7 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
                             delData[assignedDel].vulnValidos++;
                         }
                     }
-                } catch(e) { } // Ignore geometries that turf can't process
+                } catch (e) { } // Ignore geometries that turf can't process
             });
 
             var sortedDels = Object.keys(delData).map(k => { return { name: k, agebs: delData[k].agebs, pob: delData[k].pob, vulnSum: delData[k].vulnSum, vulnValidos: delData[k].vulnValidos }; }).filter(d => d.agebs > 0).sort((a, b) => b.pob - a.pob);
@@ -1009,7 +1108,7 @@ function actualizarGraficasMunicipal(nombreEstado, atributo) {
             if (sintesisDelRes && sortedDels.length > 0) {
                 sintesisDelRes.style.display = 'block';
                 var delMax = sortedDels[0];
-                sintesisDelRes.innerHTML = `La delegación <b>${delMax.name}</b> concentra la mayor población analizada con <b>${delMax.pob.toLocaleString('en-US')}</b> habitantes distribuidos en <b>${delMax.agebs}</b> AGEBs, presentando un nivel de vulnerabilidad promedio de <b>${(delMax.vulnValidos > 0 ? (delMax.vulnSum/delMax.vulnValidos).toFixed(1) : "N/A")}</b>.`;
+                sintesisDelRes.innerHTML = `La delegación <b>${delMax.name}</b> concentra la mayor población analizada con <b>${delMax.pob.toLocaleString('en-US')}</b> habitantes distribuidos en <b>${delMax.agebs}</b> AGEBs, presentando un nivel de vulnerabilidad promedio de <b>${(delMax.vulnValidos > 0 ? (delMax.vulnSum / delMax.vulnValidos).toFixed(1) : "N/A")}</b>.`;
             }
         }
     }

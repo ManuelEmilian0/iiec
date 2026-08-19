@@ -149,6 +149,23 @@ function inyectarSelectorModelos() {
     var container = document.getElementById('filter-buttons-container');
     if (!container) return;
 
+    // Contenedor propio, oculto hasta que se elija "Modelos Matemáticos" en el
+    // selector de Tipo de Análisis (misma clase "mundial-modo-container" que
+    // usa el contenedor de Flujos en escala_global.js para que ambos se
+    // oculten entre sí desde ese mismo onchange).
+    var modelosContainer = document.createElement('div');
+    modelosContainer.id = 'modelos-container-mundial';
+    modelosContainer.className = 'mundial-modo-container';
+    modelosContainer.style.display = 'none';
+
+    var selectModoMundial = document.getElementById('select-modo-mundial');
+    if (selectModoMundial) {
+        selectModoMundial.addEventListener('change', function () {
+            modelosContainer.style.display = (this.value === 'modelos') ? 'block' : 'none';
+            if (this.value !== 'modelos') _resetearModelos();
+        });
+    }
+
     // Crear el <select>
     var select = document.createElement('select');
     select.id = 'modelos-tipo-select';
@@ -186,8 +203,8 @@ function inyectarSelectorModelos() {
         }
     });
 
-    // Insertar en el container (el monkey-patch lo envuelve en filter-item-wrapper)
-    container.appendChild(select);
+    modelosContainer.appendChild(select);
+    container.appendChild(modelosContainer);
 
     window._modelosState._selectorInyectado = true;
 }

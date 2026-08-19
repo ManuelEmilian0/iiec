@@ -216,23 +216,11 @@ function _inyectarBotonAyuda() {
     }
 }
 
-// Disparar automáticamente cuando la portada (#splash-screen) se cierra,
-// siguiendo el mismo patrón de MutationObserver que ya usa ian_dashboard.js
-// para reaccionar a cambios del DOM sin depender de otros scripts.
+// Ya no se dispara automáticamente al cerrar la portada (#splash-screen): el
+// panel lateral ("Dashboard") ahora arranca oculto, así que activar la guía
+// de una vez no tendría nada que señalar todavía. Se dispara en su lugar
+// desde escala_global.js (setupUI) la PRIMERA vez que el usuario abre el
+// panel con la pestaña lateral — ver el onclick de #sidebar-toggle-tab.
 document.addEventListener('DOMContentLoaded', function () {
     _inyectarBotonAyuda();
-
-    var splash = document.getElementById('splash-screen');
-    if (!splash) {
-        if (!_onboardingYaVisto()) setTimeout(window.mostrarOnboarding, 800);
-        return;
-    }
-
-    var observer = new MutationObserver(function () {
-        if (!document.getElementById('splash-screen')) {
-            observer.disconnect();
-            if (!_onboardingYaVisto()) setTimeout(window.mostrarOnboarding, 500);
-        }
-    });
-    observer.observe(document.body, { childList: true });
 });

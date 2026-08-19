@@ -25,17 +25,28 @@ function iniciarFiltroNacional_Paso1(data) {
     var selectModo = document.createElement("select");
     selectModo.className = "dynamic-filter-select";
     selectModo.innerHTML = `
+        <option value="" disabled selected>-- Selección de análisis --</option>
         <option value="flujos">Intercambios (Flujos Industriales)</option>
         <option value="finanzas">Finanzas Públicas (Dependencia Federal)</option>
         <option value="productividad">Índice de crecimiento complejo (Evolución temporal)</option>
+        <option value="censo">Censo Económico 2024</option>
+        <option value="financiero">Indicadores Financieros Globales</option>
     `;
     modoWrapper.appendChild(selectModo);
 
+    // Antes "flujos" quedaba implícitamente seleccionado (primer <option> del
+    // <select>, sin "selected" explícito) y este contenedor se veía de entrada
+    // sin que el usuario hubiera elegido nada — ahora el placeholder de arriba
+    // arranca sin ningún tipo activo, así que también debe arrancar oculto.
     var flujosContainer = document.createElement("div");
+    flujosContainer.style.display = "none";
     var finanzasContainer = document.createElement("div");
     finanzasContainer.style.display = "none";
+    
+    var censoContainer = document.createElement("div");
+    censoContainer.style.display = "none";
 
-    document.getElementById('filter-title').innerText = "Modo de análisis";
+    document.getElementById('filter-title').innerText = "Análisis";
 
     // --- FLUJOS LOGIC ---
     function obtenerGrupo(subsectorTexto) {
@@ -158,9 +169,52 @@ function iniciarFiltroNacional_Paso1(data) {
         if (selectIndustriaCSV.value) renderizarMapaProductividad(selectIndustriaCSV.value, selectAnio.value);
     };
 
+    // --- CENSO LOGIC ---
+    var censoWrapper = document.createElement("div");
+    censoWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Variable Censal:</small>`;
+    var selectCenso = document.createElement("select");
+    selectCenso.className = "dynamic-filter-select";
+    selectCenso.innerHTML = `
+        <option value="A131A Valor agregado censal bruto (millones de pesos)" selected>Valor agregado bruto (MDP)</option>
+        <option value="A111A Producción bruta total (millones de pesos)">Producción bruta total (MDP)</option>
+        <option value="H001A Personal ocupado total">Personal ocupado total</option>
+        <option value="UE Unidades económicas">Unidades económicas</option>
+    `;
+
+    var censoAnioWrapper = document.createElement("div");
+    censoAnioWrapper.style.marginTop = "10px";
+    censoAnioWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Año Censal:</small>`;
+    var selectCensoAnio = document.createElement("select");
+    selectCensoAnio.className = "dynamic-filter-select";
+    selectCensoAnio.innerHTML = `
+        <option value="2023" selected>2023</option>
+        <option value="2018">2018</option>
+        <option value="2013">2013</option>
+        <option value="2008">2008</option>
+        <option value="2003">2003</option>
+    `;
+
+    selectCenso.onchange = function () {
+        renderizarMapaCensoNacional(this.value, selectCensoAnio.value);
+    };
+    selectCensoAnio.onchange = function () {
+        renderizarMapaCensoNacional(selectCenso.value, this.value);
+    };
+    censoWrapper.appendChild(selectCenso);
+    censoAnioWrapper.appendChild(selectCensoAnio);
+    censoContainer.appendChild(censoWrapper);
+    censoContainer.appendChild(censoAnioWrapper);
+
     // --- MODO TOGGLE LOGIC ---
     selectModo.onchange = function () {
+        // Limpieza completa de simbología del tipo anterior — antes solo se
+        // quitaba currentGeoJSONLayer, pero window.nacionalTop5Layer (los
+        // "Nodos Locales" que dibuja Indicadores Financieros Globales) es una
+        // capa APARTE que nunca se removía al cambiar de tipo: si se entraba a
+        // "financiero" y luego a "censo"/"productividad", los círculos del
+        // top-5 de empresas se quedaban pegados sobre la nueva coropleta.
         if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+        if (window.nacionalTop5Layer) { map.removeLayer(window.nacionalTop5Layer); window.nacionalTop5Layer = null; }
         map.eachLayer(l => {
             if (l.options && (l.options.className === 'flujo-animado' || l.options.className === 'etiqueta-destino')) {
                 map.removeLayer(l);
@@ -169,23 +223,36 @@ function iniciarFiltroNacional_Paso1(data) {
         var statsDiv = document.getElementById('stats-overlay');
         if (statsDiv) statsDiv.style.display = 'none';
 
-        if (this.value === 'flujos') {
-            flujosContainer.style.display = 'block';
-            finanzasContainer.style.display = 'none';
-            productividadContainer.style.display = 'none';
-            document.getElementById('filter-title').innerText = "Modo de análisis";
-        } else if (this.value === 'finanzas') {
-            flujosContainer.style.display = 'none';
-            finanzasContainer.style.display = 'block';
-            productividadContainer.style.display = 'none';
-            document.getElementById('filter-title').innerText = "Modo de análisis";
+        // La leyenda (clases, checkboxes de armadoras/nodos locales, etc.) se
+        // oculta siempre al cambiar de tipo; cada rama la vuelve a mostrar y
+        // reconstruir solo si de verdad tiene algo que representar — evitar
+        // esto dejaba la leyenda de un tipo anterior visible aunque ya no
+        // correspondiera a nada en el mapa.
+        var legendOverlay = document.getElementById('legend-overlay');
+        if (legendOverlay) legendOverlay.style.display = 'none';
+
+        // El panel de "Indicadores Financieros Globales" (#fin-overlay,
+        // construido en setupUI de escala_global.js) vive fuera de este
+        // container — se oculta explícitamente salvo cuando ese tipo está
+        // activo, para que no quede pegado al cambiar a otro análisis.
+        var finOverlay = document.getElementById('fin-overlay');
+
+        flujosContainer.style.display = this.value === 'flujos' ? 'block' : 'none';
+        finanzasContainer.style.display = this.value === 'finanzas' ? 'block' : 'none';
+        productividadContainer.style.display = this.value === 'productividad' ? 'block' : 'none';
+        censoContainer.style.display = this.value === 'censo' ? 'block' : 'none';
+        if (this.value !== 'financiero' && finOverlay) finOverlay.style.display = 'none';
+
+        document.getElementById('filter-title').innerText = "Análisis";
+
+        if (this.value === 'finanzas') {
             selectFinanzas.value = "";
         } else if (this.value === 'productividad') {
-            flujosContainer.style.display = 'none';
-            finanzasContainer.style.display = 'none';
-            productividadContainer.style.display = 'block';
-            document.getElementById('filter-title').innerText = "Modo de análisis";
             selectIndustriaCSV.value = "";
+        } else if (this.value === 'censo') {
+            renderizarMapaCensoNacional(selectCenso.value, selectCensoAnio.value);
+        } else if (this.value === 'financiero') {
+            if (typeof cargarYRenderizarEmpresasCSV === "function") cargarYRenderizarEmpresasCSV();
         }
     };
 
@@ -193,6 +260,7 @@ function iniciarFiltroNacional_Paso1(data) {
     container.appendChild(flujosContainer);
     container.appendChild(finanzasContainer);
     container.appendChild(productividadContainer);
+    container.appendChild(censoContainer);
 }
 
 function renderizarMapaFinanzas(tipo) {
@@ -205,14 +273,14 @@ function renderizarMapaFinanzas(tipo) {
         AppData.load('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
             .then(geo => {
                 window.estadosPolygonsGeoJSON = geo;
-                filterTitle.innerText = "Modo de análisis";
+                filterTitle.innerText = "Análisis";
                 dibujarCoropletaFinanzas(tipo);
             }).catch(e => {
                 console.error("No se pudo cargar el geojson de México", e);
                 filterTitle.innerText = "Error cargando mapa";
             });
     } else {
-        filterTitle.innerText = "Modo de análisis";
+        filterTitle.innerText = "Análisis";
         dibujarCoropletaFinanzas(tipo);
     }
 }
@@ -559,7 +627,7 @@ window.procesarDatosEmpresas = function (dataRows, indicador = 'Activos_Millones
                             if (label) label += ': ';
                             if (context.parsed.y !== null) {
                                 let valString = context.parsed.y.toLocaleString('es-MX', { maximumFractionDigits: 2 });
-                                label += indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital' ? valString : '$' + valString;
+                                label += indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital' || indicador === 'Empleados' ? valString : '$' + valString;
                             }
                             return label;
                         }
@@ -571,7 +639,7 @@ window.procesarDatosEmpresas = function (dataRows, indicador = 'Activos_Millones
                 y: {
                     ticks: {
                         color: '#aaa',
-                        callback: function (value) { return indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital' ? value : '$' + value; }
+                        callback: function (value) { return indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital' || indicador === 'Empleados' ? value : '$' + value; }
                     },
                     grid: { color: '#333', borderDash: [2, 2] }
                 }
@@ -585,7 +653,7 @@ window.procesarDatosEmpresas = function (dataRows, indicador = 'Activos_Millones
         var maxWinnerValRaw = parseFloat(winnerRecord[indicador]) || 0;
         var maxWinnerVal = window.Intl ? new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(maxWinnerValRaw) : maxWinnerValRaw;
 
-        var isPercentage = indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital';
+        var isPercentage = indicador.includes('%') || indicador === 'ROE' || indicador === 'Rotación_Activos' || indicador === 'Multiplicador_Capital' || indicador === 'Empleados';
         var valDisplay = isPercentage ? `${maxWinnerVal}` : `$${maxWinnerVal}`;
 
         var winnerModel = winnerRecord['Vía de desarrollo'] || "Alta Tecnología";
@@ -611,6 +679,33 @@ window.procesarDatosEmpresas = function (dataRows, indicador = 'Activos_Millones
 
 window.top5NombresCache = null;
 window.coloresLineasCache = null;
+
+// Control independiente de las armadoras (triángulos) a escala Nacional —
+// antes no tenían ningún control de prender/apagar ni de opacidad.
+window.currentArmadorasOpacityNacional = 1;
+window.actualizarVisibilidadArmadorasNacional = function () {
+    var chk = document.getElementById('chk-armadoras-nacional');
+    var visible = chk ? chk.checked : true;
+    var op = visible ? (window.currentArmadorasOpacityNacional !== undefined ? parseFloat(window.currentArmadorasOpacityNacional) : 1) : 0;
+    if (window.armadorasNacionalTriangulosLayer) {
+        window.armadorasNacionalTriangulosLayer.eachLayer(function (l) {
+            if (l.setOpacity) l.setOpacity(op);
+        });
+    }
+};
+
+// Control independiente de los "Nodos Locales" (top 5 empresas) — antes
+// solo la gráfica/leyenda reaccionaba al indicador financiero elegido, sin
+// forma de ocultar los puntos del mapa si no se querían ver.
+window.actualizarVisibilidadNodosTop5 = function () {
+    var chk = document.getElementById('chk-nodos-top5');
+    var visible = chk ? chk.checked : true;
+    if (window.nacionalTop5Layer) {
+        window.nacionalTop5Layer.eachLayer(function (l) {
+            if (l.setStyle) l.setStyle({ opacity: visible ? 1 : 0, fillOpacity: visible ? 0.9 : 0 });
+        });
+    }
+};
 
 window.actualizarLeyendaNodosNacionales = function (top5Nombres, colores) {
     if (currentScaleType !== 'nacional') return;
@@ -652,13 +747,22 @@ window.actualizarLeyendaNodosNacionales = function (top5Nombres, colores) {
 
     divNodos.innerHTML = `
         <div style="margin-bottom: 8px; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase;">Nodos Locales</div>
-        <div style="display:flex; align-items:center; margin-bottom:10px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:8px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+            <input type="checkbox" id="chk-armadoras-nacional" checked onchange="if(window.actualizarVisibilidadArmadorasNacional) window.actualizarVisibilidadArmadorasNacional();">
+            <svg width="20" height="20" viewBox="0 0 24 24">
                 <polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/>
             </svg>
             <span style="font-size:11px; color:#ccc;">Planta Armadora Automotriz</span>
         </div>
-        <div style="margin-bottom: 6px; font-weight:bold; color:#aaa; font-size:10px; text-transform:uppercase;">Mayor Rendimiento (Top 5)</div>
+        <div style="margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size:10px; color:#888;">Opacidad:</span>
+            <input type="range" min="0" max="1" step="0.1" value="1" style="width:55%; cursor:pointer;"
+                oninput="window.currentArmadorasOpacityNacional = this.value; if(window.actualizarVisibilidadArmadorasNacional) window.actualizarVisibilidadArmadorasNacional();">
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom: 6px;">
+            <input type="checkbox" id="chk-nodos-top5" checked onchange="if(window.actualizarVisibilidadNodosTop5) window.actualizarVisibilidadNodosTop5();">
+            <span style="font-weight:bold; color:#aaa; font-size:10px; text-transform:uppercase;">Mayor Rendimiento (Top 5)</span>
+        </div>
         ${htmlItems}
     `;
 
@@ -930,7 +1034,7 @@ function dibujarCoropletaProductividad(anio) {
     combinedGroup.bringToBack();
     currentGeoJSONLayer = combinedGroup;
 
-    document.getElementById('filter-title').innerText = "Modo de análisis";
+    document.getElementById('filter-title').innerText = "Análisis";
 
     actualizarLeyendaProductividad(breaks);
 
@@ -1383,3 +1487,458 @@ window.filtrarMapaFinanzas = function (clase) {
         });
     }
 };
+
+window._censoDataGlobal = null;
+
+// Etiquetas amigables por variable censal (las llaves son los encabezados
+// reales del CSV, usados tal cual como <option value="..."> del selector).
+var CENSO_VARIABLE_LABELS = {
+    'UE Unidades económicas': 'Unidades Económicas',
+    'H001A Personal ocupado total': 'Personal Ocupado Total',
+    'A111A Producción bruta total (millones de pesos)': 'Producción Bruta Total (MDP)',
+    'A131A Valor agregado censal bruto (millones de pesos)': 'Valor Agregado Censal Bruto (MDP)'
+};
+var CENSO_VARIABLES_TODAS = Object.keys(CENSO_VARIABLE_LABELS);
+
+// Parser CSV con soporte de comillas (algunas "Actividad económica" traen
+// comas dentro de comillas) y saltos de línea reales (\r\n en el archivo
+// fuente) — antes se hacía split('\\n') (dos caracteres literales, no un
+// salto de línea real), lo que dejaba todo el CSV en una sola "línea" y
+// nunca producía filas: por eso el mapa nunca se iluminaba.
+function _parsearCSVCenso(csvText) {
+    var lines = csvText.split(/\r?\n/);
+    var headers = lines[0].split(',').map(function (h) { return h.trim(); });
+    var parsed = [];
+    for (var i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        var inQuote = false, cols = [], current = '';
+        var linea = lines[i];
+        for (var c = 0; c < linea.length; c++) {
+            var ch = linea[c];
+            if (ch === '"') inQuote = !inQuote;
+            else if (ch === ',' && !inQuote) { cols.push(current.trim()); current = ''; }
+            else current += ch;
+        }
+        cols.push(current.trim());
+        var obj = {};
+        headers.forEach(function (h, idx) { obj[h] = cols[idx]; });
+        parsed.push(obj);
+    }
+    return parsed;
+}
+
+// Agrega el CSV (que trae una fila por Entidad+Año+Actividad económica) en
+// {estadoReal: {anio: {variable: valorSumado}}}, sumando todas las
+// actividades económicas del sector (Electrónica/SEIT/Telecom/Medios) para
+// cada entidad y año.
+function _construirCensoAgregado(csvData) {
+    var agregado = {};
+    csvData.forEach(function (d) {
+        var entRaw = d['Entidad'];
+        if (!entRaw || entRaw.indexOf('Total Nacional') !== -1 || entRaw.indexOf('No distribuible') !== -1) return;
+        var anioRow = (d['Año Censal'] || '').trim();
+        if (!anioRow) return;
+
+        // El código antes usaba /^\\d+\\s*/ (regex que busca un BACKSLASH
+        // literal seguido de "d", no dígitos) y nunca quitaba el prefijo
+        // "01 ", "02 ", etc. — dejando nombres de estado corruptos que no
+        // hacían match contra el geojson. Aquí sí es \d (clase de dígito).
+        var entLimpia = entRaw.replace(/^\d+\s*/, '').trim();
+        var estadoReal = normalizarEstadoNombre(entLimpia);
+
+        if (!agregado[estadoReal]) agregado[estadoReal] = {};
+        if (!agregado[estadoReal][anioRow]) {
+            agregado[estadoReal][anioRow] = {};
+            CENSO_VARIABLES_TODAS.forEach(function (v) { agregado[estadoReal][anioRow][v] = 0; });
+        }
+        CENSO_VARIABLES_TODAS.forEach(function (v) {
+            var raw = d[v] || '0';
+            var val = parseFloat(raw.replace(/,/g, '')) || 0;
+            agregado[estadoReal][anioRow][v] += val;
+        });
+    });
+    return agregado;
+}
+
+function renderizarMapaCensoNacional(variable, anio) {
+    if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+
+    var filterTitle = document.getElementById('filter-title');
+    filterTitle.innerText = "Cargando datos del Censo...";
+
+    function conAgregadoYPoligonos() {
+        if (!window.estadosPolygonsGeoJSON) {
+            AppData.load('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json')
+                .then(function (geo) {
+                    window.estadosPolygonsGeoJSON = geo;
+                    dibujarCoropletaCenso(variable, anio);
+                }).catch(function (e) {
+                    console.error(e);
+                    filterTitle.innerText = "Error cargando mapa";
+                });
+        } else {
+            dibujarCoropletaCenso(variable, anio);
+        }
+    }
+
+    if (!window._censoAgregado) {
+        AppData.load('Tablas/Censo_economico_2024.csv').then(function (csvText) {
+            var parsed = _parsearCSVCenso(csvText);
+            window._censoAgregado = _construirCensoAgregado(parsed);
+            conAgregadoYPoligonos();
+        }).catch(function (err) {
+            console.error(err);
+            filterTitle.innerText = "Error: " + err.message;
+        });
+    } else {
+        conAgregadoYPoligonos();
+    }
+}
+
+function dibujarCoropletaCenso(variable, anio) {
+    var filterTitle = document.getElementById('filter-title');
+    var agregado = window._censoAgregado;
+
+    var valores = [];
+    var stateDataMap = {};
+    Object.keys(agregado).forEach(function (estadoReal) {
+        var datosAnio = agregado[estadoReal][anio];
+        var val = datosAnio ? (datosAnio[variable] || 0) : 0;
+        var historial = {};
+        Object.keys(agregado[estadoReal]).forEach(function (y) {
+            historial[y] = agregado[estadoReal][y][variable] || 0;
+        });
+        stateDataMap[estadoReal] = { valor: val, historial: historial };
+        if (val > 0) valores.push(val);
+    });
+
+    valores.sort(function (a, b) { return a - b; });
+    var breaks = calcularBreaks(valores);
+
+    window.censoDataActual = stateDataMap;
+    window.censoVariableActual = variable;
+    window.breaksCensoActual = breaks;
+
+    var labelsArray = [];
+    var layer_geo = L.geoJSON(window.estadosPolygonsGeoJSON, {
+        style: function (feature) {
+            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+            var entrada = stateDataMap[estadoReal];
+            var color = '#333', opacity = 0.5;
+            if (entrada && entrada.valor > 0) {
+                color = RampaRojos[getClase(entrada.valor, breaks)] || '#333';
+                opacity = 0.82;
+            }
+            return { fillColor: color, weight: 1, opacity: 1, color: window.limiteBoundaryColor || 'white', fillOpacity: opacity };
+        },
+        onEachFeature: function (feature, layer) {
+            var estadoReal = normalizarEstadoNombre(feature.properties.name || feature.properties.ESTADO || feature.properties.NOMGEO);
+            var entrada = stateDataMap[estadoReal];
+            if (!entrada || !(entrada.valor > 0)) return;
+
+            var metricaLabel = CENSO_VARIABLE_LABELS[variable] || variable;
+            var tooltipContent = `
+                <div style="font-size:12px; font-weight:bold; color:#00e5ff; margin-bottom:5px;">${estadoReal}</div>
+                <div style="font-size:11px; color:#fff;">${metricaLabel} (${anio}): ${entrada.valor.toLocaleString('es-MX', { maximumFractionDigits: 2 })}</div>
+            `;
+            layer.bindTooltip(tooltipContent, { sticky: true, className: 'custom-tooltip' });
+
+            layer.on({
+                mouseover: function (e) { e.target.setStyle({ weight: 3, color: '#00e5ff' }); e.target.bringToFront(); },
+                mouseout: function (e) { layer_geo.resetStyle(e.target); },
+                click: function (e) { dibujarGraficaEvolucionCenso([estadoReal], anio, variable); }
+            });
+        }
+    });
+
+    layer_geo.eachLayer(function (layer) {
+        var estadoReal = normalizarEstadoNombre(layer.feature.properties.name || layer.feature.properties.ESTADO || layer.feature.properties.NOMGEO);
+        var labelCenter = layer.getBounds().getCenter();
+        var nombreAcotado = ABREVIATURAS_ESTADOS[estadoReal] || estadoReal;
+        var labelMarker = L.marker(labelCenter, {
+            icon: L.divIcon({
+                className: 'state-label-permanent',
+                html: `<div style="color:#fff; font-size:10px; font-weight:bold; text-shadow:1px 1px 2px #000; text-align:center;">${nombreAcotado}</div>`,
+                iconSize: [80, 20]
+            }),
+            interactive: false
+        });
+        labelsArray.push(labelMarker);
+    });
+
+    var labelsGroup = L.featureGroup(labelsArray);
+    var combinedGroup = L.featureGroup([layer_geo, labelsGroup]).addTo(map);
+    combinedGroup.bringToBack();
+    currentGeoJSONLayer = combinedGroup;
+
+    filterTitle.innerText = "Análisis";
+
+    actualizarLeyendaCenso(breaks, variable, anio);
+
+    var top5 = Object.keys(stateDataMap)
+        .filter(function (k) { return stateDataMap[k].valor > 0; })
+        .sort(function (a, b) { return stateDataMap[b].valor - stateDataMap[a].valor; })
+        .slice(0, 5);
+
+    dibujarGraficaEvolucionCenso(top5, anio, variable);
+}
+
+window.breaksCensoActual = [];
+window.claseCensoSeleccionada = null;
+
+window.sintesisCenso = [
+    "Clase 1: Actividad incipiente. Presencia muy reducida del sector Electrónica/SEIT/Telecom/Medios.",
+    "Clase 2: Actividad baja. Participación modesta dentro del Censo Económico para esta variable.",
+    "Clase 3: Actividad media. Posición intermedia respecto al resto de las entidades.",
+    "Clase 4: Actividad alta. Concentración relevante de unidades económicas y valor generado.",
+    "Clase 5: Actividad muy alta. Entidades líderes en el sector para la variable seleccionada."
+];
+
+// Leyenda con clases clicables (prender/apagar), igual que el Índice de
+// crecimiento complejo (actualizarLeyendaProductividad) y Finanzas
+// (actualizarLeyendaFinanzas) — antes era una franja de color estática sin
+// interacción.
+function actualizarLeyendaCenso(breaks, variable, anio) {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if (!div || !overlay) return;
+
+    window.breaksCensoActual = breaks;
+    window.claseCensoSeleccionada = null;
+
+    var metricaLabel = CENSO_VARIABLE_LABELS[variable] || variable;
+    var f = function (n) { return (n || 0).toLocaleString('es-MX', { maximumFractionDigits: 1 }); };
+    var colores = RampaRojos;
+
+    var html = `
+        <div id="legend-flujos">
+            <div style="margin-bottom:6px; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Censo Económico ${anio}</div>
+            <div style="font-size:11px; color:#ccc; margin-bottom:8px;">${metricaLabel} · Sectores: Electrónica, SEIT, Telecom, Medios.</div>
+            <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px; text-transform:uppercase;">CLASES</div>
+            <div style="font-size:11px; color:#aaa; margin-bottom:10px;">Selecciona una clase para filtrar entidades</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-top: 5px;">
+    `;
+
+    var conteos = [0, 0, 0, 0, 0];
+    if (window.censoDataActual) {
+        Object.keys(window.censoDataActual).forEach(function (estado) {
+            var entrada = window.censoDataActual[estado];
+            if (entrada && entrada.valor > 0) conteos[getClase(entrada.valor, breaks)]++;
+        });
+    }
+
+    var rangos = [
+        `Menor o igual a ${f(breaks[0])}`,
+        `${f(breaks[0])} - ${f(breaks[1])}`,
+        `${f(breaks[1])} - ${f(breaks[2])}`,
+        `${f(breaks[2])} - ${f(breaks[3])}`,
+        `Mayor a ${f(breaks[3])}`
+    ];
+
+    for (var i = 0; i < 5; i++) {
+        html += `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                <div class="legend-box-censo" data-class="${i}"
+                     style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;"
+                     onclick="filtrarMapaCenso(${i})" title="${rangos[i]}">${conteos[i]}</div>
+                <div style="font-size: 9px; color: #ccc; margin-top: 4px; text-align: center;">Clase ${i + 1}</div>
+            </div>
+        `;
+    }
+
+    html += `
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #ccc; font-weight: bold; margin-top: 5px;">
+                <span>Min</span>
+                <span>Max</span>
+            </div>
+            <div id="leyenda-sintesis-censo" style="margin-top:10px; font-size:11px; color:#00e5ff; font-style:italic; text-align: justify;">Da clic en una entidad del mapa para ver su evolución temporal (2003-2023) en la gráfica inferior, o en una clase para filtrar entidades.</div>
+        </div>
+        <div id="legend-nodos-locales" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; display:none;"></div>
+    `;
+
+    div.innerHTML = html;
+    overlay.style.display = 'block';
+}
+
+window.filtrarMapaCenso = function (clase) {
+    if (window.claseCensoSeleccionada === clase) {
+        window.claseCensoSeleccionada = null;
+    } else {
+        window.claseCensoSeleccionada = clase;
+    }
+
+    var sintesisEl = document.getElementById('leyenda-sintesis-censo');
+    if (window.claseCensoSeleccionada === null) {
+        if (sintesisEl) sintesisEl.innerHTML = "Da clic en una entidad del mapa para ver su evolución temporal (2003-2023) en la gráfica inferior, o en una clase para filtrar entidades.";
+    } else {
+        if (sintesisEl) sintesisEl.innerHTML = window.sintesisCenso[window.claseCensoSeleccionada];
+    }
+
+    document.querySelectorAll('.legend-box-censo').forEach(function (box) {
+        var boxClase = parseInt(box.getAttribute('data-class'));
+        if (window.claseCensoSeleccionada === null) {
+            box.style.opacity = '1';
+            box.style.border = '1px solid #1a1a1a';
+            box.style.transform = 'scale(1)';
+        } else if (boxClase === window.claseCensoSeleccionada) {
+            box.style.opacity = '1';
+            box.style.border = '2px solid #00e5ff';
+            box.style.transform = 'scale(1.1)';
+            box.style.zIndex = '10';
+        } else {
+            box.style.opacity = '0.3';
+            box.style.border = '1px solid #1a1a1a';
+            box.style.transform = 'scale(1)';
+            box.style.zIndex = '1';
+        }
+    });
+
+    if (typeof currentGeoJSONLayer !== 'undefined' && currentGeoJSONLayer) {
+        currentGeoJSONLayer.eachLayer(function (subGroup) {
+            if (subGroup.eachLayer) {
+                subGroup.eachLayer(function (layer) {
+                    if (layer.feature && layer.feature.geometry && layer.feature.geometry.type !== 'Point') {
+                        var estadoReal = normalizarEstadoNombre(
+                            layer.feature.properties.name || layer.feature.properties.ESTADO || layer.feature.properties.NOMGEO
+                        );
+                        var entrada = window.censoDataActual && window.censoDataActual[estadoReal];
+                        if (entrada && entrada.valor > 0) {
+                            var claseEstado = getClase(entrada.valor, window.breaksCensoActual);
+                            if (window.claseCensoSeleccionada === null || claseEstado === window.claseCensoSeleccionada) {
+                                layer.setStyle({ opacity: 1, fillOpacity: 0.82 });
+                            } else {
+                                layer.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
+                            }
+                        } else {
+                            layer.setStyle({ opacity: 0.2, fillOpacity: 0 });
+                        }
+                    }
+                });
+            }
+        });
+    }
+};
+
+function dibujarGraficaEvolucionCenso(estadosSeleccionados, anioDestacado, variable) {
+    if (typeof Chart === 'undefined') return;
+
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var statsContent = document.getElementById('stats-content');
+    if (statsContent && !statsContent.classList.contains('show')) {
+        statsContent.classList.add('show');
+    }
+
+    var chartContainer = document.getElementById('topGlobalChartContainer');
+    if (chartContainer) chartContainer.style.display = 'block';
+
+    var metricaLabel = CENSO_VARIABLE_LABELS[variable] || variable;
+
+    var chartTitle = document.getElementById('topGlobalChartTitle');
+    if (chartTitle) {
+        chartTitle.innerHTML = 'EVOLUCIÓN TEMPORAL: ' + metricaLabel.toUpperCase();
+        chartTitle.style.display = 'block';
+    }
+
+    var hr = document.getElementById('topGlobalChartHr');
+    if (hr) hr.style.display = 'block';
+
+    var canvas = document.getElementById('topGlobalChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    if (window.topGlobalChartInstance) {
+        window.topGlobalChartInstance.destroy();
+    }
+
+    var labelsSet = new Set();
+    estadosSeleccionados.forEach(function (edo) {
+        var entrada = window.censoDataActual[edo];
+        if (entrada && entrada.historial) {
+            Object.keys(entrada.historial).forEach(function (anio) { labelsSet.add(anio); });
+        }
+    });
+
+    var labels = Array.from(labelsSet).sort(function (a, b) { return parseInt(a) - parseInt(b); });
+
+    var colores = ['#00e5ff', '#ff3366', '#d59f0f', '#00e676', '#d500f9'];
+    var datasets = [];
+
+    estadosSeleccionados.forEach(function (edo, index) {
+        var entrada = window.censoDataActual[edo];
+        var dataValues = labels.map(function (anio) {
+            var val = entrada && entrada.historial ? entrada.historial[anio] : undefined;
+            return val !== undefined ? val : null;
+        });
+
+        datasets.push({
+            label: edo,
+            data: dataValues,
+            borderColor: colores[index % colores.length],
+            backgroundColor: colores[index % colores.length],
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#222'
+        });
+    });
+
+    window.topGlobalChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { color: '#ccc', font: { size: 10 }, boxWidth: 12 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(20,20,20,0.95)',
+                    titleColor: '#00e5ff',
+                    bodyColor: '#fff',
+                    borderColor: '#555',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toLocaleString('es-MX', { maximumFractionDigits: 2 });
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                y: {
+                    ticks: {
+                        color: '#aaa',
+                        callback: function (value) { return value.toLocaleString('es-MX', { maximumFractionDigits: 0 }); }
+                    },
+                    grid: { color: '#333', borderDash: [2, 2] }
+                }
+            }
+        }
+    });
+
+    var summaryDiv = document.getElementById('dynamic-summary-global');
+    if (summaryDiv && estadosSeleccionados.length > 0) {
+        var lider = estadosSeleccionados[0];
+        var primerAnio = labels[0] || "";
+        var ultimoAnio = labels[labels.length - 1] || "";
+
+        var texto = `A lo largo del periodo analizado (${primerAnio} - ${ultimoAnio}), el estado de <b style="color:#00e5ff;">${lider}</b> se ha mantenido como el nodo más relevante en <b style="color:#fcae91;">${metricaLabel.toLowerCase()}</b> dentro del Censo Económico (sectores Electrónica, SEIT, Telecom y Medios).`;
+
+        summaryDiv.innerHTML = texto;
+        summaryDiv.style.display = 'block';
+    }
+}

@@ -1,0 +1,972 @@
+{
+ "2003": {
+  "Aguascalientes": {
+   "UE": 91.0,
+   "personal": 705.0,
+   "produccion": 756.6270000000001,
+   "valorAgregado": 252.96599999999998
+  },
+  "Baja California": {
+   "UE": 341.0,
+   "personal": 76056.0,
+   "produccion": 22470.269000000004,
+   "valorAgregado": 13071.902
+  },
+  "Baja California Sur": {
+   "UE": 46.0,
+   "personal": 362.0,
+   "produccion": 306.25899999999996,
+   "valorAgregado": 114.066
+  },
+  "Campeche": {
+   "UE": 86.0,
+   "personal": 856.0,
+   "produccion": 595.666,
+   "valorAgregado": 178.898
+  },
+  "Chiapas": {
+   "UE": 175.0,
+   "personal": 1983.0,
+   "produccion": 1234.547,
+   "valorAgregado": 395.08000000000004
+  },
+  "Chihuahua": {
+   "UE": 311.0,
+   "personal": 57784.0,
+   "produccion": 26727.337000000003,
+   "valorAgregado": 14829.205
+  },
+  "Ciudad de México": {
+   "UE": 1401.0,
+   "personal": 139933.0,
+   "produccion": 200878.567,
+   "valorAgregado": 124547.38399999999
+  },
+  "Coahuila de Zaragoza": {
+   "UE": 227.0,
+   "personal": 6277.0,
+   "produccion": 1681.8010000000002,
+   "valorAgregado": 744.7439999999999
+  },
+  "Colima": {
+   "UE": 60.0,
+   "personal": 602.0,
+   "produccion": 268.134,
+   "valorAgregado": 102.889
+  },
+  "Durango": {
+   "UE": 69.0,
+   "personal": 2358.0,
+   "produccion": 970.0809999999999,
+   "valorAgregado": 575.893
+  },
+  "Guanajuato": {
+   "UE": 280.0,
+   "personal": 3075.0,
+   "produccion": 2366.301,
+   "valorAgregado": 771.878
+  },
+  "Guerrero": {
+   "UE": 158.0,
+   "personal": 1651.0,
+   "produccion": 894.9739999999999,
+   "valorAgregado": 400.757
+  },
+  "Hidalgo": {
+   "UE": 133.0,
+   "personal": 989.0,
+   "produccion": 426.36300000000006,
+   "valorAgregado": 135.13400000000001
+  },
+  "Jalisco": {
+   "UE": 574.0,
+   "personal": 44863.0,
+   "produccion": 55077.17199999999,
+   "valorAgregado": 9230.503
+  },
+  "Michoacán de Ocampo": {
+   "UE": 296.0,
+   "personal": 2988.0,
+   "produccion": 1532.0569999999998,
+   "valorAgregado": 670.522
+  },
+  "Morelos": {
+   "UE": 94.0,
+   "personal": 753.0,
+   "produccion": 656.445,
+   "valorAgregado": 179.612
+  },
+  "México": {
+   "UE": 432.0,
+   "personal": 11363.0,
+   "produccion": 10440.246000000001,
+   "valorAgregado": 3359.0059999999994
+  },
+  "Nayarit": {
+   "UE": 52.0,
+   "personal": 519.0,
+   "produccion": 306.99300000000005,
+   "valorAgregado": 67.741
+  },
+  "Nuevo León": {
+   "UE": 519.0,
+   "personal": 24812.0,
+   "produccion": 26560.817000000003,
+   "valorAgregado": 9727.912
+  },
+  "Oaxaca": {
+   "UE": 160.0,
+   "personal": 1460.0,
+   "produccion": 426.068,
+   "valorAgregado": 190.514
+  },
+  "Puebla": {
+   "UE": 266.0,
+   "personal": 3883.0,
+   "produccion": 5413.451000000001,
+   "valorAgregado": 2738.468
+  },
+  "Querétaro": {
+   "UE": 119.0,
+   "personal": 5210.0,
+   "produccion": 6266.009,
+   "valorAgregado": 2114.4770000000003
+  },
+  "Quintana Roo": {
+   "UE": 77.0,
+   "personal": 1337.0,
+   "produccion": 1297.565,
+   "valorAgregado": 491.68600000000004
+  },
+  "San Luis Potosí": {
+   "UE": 184.0,
+   "personal": 2068.0,
+   "produccion": 902.2429999999999,
+   "valorAgregado": 360.206
+  },
+  "Sinaloa": {
+   "UE": 238.0,
+   "personal": 2111.0,
+   "produccion": 1338.084,
+   "valorAgregado": 603.207
+  },
+  "Sonora": {
+   "UE": 313.0,
+   "personal": 29228.0,
+   "produccion": 8688.467999999999,
+   "valorAgregado": 4400.455999999999
+  },
+  "Tabasco": {
+   "UE": 130.0,
+   "personal": 1829.0,
+   "produccion": 935.0120000000001,
+   "valorAgregado": 478.899
+  },
+  "Tamaulipas": {
+   "UE": 378.0,
+   "personal": 40176.0,
+   "produccion": 9115.001999999999,
+   "valorAgregado": 5819.59
+  },
+  "Tlaxcala": {
+   "UE": 83.0,
+   "personal": 248.0,
+   "produccion": 182.016,
+   "valorAgregado": 86.747
+  },
+  "Veracruz de Ignacio de la Llave": {
+   "UE": 512.0,
+   "personal": 4345.0,
+   "produccion": 2280.929,
+   "valorAgregado": 968.9769999999999
+  },
+  "Yucatán": {
+   "UE": 208.0,
+   "personal": 2969.0,
+   "produccion": 4186.203,
+   "valorAgregado": 1771.9370000000001
+  },
+  "Zacatecas": {
+   "UE": 134.0,
+   "personal": 727.0,
+   "produccion": 226.352,
+   "valorAgregado": 105.563
+  }
+ },
+ "2008": {
+  "Aguascalientes": {
+   "UE": 125.0,
+   "personal": 8031.0,
+   "produccion": 8843.194,
+   "valorAgregado": 3170.4210000000003
+  },
+  "Baja California": {
+   "UE": 451.0,
+   "personal": 80737.0,
+   "produccion": 36909.668999999994,
+   "valorAgregado": 16876.638
+  },
+  "Baja California Sur": {
+   "UE": 96.0,
+   "personal": 1207.0,
+   "produccion": 2594.765,
+   "valorAgregado": 844.297
+  },
+  "Campeche": {
+   "UE": 125.0,
+   "personal": 1584.0,
+   "produccion": 1687.272,
+   "valorAgregado": 828.3689999999999
+  },
+  "Chiapas": {
+   "UE": 337.0,
+   "personal": 3096.0,
+   "produccion": 4009.059,
+   "valorAgregado": 1734.603
+  },
+  "Chihuahua": {
+   "UE": 406.0,
+   "personal": 95780.0,
+   "produccion": 39223.632,
+   "valorAgregado": 24199.641000000003
+  },
+  "Ciudad de México": {
+   "UE": 1957.0,
+   "personal": 100365.0,
+   "produccion": 176499.342,
+   "valorAgregado": 63995.542
+  },
+  "Coahuila de Zaragoza": {
+   "UE": 313.0,
+   "personal": 8195.0,
+   "produccion": 8351.060000000001,
+   "valorAgregado": 3499.2290000000003
+  },
+  "Colima": {
+   "UE": 91.0,
+   "personal": 1293.0,
+   "produccion": 2078.441,
+   "valorAgregado": 798.317
+  },
+  "Durango": {
+   "UE": 91.0,
+   "personal": 1631.0,
+   "produccion": 3311.493,
+   "valorAgregado": 1361.126
+  },
+  "Guanajuato": {
+   "UE": 555.0,
+   "personal": 10873.0,
+   "produccion": 14543.819000000001,
+   "valorAgregado": 7596.741999999999
+  },
+  "Guerrero": {
+   "UE": 237.0,
+   "personal": 3284.0,
+   "produccion": 4892.007,
+   "valorAgregado": 2175.547
+  },
+  "Hidalgo": {
+   "UE": 311.0,
+   "personal": 2771.0,
+   "produccion": 3363.198,
+   "valorAgregado": 1501.2640000000001
+  },
+  "Jalisco": {
+   "UE": 839.0,
+   "personal": 56151.0,
+   "produccion": 47659.39200000001,
+   "valorAgregado": 17759.765
+  },
+  "Michoacán de Ocampo": {
+   "UE": 546.0,
+   "personal": 6951.0,
+   "produccion": 7317.879,
+   "valorAgregado": 270.1060000000002
+  },
+  "Morelos": {
+   "UE": 274.0,
+   "personal": 4991.0,
+   "produccion": 6734.919,
+   "valorAgregado": 3114.361
+  },
+  "México": {
+   "UE": 1330.0,
+   "personal": 22764.0,
+   "produccion": 33510.471,
+   "valorAgregado": 14433.036
+  },
+  "Nayarit": {
+   "UE": 152.0,
+   "personal": 1674.0,
+   "produccion": 2116.055,
+   "valorAgregado": 1029.952
+  },
+  "Nuevo León": {
+   "UE": 648.0,
+   "personal": 33949.0,
+   "produccion": 34442.62,
+   "valorAgregado": 12159.455
+  },
+  "Oaxaca": {
+   "UE": 264.0,
+   "personal": 2828.0,
+   "produccion": 3462.844,
+   "valorAgregado": 1581.0539999999999
+  },
+  "Puebla": {
+   "UE": 547.0,
+   "personal": 9396.0,
+   "produccion": 13152.295999999998,
+   "valorAgregado": 4293.853
+  },
+  "Querétaro": {
+   "UE": 267.0,
+   "personal": 9146.0,
+   "produccion": 15109.709,
+   "valorAgregado": 5619.612999999999
+  },
+  "Quintana Roo": {
+   "UE": 155.0,
+   "personal": 2806.0,
+   "produccion": 4292.479,
+   "valorAgregado": 1777.328
+  },
+  "San Luis Potosí": {
+   "UE": 255.0,
+   "personal": 3655.0,
+   "produccion": 4491.034000000001,
+   "valorAgregado": 2099.632
+  },
+  "Sinaloa": {
+   "UE": 282.0,
+   "personal": 4077.0,
+   "produccion": 7378.835,
+   "valorAgregado": 3041.429
+  },
+  "Sonora": {
+   "UE": 395.0,
+   "personal": 29433.0,
+   "produccion": 18826.843,
+   "valorAgregado": 7580.7970000000005
+  },
+  "Tabasco": {
+   "UE": 171.0,
+   "personal": 2211.0,
+   "produccion": 3621.6850000000004,
+   "valorAgregado": 1615.581
+  },
+  "Tamaulipas": {
+   "UE": 489.0,
+   "personal": 66050.0,
+   "produccion": 26484.247,
+   "valorAgregado": 15101.655
+  },
+  "Tlaxcala": {
+   "UE": 155.0,
+   "personal": 1194.0,
+   "produccion": 1404.9329999999998,
+   "valorAgregado": 626.459
+  },
+  "Veracruz de Ignacio de la Llave": {
+   "UE": 626.0,
+   "personal": 9407.0,
+   "produccion": 12169.886999999999,
+   "valorAgregado": 5549.319
+  },
+  "Yucatán": {
+   "UE": 209.0,
+   "personal": 3421.0,
+   "produccion": 7254.4349999999995,
+   "valorAgregado": 2569.628
+  },
+  "Zacatecas": {
+   "UE": 156.0,
+   "personal": 1859.0,
+   "produccion": 2419.0879999999997,
+   "valorAgregado": 1072.934
+  }
+ },
+ "2013": {
+  "Aguascalientes": {
+   "UE": 113.0,
+   "personal": 14919.0,
+   "produccion": 6138.844000000002,
+   "valorAgregado": 1942.76
+  },
+  "Baja California": {
+   "UE": 433.0,
+   "personal": 70027.0,
+   "produccion": 25213.666999999998,
+   "valorAgregado": 11945.476999999999
+  },
+  "Baja California Sur": {
+   "UE": 71.0,
+   "personal": 817.0,
+   "produccion": 694.4789999999999,
+   "valorAgregado": 440.136
+  },
+  "Campeche": {
+   "UE": 130.0,
+   "personal": 1753.0,
+   "produccion": 1162.211,
+   "valorAgregado": 875.83
+  },
+  "Chiapas": {
+   "UE": 318.0,
+   "personal": 3141.0,
+   "produccion": 1179.7869999999998,
+   "valorAgregado": 709.492
+  },
+  "Chihuahua": {
+   "UE": 372.0,
+   "personal": 75658.0,
+   "produccion": 27762.065,
+   "valorAgregado": 10785.231999999998
+  },
+  "Ciudad de México": {
+   "UE": 1926.0,
+   "personal": 152420.0,
+   "produccion": 313362.30500000005,
+   "valorAgregado": 102998.61600000001
+  },
+  "Coahuila de Zaragoza": {
+   "UE": 278.0,
+   "personal": 13952.0,
+   "produccion": 3526.591,
+   "valorAgregado": 1891.4930000000002
+  },
+  "Colima": {
+   "UE": 94.0,
+   "personal": 998.0,
+   "produccion": 491.083,
+   "valorAgregado": 243.68099999999998
+  },
+  "Durango": {
+   "UE": 100.0,
+   "personal": 1163.0,
+   "produccion": 459.837,
+   "valorAgregado": 296.70099999999996
+  },
+  "Guanajuato": {
+   "UE": 500.0,
+   "personal": 6057.0,
+   "produccion": 2919.7800000000007,
+   "valorAgregado": 1507.579
+  },
+  "Guerrero": {
+   "UE": 217.0,
+   "personal": 2078.0,
+   "produccion": 1007.02,
+   "valorAgregado": 636.55
+  },
+  "Hidalgo": {
+   "UE": 270.0,
+   "personal": 1605.0,
+   "produccion": 859.7409999999999,
+   "valorAgregado": 456.19499999999994
+  },
+  "Jalisco": {
+   "UE": 755.0,
+   "personal": 66097.0,
+   "produccion": 49279.799,
+   "valorAgregado": 12656.152
+  },
+  "Michoacán de Ocampo": {
+   "UE": 389.0,
+   "personal": 3711.0,
+   "produccion": 1620.3310000000001,
+   "valorAgregado": 971.8380000000002
+  },
+  "Morelos": {
+   "UE": 159.0,
+   "personal": 3120.0,
+   "produccion": 2941.0740000000005,
+   "valorAgregado": 1411.1119999999999
+  },
+  "México": {
+   "UE": 826.0,
+   "personal": 13008.0,
+   "produccion": 14018.091,
+   "valorAgregado": 4937.925
+  },
+  "Nayarit": {
+   "UE": 91.0,
+   "personal": 688.0,
+   "produccion": 307.20099999999996,
+   "valorAgregado": 172.309
+  },
+  "Nuevo León": {
+   "UE": 603.0,
+   "personal": 34010.0,
+   "produccion": 51980.2,
+   "valorAgregado": 18023.884
+  },
+  "Oaxaca": {
+   "UE": 356.0,
+   "personal": 2795.0,
+   "produccion": 790.241,
+   "valorAgregado": 523.154
+  },
+  "Puebla": {
+   "UE": 479.0,
+   "personal": 7506.0,
+   "produccion": 17625.697,
+   "valorAgregado": 1834.345
+  },
+  "Querétaro": {
+   "UE": 275.0,
+   "personal": 18682.0,
+   "produccion": 25616.054,
+   "valorAgregado": 7670.119
+  },
+  "Quintana Roo": {
+   "UE": 142.0,
+   "personal": 1992.0,
+   "produccion": 1091.4609999999998,
+   "valorAgregado": 640.1139999999999
+  },
+  "San Luis Potosí": {
+   "UE": 187.0,
+   "personal": 2113.0,
+   "produccion": 1483.576,
+   "valorAgregado": 818.318
+  },
+  "Sinaloa": {
+   "UE": 258.0,
+   "personal": 4587.0,
+   "produccion": 8319.827,
+   "valorAgregado": 678.125
+  },
+  "Sonora": {
+   "UE": 364.0,
+   "personal": 27888.0,
+   "produccion": 8049.708999999999,
+   "valorAgregado": 4394.759999999999
+  },
+  "Tabasco": {
+   "UE": 159.0,
+   "personal": 2181.0,
+   "produccion": 1157.896,
+   "valorAgregado": 763.013
+  },
+  "Tamaulipas": {
+   "UE": 327.0,
+   "personal": 50400.0,
+   "produccion": 15268.413,
+   "valorAgregado": 9092.775
+  },
+  "Tlaxcala": {
+   "UE": 105.0,
+   "personal": 467.0,
+   "produccion": 118.593,
+   "valorAgregado": 75.548
+  },
+  "Veracruz de Ignacio de la Llave": {
+   "UE": 548.0,
+   "personal": 6494.0,
+   "produccion": 2941.858,
+   "valorAgregado": 1953.1570000000002
+  },
+  "Yucatán": {
+   "UE": 202.0,
+   "personal": 4264.0,
+   "produccion": 63154.666,
+   "valorAgregado": 10427.134
+  },
+  "Zacatecas": {
+   "UE": 130.0,
+   "personal": 1248.0,
+   "produccion": 376.38800000000003,
+   "valorAgregado": 207.323
+  }
+ },
+ "2018": {
+  "Aguascalientes": {
+   "UE": 155.0,
+   "personal": 13416.0,
+   "produccion": 8491.64,
+   "valorAgregado": 3911.213
+  },
+  "Baja California": {
+   "UE": 446.0,
+   "personal": 84221.0,
+   "produccion": 34256.235,
+   "valorAgregado": 22108.078
+  },
+  "Baja California Sur": {
+   "UE": 62.0,
+   "personal": 926.0,
+   "produccion": 637.8550000000001,
+   "valorAgregado": 337.591
+  },
+  "Campeche": {
+   "UE": 102.0,
+   "personal": 1099.0,
+   "produccion": 585.454,
+   "valorAgregado": 295.472
+  },
+  "Chiapas": {
+   "UE": 381.0,
+   "personal": 2607.0,
+   "produccion": 1351.2319999999997,
+   "valorAgregado": 701.3820000000001
+  },
+  "Chihuahua": {
+   "UE": 388.0,
+   "personal": 84730.0,
+   "produccion": 33621.664,
+   "valorAgregado": 20666.936999999998
+  },
+  "Ciudad de México": {
+   "UE": 1951.0,
+   "personal": 242744.0,
+   "produccion": 507158.90100000007,
+   "valorAgregado": 141644.40799999997
+  },
+  "Coahuila de Zaragoza": {
+   "UE": 300.0,
+   "personal": 13359.0,
+   "produccion": 6696.045,
+   "valorAgregado": 3053.7470000000003
+  },
+  "Colima": {
+   "UE": 103.0,
+   "personal": 824.0,
+   "produccion": 269.792,
+   "valorAgregado": 162.198
+  },
+  "Durango": {
+   "UE": 114.0,
+   "personal": 1036.0,
+   "produccion": 396.521,
+   "valorAgregado": 181.18099999999998
+  },
+  "Guanajuato": {
+   "UE": 443.0,
+   "personal": 7117.0,
+   "produccion": 5918.528,
+   "valorAgregado": 1845.597
+  },
+  "Guerrero": {
+   "UE": 185.0,
+   "personal": 1493.0,
+   "produccion": 1051.385,
+   "valorAgregado": 518.9590000000001
+  },
+  "Hidalgo": {
+   "UE": 237.0,
+   "personal": 1920.0,
+   "produccion": 994.845,
+   "valorAgregado": 527.94
+  },
+  "Jalisco": {
+   "UE": 789.0,
+   "personal": 104833.0,
+   "produccion": 74285.967,
+   "valorAgregado": 33836.807
+  },
+  "Michoacán de Ocampo": {
+   "UE": 355.0,
+   "personal": 5210.0,
+   "produccion": 3786.377,
+   "valorAgregado": 2160.2479999999996
+  },
+  "Morelos": {
+   "UE": 167.0,
+   "personal": 2879.0,
+   "produccion": 2750.073,
+   "valorAgregado": 1176.653
+  },
+  "México": {
+   "UE": 842.0,
+   "personal": 17419.0,
+   "produccion": 20030.451,
+   "valorAgregado": 8928.729
+  },
+  "Nayarit": {
+   "UE": 84.0,
+   "personal": 651.0,
+   "produccion": 332.867,
+   "valorAgregado": 172.411
+  },
+  "Nuevo León": {
+   "UE": 743.0,
+   "personal": 56791.0,
+   "produccion": 49232.212999999996,
+   "valorAgregado": 18064.839
+  },
+  "Oaxaca": {
+   "UE": 375.0,
+   "personal": 2474.0,
+   "produccion": 1059.6299999999999,
+   "valorAgregado": 584.133
+  },
+  "Puebla": {
+   "UE": 512.0,
+   "personal": 6534.0,
+   "produccion": 4118.2519999999995,
+   "valorAgregado": 1945.836
+  },
+  "Querétaro": {
+   "UE": 310.0,
+   "personal": 19731.0,
+   "produccion": 20775.312,
+   "valorAgregado": 8740.136
+  },
+  "Quintana Roo": {
+   "UE": 141.0,
+   "personal": 2749.0,
+   "produccion": 2584.4640000000004,
+   "valorAgregado": 1277.978
+  },
+  "San Luis Potosí": {
+   "UE": 194.0,
+   "personal": 2072.0,
+   "produccion": 1898.209,
+   "valorAgregado": 877.9200000000001
+  },
+  "Sinaloa": {
+   "UE": 263.0,
+   "personal": 4905.0,
+   "produccion": 2844.6190000000006,
+   "valorAgregado": 1386.522
+  },
+  "Sonora": {
+   "UE": 345.0,
+   "personal": 36595.0,
+   "produccion": 16188.668999999998,
+   "valorAgregado": 9143.768999999998
+  },
+  "Tabasco": {
+   "UE": 166.0,
+   "personal": 1768.0,
+   "produccion": 1199.413,
+   "valorAgregado": 606.025
+  },
+  "Tamaulipas": {
+   "UE": 276.0,
+   "personal": 63311.0,
+   "produccion": 27503.857,
+   "valorAgregado": 17134.804
+  },
+  "Tlaxcala": {
+   "UE": 97.0,
+   "personal": 412.0,
+   "produccion": 238.457,
+   "valorAgregado": 117.202
+  },
+  "Veracruz de Ignacio de la Llave": {
+   "UE": 518.0,
+   "personal": 5923.0,
+   "produccion": 4186.381,
+   "valorAgregado": 2355.2270000000003
+  },
+  "Yucatán": {
+   "UE": 261.0,
+   "personal": 4771.0,
+   "produccion": 3074.634,
+   "valorAgregado": 1560.22
+  },
+  "Zacatecas": {
+   "UE": 114.0,
+   "personal": 4467.0,
+   "produccion": 3162.566,
+   "valorAgregado": 1307.3029999999999
+  }
+ },
+ "2023": {
+  "Aguascalientes": {
+   "UE": 148.0,
+   "personal": 16435.0,
+   "produccion": 11492.105,
+   "valorAgregado": 7626.022000000001
+  },
+  "Baja California": {
+   "UE": 449.0,
+   "personal": 101746.0,
+   "produccion": 89459.57,
+   "valorAgregado": 52105.981
+  },
+  "Baja California Sur": {
+   "UE": 58.0,
+   "personal": 641.0,
+   "produccion": 691.641,
+   "valorAgregado": 383.125
+  },
+  "Campeche": {
+   "UE": 84.0,
+   "personal": 874.0,
+   "produccion": 575.559,
+   "valorAgregado": 330.854
+  },
+  "Chiapas": {
+   "UE": 424.0,
+   "personal": 2378.0,
+   "produccion": 1448.4079999999997,
+   "valorAgregado": 742.393
+  },
+  "Chihuahua": {
+   "UE": 372.0,
+   "personal": 116669.0,
+   "produccion": 67483.652,
+   "valorAgregado": 51292.967
+  },
+  "Ciudad de México": {
+   "UE": 1351.0,
+   "personal": 204652.0,
+   "produccion": 569369.0009999999,
+   "valorAgregado": 206505.128
+  },
+  "Coahuila de Zaragoza": {
+   "UE": 297.0,
+   "personal": 17576.0,
+   "produccion": 13239.673999999999,
+   "valorAgregado": 7429.907
+  },
+  "Colima": {
+   "UE": 81.0,
+   "personal": 722.0,
+   "produccion": 562.172,
+   "valorAgregado": 310.821
+  },
+  "Durango": {
+   "UE": 98.0,
+   "personal": 1321.0,
+   "produccion": 966.6690000000001,
+   "valorAgregado": 533.035
+  },
+  "Guanajuato": {
+   "UE": 375.0,
+   "personal": 6022.0,
+   "produccion": 7267.886,
+   "valorAgregado": 3149.974
+  },
+  "Guerrero": {
+   "UE": 160.0,
+   "personal": 1320.0,
+   "produccion": 1136.3319999999999,
+   "valorAgregado": 612.927
+  },
+  "Hidalgo": {
+   "UE": 297.0,
+   "personal": 2046.0,
+   "produccion": 1258.183,
+   "valorAgregado": 695.9520000000001
+  },
+  "Jalisco": {
+   "UE": 715.0,
+   "personal": 112680.0,
+   "produccion": 128945.91000000002,
+   "valorAgregado": 68541.1
+  },
+  "Michoacán de Ocampo": {
+   "UE": 368.0,
+   "personal": 6744.0,
+   "produccion": 3848.3199999999997,
+   "valorAgregado": 2091.384
+  },
+  "Morelos": {
+   "UE": 132.0,
+   "personal": 2292.0,
+   "produccion": 1386.456,
+   "valorAgregado": 792.629
+  },
+  "México": {
+   "UE": 741.0,
+   "personal": 12434.0,
+   "produccion": 14715.389,
+   "valorAgregado": 7404.643
+  },
+  "Nayarit": {
+   "UE": 90.0,
+   "personal": 1093.0,
+   "produccion": 777.905,
+   "valorAgregado": 450.203
+  },
+  "Nuevo León": {
+   "UE": 668.0,
+   "personal": 59118.0,
+   "produccion": 56088.778,
+   "valorAgregado": 28189.775999999998
+  },
+  "Oaxaca": {
+   "UE": 344.0,
+   "personal": 1923.0,
+   "produccion": 966.3770000000001,
+   "valorAgregado": 565.93
+  },
+  "Puebla": {
+   "UE": 505.0,
+   "personal": 5925.0,
+   "produccion": 4705.294,
+   "valorAgregado": 2888.593
+  },
+  "Querétaro": {
+   "UE": 298.0,
+   "personal": 21477.0,
+   "produccion": 26352.907,
+   "valorAgregado": 10229.229999999998
+  },
+  "Quintana Roo": {
+   "UE": 132.0,
+   "personal": 2568.0,
+   "produccion": 2516.682,
+   "valorAgregado": 1388.289
+  },
+  "San Luis Potosí": {
+   "UE": 225.0,
+   "personal": 5145.0,
+   "produccion": 5585.865000000001,
+   "valorAgregado": 2823.985
+  },
+  "Sinaloa": {
+   "UE": 237.0,
+   "personal": 4163.0,
+   "produccion": 2314.752,
+   "valorAgregado": 1263.946
+  },
+  "Sonora": {
+   "UE": 326.0,
+   "personal": 38071.0,
+   "produccion": 24087.082000000002,
+   "valorAgregado": 17029.578999999998
+  },
+  "Tabasco": {
+   "UE": 161.0,
+   "personal": 1624.0,
+   "produccion": 1269.225,
+   "valorAgregado": 659.957
+  },
+  "Tamaulipas": {
+   "UE": 266.0,
+   "personal": 63400.0,
+   "produccion": 35385.901999999995,
+   "valorAgregado": 25785.244000000006
+  },
+  "Tlaxcala": {
+   "UE": 103.0,
+   "personal": 1789.0,
+   "produccion": 1543.0010000000002,
+   "valorAgregado": 759.047
+  },
+  "Veracruz de Ignacio de la Llave": {
+   "UE": 457.0,
+   "personal": 4493.0,
+   "produccion": 3714.9710000000005,
+   "valorAgregado": 1889.2830000000001
+  },
+  "Yucatán": {
+   "UE": 280.0,
+   "personal": 3858.0,
+   "produccion": 3609.794000000001,
+   "valorAgregado": 1517.954
+  },
+  "Zacatecas": {
+   "UE": 114.0,
+   "personal": 2248.0,
+   "produccion": 1755.7689999999998,
+   "valorAgregado": 638.539
+  }
+ }
+}

@@ -288,6 +288,13 @@ function loadLayer(scaleType) {
         map.pm.disableGlobalEditMode();
     }
 
+    // La herramienta de dibujo/medición participativa vivía solo dentro de
+    // Municipal (iniciarLogicaMunicipio) — es genérica (no depende de datos de
+    // ninguna escala en particular), así que se habilita aquí para las 5.
+    if (typeof window.habilitarHerramientaDibujoParticipativa === 'function') {
+        window.habilitarHerramientaDibujoParticipativa();
+    }
+
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) {
         statsDiv.style.display = 'none';
@@ -353,8 +360,8 @@ function loadLayer(scaleType) {
         } else {
             AppData.load('carto/armadoras.geojson').then(data => {
                 window.armadorasRawData = data; // Cache
-                var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
-                var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
+                var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
+                var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
 
                 window.armadorasNacionalTriangulosLayer = L.geoJSON(data, {
                     pointToLayer: function (feature, latlng) {
@@ -443,7 +450,10 @@ function loadLayer(scaleType) {
         filename = 'carto/nacional.geojson';
         zoomCoords = [23.6345, -102.5528]; zoomLevel = 5;
         if (filterBox) filterBox.style.display = 'block';
-        if (typeof cargarYRenderizarEmpresasCSV === "function") cargarYRenderizarEmpresasCSV();
+        // El ranking de empresas ahora es su propio "Tipo de Análisis"
+        // (ver selectModo en iniciarFiltroNacional_Paso1) en vez de dispararse
+        // solo por entrar a Nacional — así el mapeo de unidades económicas
+        // se concentra únicamente cuando ese tipo está activo.
     }
 
     AppData.load(filename)
@@ -468,7 +478,67 @@ function loadLayer(scaleType) {
         .catch(error => console.error("Error cargando datos: " + error));
 }
 
+// ==========================================
+// HERRAMIENTA DE DIBUJO (PARTICIPATIVA) — antes vivía solo dentro de
+// iniciarLogicaMunicipio (escala_municipal.js); es genérica (dibuja una
+// geometría, ofrece copiar sus coordenadas y abrir un formulario externo) y
+// no depende de ningún dato específico de esa escala, así que se centraliza
+// aquí y loadLayer() la habilita para las 5 escalas.
+// ==========================================
+window.habilitarHerramientaDibujoParticipativa = function () {
+    if (!map.pm) return;
 
+    map.pm.addControls({
+        position: 'topright',
+        drawCircle: false,
+        drawCircleMarker: false,
+        drawText: false,
+        cutPolygon: false,
+        editMode: true,
+        dragMode: true,
+        removalMode: true
+    });
+
+    // Asegurarse de que no haya múltiples listeners acumulados de escalas
+    // anteriores (loadLayer llama esto en cada cambio de escala).
+    if (map._events && map._events['pm:create']) {
+        delete map._events['pm:create'];
+    }
+
+    map.on('pm:create', function (e) {
+        var layer = e.layer;
+
+        var geojsonObj = layer.toGeoJSON().geometry;
+        var geojsonStr = JSON.stringify(geojsonObj);
+
+        // Reemplaza esta URL con tu enlace completo de Google Forms o MS Forms
+        var formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfrjJrtuq0PMRqzGjPuu1YiTlI_sr9jQcaeKUu88pv89NlVCg/viewform?usp=publish-editor';
+
+        var popupContent = `
+            <div style="font-family:'Noto Sans'; font-size:13px; min-width: 250px;">
+                <strong style="color:#0277bd; font-size:14px; display:flex; align-items:center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right:6px;"><path fill="currentColor" d="M12 2L2 22h20L12 2zm0 3.83L18.17 19H5.83L12 5.83z"/></svg>
+                    Geometría Participativa
+                </strong>
+                <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
+
+                <p style="margin: 5px 0; color:#ddd; font-size:12px;">Copia las coordenadas y pégalas en el formulario Excel:</p>
+                <textarea id="coord-textarea" style="width: 100%; height: 50px; background: #222; color: #00e5ff; border: 1px solid #444; border-radius: 4px; font-size: 11px; padding: 4px; resize: none; margin-bottom: 5px;" readonly>${geojsonStr}</textarea>
+
+                <button onclick="document.getElementById('coord-textarea').select(); document.execCommand('copy'); alert('¡Coordenadas copiadas al portapapeles!');" style="width: 100%; background: #444; color: #fff; border: 1px solid #666; padding: 5px; border-radius: 4px; cursor: pointer; margin-bottom: 10px; font-size: 12px; transition: background 0.2s;">📋 Copiar Coordenadas</button>
+
+                <hr style="border:0; border-top:1px solid #555; margin:10px 0;">
+                <button onclick="window.open('${formUrl}', '_blank');" style="width: 100%; background: #0277bd; color: #fff; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s;" onmouseover="this.style.background='#01579b'" onmouseout="this.style.background='#0277bd'">📊 Abrir Formulario / Excel</button>
+            </div>
+        `;
+
+        layer.bindPopup(popupContent, { minWidth: 260 }).openPopup();
+
+        if (layer.setStyle) {
+            layer.setStyle({ color: '#00e5ff', fillColor: '#00e5ff', fillOpacity: 0.3, weight: 3 });
+        }
+    });
+};
 
 window.limiteMunicipalLayer = null;
 window.municipiosPolygonsGeoJSON = null;
@@ -561,7 +631,41 @@ window.dibujarLimiteMunicipal = function (nombreEstado) {
 function iniciarFiltroMundial_Paso1(data) {
     var container = document.getElementById('filter-buttons-container');
     container.innerHTML = "";
-    document.getElementById('filter-title').innerText = "Intercambios Globales";
+    document.getElementById('filter-title').innerText = "Análisis";
+
+    // --- TIPO DE ANÁLISIS (mismo patrón que Nacional/Estatal/Metropolitana) ---
+    // Arranca en el placeholder "Selección de análisis" (nada activo todavía);
+    // el contenedor de Flujos (industria/país) permanece oculto hasta que se
+    // elige un tipo real — antes se mostraba de entrada porque "flujos" quedaba
+    // implícitamente seleccionado (primer <option> del <select>) sin que el
+    // usuario hiciera nada. "Modelos Matemáticos" es el otro tipo — lo inyecta
+    // modelos.js (ver inyectarSelectorModelos) dentro de un contenedor propio
+    // que también se muestra/oculta desde este mismo selector.
+    var modoWrapper = document.createElement("div");
+    modoWrapper.style.marginBottom = "15px";
+    modoWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Tipo de Análisis:</small>`;
+    var selectModoMundial = document.createElement("select");
+    selectModoMundial.id = "select-modo-mundial";
+    selectModoMundial.className = "dynamic-filter-select";
+    selectModoMundial.innerHTML = `
+        <option value="" disabled selected>-- Selección de análisis --</option>
+        <option value="flujos">Intercambios (Flujos Industriales)</option>
+        <option value="modelos">Modelos Matemáticos</option>
+    `;
+    modoWrapper.appendChild(selectModoMundial);
+    container.appendChild(modoWrapper);
+
+    var flujosMundialContainer = document.createElement("div");
+    flujosMundialContainer.className = "mundial-modo-container";
+    flujosMundialContainer.style.display = "none";
+    container.appendChild(flujosMundialContainer);
+
+    selectModoMundial.onchange = function () {
+        document.querySelectorAll('.mundial-modo-container').forEach(function (el) { el.style.display = 'none'; });
+        if (currentGeoJSONLayer) map.removeLayer(currentGeoJSONLayer);
+        if (this.value === 'flujos') flujosMundialContainer.style.display = 'block';
+        // "modelos" lo maneja modelos.js con su propio listener sobre este select.
+    };
 
     var opcionesIndustria = [...new Set(data.features.map(f => f.properties.Industria))].sort();
 
@@ -615,8 +719,8 @@ function iniciarFiltroMundial_Paso1(data) {
         renderizarMapaFlujos(finalData, 'Valor', 'MDD', 'Pais_Desti');
     };
 
-    container.appendChild(selectIndustria);
-    container.appendChild(selectOrigen);
+    flujosMundialContainer.appendChild(selectIndustria);
+    flujosMundialContainer.appendChild(selectOrigen);
 }
 
 
@@ -978,27 +1082,53 @@ function setupUI() {
         leftContainer.id = 'left-sidebar-container';
         document.body.appendChild(leftContainer);
 
+        // Arranca CERRADO — antes el panel (el "Dashboard") se veía abierto de
+        // entrada, tapando la pantalla. Ahora inicia oculto y se avisa con un
+        // globo pulsante junto a la pestaña de apertura (ver dashboardHint más
+        // abajo); el manual de uso (onboarding) se activa hasta que el usuario
+        // abre el panel por primera vez, no al cerrar la portada.
+        leftContainer.classList.add('hidden-panel');
+
         var toggleTab = document.createElement('div');
         toggleTab.id = 'sidebar-toggle-tab';
+        toggleTab.classList.add('hidden-btn');
         const svgOpen = `<svg viewBox="0 0 24 24" width="20" height="20" style="pointer-events:none;"><path d="M6,3 h9 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13,8 l-4,4 l4,4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         const svgClosed = `<svg viewBox="0 0 24 24" width="20" height="20" style="pointer-events:none;"><path d="M6,3 h9 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9,8 l4,4 l-4,4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-        toggleTab.innerHTML = svgOpen;
-        toggleTab.title = 'Cerrar Panel Lateral';
+        toggleTab.innerHTML = svgClosed;
+        toggleTab.title = 'Abrir Panel Lateral';
+        document.body.appendChild(toggleTab);
+
+        // Globo pulsante que invita a abrir el Dashboard — se quita en cuanto
+        // se abre el panel por primera vez.
+        var dashboardHint = document.createElement('div');
+        dashboardHint.id = 'dashboard-open-hint';
+        dashboardHint.innerHTML = '<span class="dashboard-open-hint-arrow">&larr;</span> Despliega el <b>Dashboard</b>';
+        document.body.appendChild(dashboardHint);
+
         toggleTab.onclick = function () {
             leftContainer.classList.toggle('hidden-panel');
             this.classList.toggle('hidden-btn');
             const isClosed = leftContainer.classList.contains('hidden-panel');
             this.innerHTML = isClosed ? svgClosed : svgOpen;
             this.title = isClosed ? 'Abrir Panel Lateral' : 'Cerrar Panel Lateral';
+
+            if (!isClosed) {
+                // Se acaba de abrir el panel.
+                var hint = document.getElementById('dashboard-open-hint');
+                if (hint && hint.parentNode) hint.parentNode.removeChild(hint);
+
+                if (typeof _onboardingYaVisto === 'function' && !_onboardingYaVisto() && typeof window.mostrarOnboarding === 'function') {
+                    window.mostrarOnboarding();
+                }
+            }
         };
-        document.body.appendChild(toggleTab);
     }
 
     if (!document.getElementById('scale-box')) {
         var scaleBox = document.createElement('div');
         scaleBox.id = 'scale-box'; scaleBox.className = 'dashboard-box';
         scaleBox.innerHTML = `
-            <h4 class="panel-title">Análisis Multiescalar</h4>
+            <h4 class="panel-title">SELECCIÓN MULTIESCALAR</h4>
             <div class="scale-icons-container">
                 <button onclick="loadLayer('mundial')" class="scale-btn" id="btn-mundial" title="Escala Mundial">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M22 12h-20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -1149,24 +1279,31 @@ function setupUI() {
                 <!-- GRÁFICAS MUNDIAL/NACIONAL -->
                 <div id="empresas-chart-container" style="display:none;">
                     <hr style="border:0; border-top:1px solid #444; margin:12px 0; display:none;">
-                    <div id="indicador-container-box" style="margin-bottom:10px; position:relative;">
-                        <select id="fin-indicator-select" style="background:#222; color:#fff; border:1px solid #555; border-radius:4px; padding:5px; width:100%; font-size:11px;" onchange="if(window.cambiarIndicadorFinanciero) window.cambiarIndicadorFinanciero()">
-                            <option value="Activos_Millones" selected>Activos (Millones pesos)</option>
-                            <option value="Capital_Accs_Millones">Capital Accs (Millones)</option>
+                    <!-- El filtro de indicador financiero de esta gráfica de Nacional. Había
+                         un duplicado aquí (removido) mientras la gráfica de "ranking de
+                         empresas" vivía también en Estatal con su propio selector
+                         (#fin-indicator-select-estatal); ahora que esa función de Estatal
+                         se quitó, este vuelve a ser el único selector que controla esta
+                         gráfica — se restaura. -->
+                    <div id="indicador-container-box" style="position:relative; margin-bottom:10px;">
+                        <small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Indicador Financiero:</small>
+                        <select id="fin-indicator-select" class="dynamic-filter-select" onchange="window.cambiarIndicadorFinanciero()">
+                            <option value="Activos_Millones">Activos Totales (Millones)</option>
+                            <option value="Capital_Accs_Millones">Capital Accionario (Millones)</option>
                             <option value="Ingresos_Millones">Ingresos (Millones)</option>
                             <option value="Ingreso_%_cambio_Año_Anterior">Ingreso % cambio Año Anterior</option>
-                            <option value="Utilidad_Millones">Utilidad (Millones)</option>
+                            <option value="Utilidad_Millones">Utilidad Neta (Millones)</option>
                             <option value="Utilidad_%_Ventas">Utilidad % Ventas</option>
                             <option value="Utilidad_%_Año_Anterior">Utilidad % Año Anterior</option>
                             <option value="Utilidad_%_Activos">Utilidad % Activos</option>
-                            <option value="Valor_Mercado_Millones">Valor Mercado (Millones)</option>
-                            <option value="Cambio_%_Valor_Mercado">Cambio % Valor Mercado</option>
+                            <option value="Valor_Mercado_Millones">Valor de Mercado (Millones)</option>
+                            <option value="Cambio_%_Valor_Mercado">Cambio % Valor de Mercado</option>
                             <option value="Empleados">Empleados</option>
-                            <option value="Ventas_empleado">Ventas por empleado</option>
-                            <option value="Resultados_Empleado">Resultados Empleado</option>
-                            <option value="ROE">ROE</option>
-                            <option value="Rotación_Activos">Rotación Activos</option>
-                            <option value="Multiplicador_Capital">Multiplicador Capital</option>
+                            <option value="Ventas_empleado">Ventas por Empleado</option>
+                            <option value="Resultados_Empleado">Resultados por Empleado</option>
+                            <option value="ROE">ROE (%)</option>
+                            <option value="Rotación_Activos">Rotación de Activos</option>
+                            <option value="Multiplicador_Capital">Multiplicador de Capital</option>
                         </select>
                     </div>
                     <h4 class="panel-title" id="empresas-chart-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Empresas con mayor rendimiento del indicador que se seleccione</h4>
@@ -1471,7 +1608,16 @@ function actualizarPanelDerecho(escala) {
         ttSoc.innerHTML = "<b>Sociedad Civil:</b><br>Comités Vecinales, Jefes de Manzana";
         ttEnv.innerHTML = "<b>Ambiente/Comunidad:</b><br>Protección Civil Municipal";
     } else if (escala === 'metropolitana') {
-        htmlLeyes += '<div style="font-size:11px; color:#aaa; font-style:italic; text-align:center; padding: 20px 0;">Sin marco normativo metropolitano por ahora.</div>';
+        // Una ZM cruza jurisdicción estatal y municipal a la vez — se incorpora el
+        // marco normativo de ambas escalas (antes solo decía "sin marco normativo
+        // metropolitano por ahora", sin nada real).
+        htmlLeyes += '<a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGAHOTDU_011220.pdf" target="_blank" class="legal-card level-nacional">📘 LGAHOTDU (Nacional)</a>';
+        htmlLeyes += '<a href="https://ordenjuridico.gob.mx/" target="_blank" class="legal-card level-estatal">📙 Constitución Política del Estado<br><small>Soberanía y Ordenamiento</small></a>';
+        htmlLeyes += '<a href="https://ordenjuridico.gob.mx/" target="_blank" class="legal-card level-estatal">📒 Ley Estatal de Asentamientos Humanos<br><small>Regulación Territorial</small></a>';
+        htmlLeyes += '<a href="https://www.gob.mx/incedm" target="_blank" class="legal-card level-municipal">📕 Bando de Policía y Gobierno<br><small>Administración Local</small></a>';
+        htmlLeyes += '<a href="https://sistemas.sedatu.gob.mx/regisdocs/siga/" target="_blank" class="legal-card level-municipal">📓 P.M.D.U.<br><small>Programa Municipal de Desarrollo Urbano</small></a>';
+        htmlLeyes += '<a href="https://sistemas.sedatu.gob.mx/regisdocs/siga/" target="_blank" class="legal-card level-municipal">📔 Planes Parciales / Reglamentos<br><small>Zonificación de usos de suelo</small></a>';
+
         ttGov.innerHTML = "<b>Gobierno Metropolitano:</b><br>Comisiones Metropolitanas";
         ttAca.innerHTML = "<b>Academia:</b><br>Observatorios Metropolitanos";
         ttPri.innerHTML = "<b>Sector Privado:</b><br>Clústeres inter-municipales";
@@ -1889,82 +2035,22 @@ window.actualizarTransparenciaGlobal = function (val) {
 // ==========================================
 // TOOLTIP INTERACTIVO (POP-UP TUTORIAL)
 // ==========================================
+// Los globos animados que indicaban qué seleccionar en cada escala
+// ("Selecciona un Sector", "Selecciona Zona Metropolitana", "Comienza
+// seleccionando un indicador financiero"...) se quitaron por pedido
+// explícito. Se dejan como no-ops (en vez de borrar sus llamadas en los 3
+// archivos que las invocan) para no tener que tocar Metropolitana/Nacional
+// también, y por si se decide reactivar alguna en el futuro.
 window.mostrarInstruccionEscala = function (escala) {
     if (document.getElementById('escala-instruccion-pop')) {
         document.getElementById('escala-instruccion-pop').remove();
     }
-
-    var cajaFiltros = document.getElementById('filter-container-box');
-    if (escala === 'metropolitana') {
-        cajaFiltros = document.getElementById('metro-zm-box');
-    }
-    if (!cajaFiltros) return;
-
-    var msj = "";
-    if (escala === 'mundial') msj = "Comienza seleccionando un <b>Sector</b>.";
-    if (escala === 'nacional') msj = "Selecciona un <b>Sector</b> para explorarlo.";
-    if (escala === 'estatal') msj = "Selecciona un <b>Clúster Sectorial</b>.";
-    if (escala === 'metropolitana') msj = "Selecciona Zona Metropolitana";
-    if (escala === 'municipio') msj = "Elige una <b>Entidad</b> para estudiar su vulnerabilidad.";
-
-    var pop = document.createElement('div');
-    pop.id = 'escala-instruccion-pop';
-    pop.innerHTML = msj;
-    pop.style.position = 'absolute';
-    pop.style.top = '-30px';
-    pop.style.right = '20px';
-    pop.style.background = '#00e5ff';
-    pop.style.color = '#111';
-    pop.style.padding = '8px 12px';
-    pop.style.borderRadius = '8px';
-    pop.style.fontWeight = 'bold';
-    pop.style.fontSize = '12px';
-    pop.style.boxShadow = '0 4px 15px rgba(0,229,255,0.6)';
-    pop.style.zIndex = '9999';
-    pop.style.animation = 'fadeInSuave 0.5s ease-out, bouncePop 2s infinite';
-    pop.style.cursor = 'pointer';
-
-    pop.innerHTML += `<div style="position:absolute; bottom:-6px; right:20px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #00e5ff;"></div>`;
-
-    pop.onclick = function () { pop.remove(); };
-
-    cajaFiltros.style.position = 'relative';
-    cajaFiltros.appendChild(pop);
-
-    setTimeout(() => { if (document.getElementById('escala-instruccion-pop')) pop.remove(); }, 6000);
 };
 
 window.mostrarInstruccionIndicador = function () {
     if (document.getElementById('indicador-instruccion-pop')) {
         document.getElementById('indicador-instruccion-pop').remove();
     }
-
-    var cajaIndicador = document.getElementById('indicador-container-box');
-    if (!cajaIndicador) return;
-
-    var pop = document.createElement('div');
-    pop.id = 'indicador-instruccion-pop';
-    pop.innerHTML = "Comienza seleccionando un <b>indicador financiero</b>.";
-    pop.style.position = 'absolute';
-    pop.style.top = '-32px';
-    pop.style.right = '0px';
-    pop.style.background = '#00e5ff';
-    pop.style.color = '#111';
-    pop.style.padding = '6px 10px';
-    pop.style.borderRadius = '8px';
-    pop.style.fontWeight = 'bold';
-    pop.style.fontSize = '11px';
-    pop.style.boxShadow = '0 4px 15px rgba(0,229,255,0.6)';
-    pop.style.zIndex = '9999';
-    pop.style.animation = 'fadeInSuave 0.5s ease-out, bouncePop 2s infinite';
-    pop.style.cursor = 'pointer';
-
-    pop.innerHTML += `<div style="position:absolute; bottom:-5px; right:15px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:5px solid #00e5ff;"></div>`;
-
-    pop.onclick = function () { pop.remove(); };
-    cajaIndicador.appendChild(pop);
-
-    setTimeout(() => { if (document.getElementById('indicador-instruccion-pop')) pop.remove(); }, 8000);
 };
 
 

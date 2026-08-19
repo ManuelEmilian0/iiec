@@ -37,7 +37,7 @@ function generarMenuEstados(data) {
     var container = document.getElementById('filter-buttons-container');
     var title = document.getElementById('filter-title');
     if (container) container.innerHTML = "";
-    if (title) title.innerText = "Accesibilidad a la Armadora Automotriz";
+    if (title) title.innerText = "Análisis";
 
     var estadosMap = new Map();
     data.features.forEach(f => {
@@ -61,35 +61,111 @@ function generarMenuEstados(data) {
     });
     var estados = Array.from(estadosMap.values()).sort();
 
-    var select = document.createElement("select");
-    select.className = "dynamic-filter-select";
+    // --- SELECTOR TIPO DE ANÁLISIS ---
+    var modoWrapper = document.createElement('div');
+    modoWrapper.style.marginBottom = '10px';
+    modoWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Tipo de Análisis:</small>`;
+    var selectModo = document.createElement('select');
+    selectModo.id = 'estatal-modo-select';
+    selectModo.className = 'dynamic-filter-select';
+    selectModo.innerHTML = `
+        <option value="" disabled selected>-- Selección de análisis --</option>
+        <option value="accesibilidad">Accesibilidad a la Armadora Automotriz</option>
+        <option value="superior_temporal">Índice Educación Superior</option>
+    `;
+    modoWrapper.appendChild(selectModo);
+    container.appendChild(modoWrapper);
 
+    // --- SELECTOR ENTIDAD ---
+    // Antes "accesibilidad" quedaba implícitamente seleccionado (tenía
+    // "selected") y este selector se veía de entrada sin que el usuario
+    // hubiera elegido ningún Tipo de Análisis — ahora arranca oculto y se
+    // revela desde selectModo.onchange en cuanto se elige un tipo real.
+    var estadoWrapper = document.createElement('div');
+    estadoWrapper.style.display = 'none';
+    estadoWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Entidad Federativa:</small>`;
+    var select = document.createElement("select");
+    select.id = 'estatal-estado-select';
+    select.className = "dynamic-filter-select";
     var defaultOption = document.createElement("option");
     defaultOption.innerText = "-- Entidad Federativa --";
     defaultOption.value = ""; defaultOption.disabled = true; defaultOption.selected = true;
     select.appendChild(defaultOption);
-
     estados.forEach(estado => {
         var opt = document.createElement("option"); opt.value = estado; opt.innerText = estado;
         select.appendChild(opt);
     });
+    estadoWrapper.appendChild(select);
+    container.appendChild(estadoWrapper);
 
-    select.onchange = function () {
-        if (this.value) {
-            filtrarPorEstado(this.value);
-        }
-    };
-    container.appendChild(select);
+    // --- CONTENEDORES DE MODO ---
+    var accContainer = document.createElement('div');
+    accContainer.id = 'estatal-acc-container';
+    accContainer.style.display = 'none';
 
+    var supContainer = document.createElement('div');
+    supContainer.id = 'estatal-sup-container';
+    supContainer.style.display = 'none';
+    supContainer.innerHTML = `
+        <div style="margin-top:10px;">
+            <small style="color:#aaa; font-size:10px; display:block; margin-bottom:4px;">Seleccione entidad para cargar municipios.</small>
+        </div>
+    `;
+
+    container.appendChild(accContainer);
+    container.appendChild(supContainer);
+
+    // Opacidad empresas (solo en modo accesibilidad)
     window.currentDenueOpacity = 0.9;
     var opacityControl = document.createElement('div');
+    opacityControl.id = 'estatal-opacity-control';
     opacityControl.style.cssText = "margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: space-between;";
     opacityControl.innerHTML = `
         <span style="font-size: 11px; color: #aaa;">Opacidad Empresas:</span>
-        <input type="range" min="0" max="1" step="0.1" value="0.9" style="width: 55%; cursor: pointer;" 
+        <input type="range" min="0" max="1" step="0.1" value="0.9" style="width: 55%; cursor: pointer;"
             oninput="window.currentDenueOpacity = this.value; if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();">
     `;
-    container.appendChild(opacityControl);
+    accContainer.appendChild(opacityControl);
+
+    // --- LÓGICA DE MODO ---
+    function limpiarCapasAccesibilidad() {
+        if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
+        if (currentGeoJSONLayer) { map.removeLayer(currentGeoJSONLayer); currentGeoJSONLayer = null; }
+        if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+    }
+
+    function aplicarModo(estado) {
+        var modo = selectModo.value;
+        accContainer.style.display = modo === 'accesibilidad' ? 'block' : 'none';
+        supContainer.style.display = modo === 'superior_temporal' ? 'block' : 'none';
+
+        // Oculta la leyenda del tipo anterior de una vez — cada rama la vuelve
+        // a mostrar solo si tiene algo real que representar. Antes, cambiar de
+        // tipo sin tener aún una entidad elegida dejaba la leyenda (y sus
+        // clases/checkboxes) del tipo previo visible sin corresponder a nada.
+        var legendOverlay = document.getElementById('legend-overlay');
+        if (legendOverlay) legendOverlay.style.display = 'none';
+
+        if (modo === 'accesibilidad') {
+            limpiarCapasAccesibilidad();
+            if (estado) filtrarPorEstado(estado);
+        } else if (modo === 'superior_temporal') {
+            limpiarCapasAccesibilidad();
+            if (estado) iniciarIndiceTemporalEstatal(estado);
+        }
+    }
+
+    selectModo.onchange = function() {
+        estadoWrapper.style.display = this.value ? 'block' : 'none';
+        var estadoSel = document.getElementById('estatal-estado-select') ? document.getElementById('estatal-estado-select').value : '';
+        aplicarModo(estadoSel || null);
+    };
+
+    select.onchange = function () {
+        if (this.value) {
+            aplicarModo(this.value);
+        }
+    };
 }
 
 function obtenerNombreEstandarEstado(nombre) {
@@ -214,8 +290,8 @@ function filtrarPorEstado(nombreEstado) {
     }
 
     if (armadorasEstado.length > 0) {
-        var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
-        var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
+        var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0, 229, 255, 0.6)" stroke="#fff" stroke-width="2"/></svg>';
+        var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
         armadorasLayer = L.geoJSON(armadorasEstado, {
             pointToLayer: function (feature, latlng) {
                 return L.marker(latlng, { icon: triangleIcon, opacity: 0 });
@@ -280,8 +356,8 @@ function filtrarPorEstado(nombreEstado) {
 function dibujarArmadorasPuntos(features) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
     if (!features || features.length === 0) return;
-    var triangleHtml = '<svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>';
-    var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [24, 24], iconAnchor: [12, 12] });
+    var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0, 229, 255, 0.6)" stroke="#fff" stroke-width="2"/></svg>';
+    var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
     armadorasLayer = L.geoJSON(features, {
         pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: triangleIcon, opacity: 1 }); },
         onEachFeature: function (feature, layer) { layer.bindTooltip(feature.properties.NOMBRE || feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] }); }
@@ -510,7 +586,6 @@ function actualizarGraficasVinculacion(nombreEstado, isocronasEstado) {
             for(let i=0; i<isocronasEstado.length; i++) {
                 var iso = isocronasEstado[i];
                 try {
-                    // Turf requiere un Feature<Polygon|MultiPolygon> para booleanPointInPolygon
                     if (turf.booleanPointInPolygon(pt, iso)) {
                         let minIso = parseInt(iso.properties.AA_MINS || 999);
                         if (minIso < mins) mins = minIso;
@@ -526,7 +601,10 @@ function actualizarGraficasVinculacion(nombreEstado, isocronasEstado) {
             datosPorIsocrona[isocronaStr][tipo] = (datosPorIsocrona[isocronaStr][tipo] || 0) + 1;
         });
 
-        var tiposArray = Array.from(tiposSet).sort();
+        // Guardar datos completos para actualización dinámica
+        window._isocronaChartData = { datosPorIsocrona: datosPorIsocrona, tiposArray: Array.from(tiposSet).sort() };
+
+        var tiposArray = window._isocronaChartData.tiposArray;
         var labelsIso = ['0-15 min', '15-30 min', '30-60 min'];
         var datasetsIso = [];
 
@@ -719,11 +797,27 @@ function actualizarLeyendaIsocronas() {
             </div>
         </div>
 
-        <div style="margin-top:10px; display:flex; align-items:center; justify-content:center; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:8px;"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>
+        ${currentScaleType === 'metropolitana' ? '' : `
+        <div style="margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+            <input type="checkbox" id="chk-armadoras" checked onchange="if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+            <svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>
             <span style="color:#fff; font-weight:bold; font-size:12px;">Planta Armadora</span>
         </div>
+
+        <div style="margin-top:10px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
+            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 50%; cursor: pointer;"
+                oninput="window.currentArmadorasOpacity = this.value; if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+        </div>
+        `}
     `;
+    // Metropolitana ya trae su propio control individual de armadoras
+    // (chk-armadoras-metro + slider, en el accBox de escala_metropolitana.js)
+    // que sí controla la capa real que usa esa escala
+    // (window._metroArmadorasLayer) — el checkbox/slider de arriba solo
+    // controla window.animArmadoras/armadorasLayer (variables de Estatal), así
+    // que en Metropolitana era un control repetido y no funcional. Se deja
+    // solo el individual.
     overlay.style.display = 'block';
 }
 
@@ -756,5 +850,639 @@ window.actualizarVisibilidadIsocronas = function() {
             }
         });
     }
+
+    // E4: Actualizar gráfica de clústeres dinámicamente
+    if (window.actualizarGraficaIsocrona) window.actualizarGraficaIsocrona();
 };
 
+// G1: Actualizar opacidad de triángulos de armadoras
+window.actualizarOpacidadArmadoras = function() {
+    var chkArmadoras = document.getElementById('chk-armadoras');
+    var visibles = chkArmadoras ? chkArmadoras.checked : true;
+    var op = visibles ? (window.currentArmadorasOpacity !== undefined ? parseFloat(window.currentArmadorasOpacity) : 1) : 0;
+    if (window.animArmadoras) {
+        window.animArmadoras.forEach(l => {
+            if (l.setOpacity) l.setOpacity(op);
+            if (l._icon) l._icon.style.opacity = op;
+        });
+    }
+    // También afecta armadoras en escala municipal/extra
+    if (armadorasLayer) {
+        armadorasLayer.eachLayer(l => {
+            if (l.setOpacity) l.setOpacity(op);
+            if (l._icon) l._icon.style.opacity = op;
+        });
+    }
+};
+
+// E4: Actualizar gráfica de Distancia de Clústeres según isócronas activas
+window.actualizarGraficaIsocrona = function() {
+    var isocronaChartCanvas = document.getElementById('isocronaChart');
+    if (!isocronaChartCanvas || !window._isocronaChartData) return;
+
+    var show15 = document.getElementById('chk-iso-15') ? document.getElementById('chk-iso-15').checked : true;
+    var show30 = document.getElementById('chk-iso-30') ? document.getElementById('chk-iso-30').checked : true;
+    var show60 = document.getElementById('chk-iso-60') ? document.getElementById('chk-iso-60').checked : true;
+
+    var datosPorIsocrona = window._isocronaChartData.datosPorIsocrona;
+    var tiposArray = window._isocronaChartData.tiposArray;
+
+    // Filtrar solo isócronas activas
+    var labelsActivos = [];
+    if (show15) labelsActivos.push('0-15 min');
+    if (show30) labelsActivos.push('15-30 min');
+    if (show60) labelsActivos.push('30-60 min');
+
+    if (labelsActivos.length === 0) {
+        if (typeof isocronaChart !== 'undefined' && isocronaChart) {
+            isocronaChart.data.labels = [];
+            isocronaChart.data.datasets = [];
+            isocronaChart.update();
+        }
+        // Actualizar síntesis
+        var sintesisIsocrona = document.getElementById('sintesis-isocrona');
+        if (sintesisIsocrona) {
+            sintesisIsocrona.innerHTML = 'No hay isócronas activas seleccionadas.';
+            sintesisIsocrona.style.display = 'block';
+        }
+        return;
+    }
+
+    var datasetsIso = [];
+    tiposArray.forEach(tipo => {
+        datasetsIso.push({
+            label: tipo,
+            data: labelsActivos.map(lbl => datosPorIsocrona[lbl][tipo] || 0),
+            backgroundColor: getColorConjunto(tipo),
+            borderColor: '#333',
+            borderWidth: 0.5
+        });
+    });
+
+    if (typeof isocronaChart !== 'undefined' && isocronaChart) {
+        isocronaChart.data.labels = labelsActivos;
+        isocronaChart.data.datasets = datasetsIso;
+        isocronaChart.update();
+    }
+
+    // Actualizar síntesis con la primera isócrona activa
+    var sintesisIsocrona = document.getElementById('sintesis-isocrona');
+    if (sintesisIsocrona && labelsActivos.length > 0) {
+        var primerLabel = labelsActivos[0];
+        var totalEnRango = 0;
+        var maxTipo = { nombre: '', cant: 0 };
+        tiposArray.forEach(t => {
+            let c = datosPorIsocrona[primerLabel][t] || 0;
+            totalEnRango += c;
+            if (c > maxTipo.cant) { maxTipo.cant = c; maxTipo.nombre = t; }
+        });
+        if (totalEnRango > 0) {
+            sintesisIsocrona.innerHTML = `En la isócrona <b>${primerLabel}</b>, se detectan <b>${totalEnRango}</b> unidades económicas, predominando el sector <b>${maxTipo.nombre}</b>.`;
+        } else {
+            sintesisIsocrona.innerHTML = `No se detectaron unidades en la isócrona <b>${primerLabel}</b>.`;
+        }
+        sintesisIsocrona.style.display = 'block';
+    }
+};
+
+// ==========================================
+// E3: ÍNDICE SUPERIOR TEMPORAL — ESCALA ESTATAL
+// ==========================================
+window._indiceCSVCache = null;
+
+function iniciarIndiceTemporalEstatal(nombreEstado) {
+    var supContainer = document.getElementById('estatal-sup-container');
+    if (!supContainer) return;
+
+    supContainer.innerHTML = `<small style="color:#aaa; font-size:10px;">Cargando datos (~15 MB)...</small>`;
+
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    var titulo = document.getElementById('stats-title-text');
+    if (titulo) titulo.innerHTML = `<span style="font-size:16px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br><small style="color:#ddd; font-size:11px">Índice Educación Superior</small>`;
+
+    // Ocultar gráficas de flujos y financieras
+    var chartContainer2 = document.getElementById('myChartContainer');
+    if (chartContainer2) chartContainer2.style.display = 'none';
+    var topGlobalContainer = document.getElementById('topGlobalChartContainer');
+    if (topGlobalContainer) topGlobalContainer.style.display = 'none';
+    var chartContainerFin = document.getElementById('empresas-chart-container');
+    if (chartContainerFin) chartContainerFin.style.display = 'none';
+    var finOverlay = document.getElementById('fin-overlay');
+    if (finOverlay) finOverlay.style.display = 'none';
+
+    function parsearCSVIndice(texto) {
+        var lineas = texto.trim().split('\n');
+        var headers = lineas[0].split(',').map(h => h.trim().replace(/\r/, ''));
+        var resultado = [];
+        for (var i = 1; i < lineas.length; i++) {
+            if (!lineas[i].trim()) continue;
+            // Manejar campos con comillas
+            var cols = [];
+            var linea = lineas[i];
+            var inQuote = false;
+            var current = '';
+            for (var c = 0; c < linea.length; c++) {
+                if (linea[c] === '"') { inQuote = !inQuote; }
+                else if (linea[c] === ',' && !inQuote) { cols.push(current.trim()); current = ''; }
+                else { current += linea[c]; }
+            }
+            cols.push(current.trim());
+            var obj = {};
+            headers.forEach((h, j) => { obj[h] = cols[j] ? cols[j].replace(/\r/, '').trim() : ''; });
+            resultado.push(obj);
+        }
+        return resultado;
+    }
+
+    // Estado -> código INEGI de entidad (para filtrar Limite_municipal_opt.geojson /
+    // Limite_municipal_CDMX.geojson por "cve_ent"). Es un catálogo propio de las 32
+    // entidades porque el CVE_ENT_ESTADOS de escala_municipal.js solo cubre un
+    // subconjunto reducido de estados (los de esa vista).
+    var CVE_ENT_INDICE_SUPERIOR = {
+        "AGUASCALIENTES": "01", "BAJA CALIFORNIA": "02", "BAJA CALIFORNIA SUR": "03",
+        "CAMPECHE": "04", "COAHUILA": "05", "COLIMA": "06", "CHIAPAS": "07",
+        "CHIHUAHUA": "08", "CIUDAD DE MEXICO": "09", "DURANGO": "10",
+        "GUANAJUATO": "11", "GUERRERO": "12", "HIDALGO": "13", "JALISCO": "14",
+        "MEXICO": "15", "MICHOACAN": "16", "MORELOS": "17", "NAYARIT": "18",
+        "NUEVO LEON": "19", "OAXACA": "20", "PUEBLA": "21", "QUERETARO": "22",
+        "QUINTANA ROO": "23", "SAN LUIS POTOSI": "24", "SINALOA": "25",
+        "SONORA": "26", "TABASCO": "27", "TAMAULIPAS": "28", "TLAXCALA": "29",
+        "VERACRUZ": "30", "YUCATAN": "31", "ZACATECAS": "32"
+    };
+
+    // cveEnt (código oficial INEGI, arriba) -> archivo regional que lo trae
+    // (carto/Limites_Municipales_<Región>.geojson, cruce de
+    // Tablas/REGIONES.csv contra Limites_Municipales.geojson — cubre los 32
+    // estados con geometría de municipio completa). Independiente de
+    // escala_municipal.js: esa escala usa su PROPIO sistema de AGEB (12
+    // estados, 4 regiones distintas) para su propio análisis, así que no se
+    // reutilizan sus constantes aquí.
+    var REGION_GEOJSON_POR_CVE_ENT = {
+        "01": "carto/Limites_Municipales_Suroeste.geojson",
+        "02": "carto/Limites_Municipales_Oriente.geojson",
+        "03": "carto/Limites_Municipales_Oriente.geojson",
+        "04": "carto/Limites_Municipales_Centrosur.geojson",
+        "05": "carto/Limites_Municipales_Sureste.geojson",
+        "06": "carto/Limites_Municipales_Suroeste.geojson",
+        "07": "carto/Limites_Municipales_Occidente.geojson",
+        "08": "carto/Limites_Municipales_Suroeste.geojson",
+        "09": "carto/Limites_Municipales_Occidente.geojson",
+        "10": "carto/Limites_Municipales_Oriente.geojson",
+        "11": "carto/Limites_Municipales_Noroeste.geojson",
+        "12": "carto/Limites_Municipales_Oriente.geojson",
+        "13": "carto/Limites_Municipales_Centronorte.geojson",
+        "14": "carto/Limites_Municipales_Centronorte.geojson",
+        "15": "carto/Limites_Municipales_Noroeste.geojson",
+        "16": "carto/Limites_Municipales_Noreste.geojson",
+        "17": "carto/Limites_Municipales_Centronorte.geojson",
+        "18": "carto/Limites_Municipales_Noreste.geojson",
+        "19": "carto/Limites_Municipales_Noroeste.geojson",
+        "20": "carto/Limites_Municipales_Noreste.geojson",
+        "21": "carto/Limites_Municipales_Centrosur.geojson",
+        "22": "carto/Limites_Municipales_Occidente.geojson",
+        "23": "carto/Limites_Municipales_Noroeste.geojson",
+        "24": "carto/Limites_Municipales_Centronorte.geojson",
+        "25": "carto/Limites_Municipales_Sureste.geojson",
+        "26": "carto/Limites_Municipales_Centrosur.geojson",
+        "27": "carto/Limites_Municipales_Sureste.geojson",
+        "28": "carto/Limites_Municipales_Centronorte.geojson",
+        "29": "carto/Limites_Municipales_Sureste.geojson",
+        "30": "carto/Limites_Municipales_Occidente.geojson",
+        "31": "carto/Limites_Municipales_Noroeste.geojson",
+        "32": "carto/Limites_Municipales_Noroeste.geojson"
+    };
+
+    function _normalizarNombreMunicipio(nombre) {
+        return (nombre || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+
+    var municipiosIndiceLayer = null;
+
+    // Colorea los municipios de la entidad seleccionada según su ranking de
+    // Titulados Total (coropleta), reusando RampaRojos/calcularBreaks/getClase
+    // igual que las demás coropletas del proyecto.
+    function _renderizarMunicipiosIndiceEducacion(datosEstado, municipioSeleccionado) {
+        var cveEnt = CVE_ENT_INDICE_SUPERIOR[obtenerNombreEstandarEstado(nombreEstado)];
+        if (!cveEnt) return;
+
+        var totalesPorMunicipio = {};
+        datosEstado.forEach(function (d) {
+            var muniNorm = _normalizarNombreMunicipio(d['MUNICIPIO']);
+            if (!muniNorm) return;
+            totalesPorMunicipio[muniNorm] = (totalesPorMunicipio[muniNorm] || 0) + (parseInt(d['Titulados Total']) || 0);
+        });
+
+        // Antes usaba window.cargarLimiteMunicipalGeoJSON() (Limite_municipal_opt/
+        // CDMX.geojson) — ese archivo no cubre bien todas las entidades/municipios
+        // (varios quedaban sin encender en el mapa). Se usa en su lugar el
+        // archivo regional correspondiente (carto/Limites_Municipales_
+        // <Región>.geojson, cruce de Tablas/REGIONES.csv), con cobertura
+        // completa y verificada de los 32 estados.
+        var archivoRegion = REGION_GEOJSON_POR_CVE_ENT[cveEnt];
+        if (!archivoRegion) {
+            console.error('No se encontró el archivo regional para la entidad (cveEnt=' + cveEnt + ')');
+            return;
+        }
+
+        AppData.load(archivoRegion).then(function (muniGeo) {
+            if (!muniGeo) return;
+            var featuresEstado = muniGeo.features.filter(function (f) { return f.properties.CVE_ENT === cveEnt; });
+            if (featuresEstado.length === 0) return;
+
+            var valores = Object.keys(totalesPorMunicipio).map(function (k) { return totalesPorMunicipio[k]; }).filter(function (v) { return v > 0; });
+            valores.sort(function (a, b) { return a - b; });
+            var breaks = calcularBreaks(valores);
+
+            if (municipiosIndiceLayer) { map.removeLayer(municipiosIndiceLayer); municipiosIndiceLayer = null; }
+            if (currentGeoJSONLayer) { map.removeLayer(currentGeoJSONLayer); currentGeoJSONLayer = null; }
+
+            var muniSelNorm = municipioSeleccionado ? _normalizarNombreMunicipio(municipioSeleccionado) : null;
+
+            var layer_geo = L.geoJSON({ type: "FeatureCollection", features: featuresEstado }, {
+                style: function (feature) {
+                    var muniNorm = _normalizarNombreMunicipio(feature.properties.NOMMUN);
+                    var val = totalesPorMunicipio[muniNorm] || 0;
+                    var esSeleccionado = muniSelNorm && muniNorm === muniSelNorm;
+                    var color = '#333', opacity = 0.35;
+                    if (val > 0) { color = RampaRojos[getClase(val, breaks)] || '#333'; opacity = 0.78; }
+                    return {
+                        fillColor: color, fillOpacity: opacity,
+                        color: esSeleccionado ? '#00e5ff' : 'white',
+                        weight: esSeleccionado ? 3 : 1, opacity: 1
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    var muniNorm = _normalizarNombreMunicipio(feature.properties.NOMMUN);
+                    var val = totalesPorMunicipio[muniNorm] || 0;
+                    layer.bindTooltip(
+                        '<b>' + feature.properties.NOMMUN + '</b><br>Titulados: ' + val.toLocaleString('es-MX'),
+                        { sticky: true, className: 'custom-tooltip' }
+                    );
+                    layer.on({
+                        mouseover: function (e) { e.target.setStyle({ weight: 3 }); e.target.bringToFront(); },
+                        mouseout: function (e) { layer_geo.resetStyle(e.target); },
+                        click: function (e) {
+                            var muniSelect = document.getElementById('indice-municipio-select');
+                            if (!muniSelect) return;
+                            var opt = Array.from(muniSelect.options).find(function (o) {
+                                return _normalizarNombreMunicipio(o.value) === muniNorm;
+                            });
+                            if (opt) {
+                                muniSelect.value = opt.value;
+                                muniSelect.dispatchEvent(new Event('change'));
+                            }
+                        }
+                    });
+                }
+            });
+
+            municipiosIndiceLayer = layer_geo.addTo(map);
+            currentGeoJSONLayer = municipiosIndiceLayer;
+
+            // Si hay un municipio elegido, centrar en SU geometría (no en todo el
+            // estado) — antes siempre encuadraba el estado completo aunque ya
+            // hubiera un municipio seleccionado en el dropdown.
+            var boundsObjetivo = null;
+            if (muniSelNorm) {
+                layer_geo.eachLayer(function (l) {
+                    if (_normalizarNombreMunicipio(l.feature.properties.NOMMUN) === muniSelNorm) boundsObjetivo = l.getBounds();
+                });
+            }
+            try {
+                if (boundsObjetivo) map.flyToBounds(boundsObjetivo, { padding: [60, 60], maxZoom: 11 });
+                else map.flyToBounds(layer_geo.getBounds(), { padding: [30, 30], maxZoom: 10 });
+            } catch (e) { }
+
+            // Exponer referencias globales para que la leyenda clicable (clases
+            // prender/apagar) pueda filtrar esta capa desde onclick="..." (fuera
+            // del closure de iniciarIndiceTemporalEstatal).
+            window._municipiosIndiceLayerRef = municipiosIndiceLayer;
+            window._totalesPorMunicipioIndiceActual = totalesPorMunicipio;
+            window._breaksMunicipiosIndiceActual = breaks;
+
+            _actualizarLeyendaMunicipiosIndice(breaks, municipioSeleccionado);
+        }).catch(function (e) {
+            console.error('Error cargando municipios para Índice Educación Superior:', e);
+        });
+    }
+
+    // Misma simbología "por clase" (cajas clicables que prenden/apagan) que
+    // usan los análisis a escala Nacional (actualizarLeyendaProductividad /
+    // actualizarLeyendaCenso) — antes esta leyenda era una franja de color
+    // estática sin interacción.
+    function _actualizarLeyendaMunicipiosIndice(breaks, municipioSeleccionado) {
+        var overlay = document.getElementById('legend-overlay');
+        var div = document.getElementById('legend-content');
+        if (!div || !overlay) return;
+
+        window._claseMunicipiosIndiceSeleccionada = null;
+
+        var f = function (n) { return (n || 0).toLocaleString('es-MX'); };
+        var colores = RampaRojos;
+        var totales = window._totalesPorMunicipioIndiceActual || {};
+
+        var conteos = [0, 0, 0, 0, 0];
+        Object.keys(totales).forEach(function (m) {
+            if (totales[m] > 0) conteos[getClase(totales[m], breaks)]++;
+        });
+
+        var rangos = [
+            'Menor o igual a ' + f(breaks[0]),
+            f(breaks[0]) + ' - ' + f(breaks[1]),
+            f(breaks[1]) + ' - ' + f(breaks[2]),
+            f(breaks[2]) + ' - ' + f(breaks[3]),
+            'Mayor a ' + f(breaks[3])
+        ];
+
+        var html = `
+            <div id="legend-flujos">
+                <div style="margin: 4px 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Municipios — Titulados</div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:8px;">Ranking de Titulados Total (Índice Educación Superior)${municipioSeleccionado ? ' · Seleccionado: <b>' + municipioSeleccionado + '</b>' : ''}</div>
+                <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px; text-transform:uppercase;">CLASES</div>
+                <div style="font-size:11px; color:#aaa; margin-bottom:10px;">Selecciona una clase para filtrar municipios</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-top: 5px;">
+        `;
+
+        for (var i = 0; i < 5; i++) {
+            html += `
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                    <div class="legend-box-muni-indice" data-class="${i}"
+                         style="background: ${colores[i]}; width: 100%; height: 25px; cursor: pointer; border: 1px solid #1a1a1a; transition: all 0.2s ease; border-radius: 2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;"
+                         onclick="filtrarMapaMunicipiosIndice(${i})" title="${rangos[i]}">${conteos[i]}</div>
+                    <div style="font-size: 9px; color: #ccc; margin-top: 4px; text-align: center;">Clase ${i + 1}</div>
+                </div>
+            `;
+        }
+
+        html += `
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #ccc; font-weight: bold; margin-top: 5px;">
+                    <span>Min</span>
+                    <span>Max</span>
+                </div>
+                <div id="leyenda-sintesis-muni-indice" style="margin-top:10px; font-size:11px; color:#00e5ff; font-style:italic; text-align: justify;">Da clic en un municipio del mapa o en una clase para filtrar.</div>
+            </div>
+        `;
+
+        div.innerHTML = html;
+        overlay.style.display = 'block';
+    }
+
+    function mostrarSelectorMunicipio(datos, estadoNorm) {
+        // Solo municipios con AL MENOS un titulado registrado — antes se listaban
+        // todos los municipios presentes en el CSV aunque su suma fuera 0 (sin
+        // información real que mostrar ni en la coropleta ni en las gráficas).
+        var totalesTmp = {};
+        datos.forEach(function (d) {
+            var m = (d['MUNICIPIO'] || '').trim();
+            if (!m) return;
+            totalesTmp[m] = (totalesTmp[m] || 0) + (parseInt(d['Titulados Total']) || 0);
+        });
+        var municipios = Object.keys(totalesTmp).filter(function (m) { return totalesTmp[m] > 0; }).sort();
+
+        supContainer.innerHTML = `
+            <div style="margin-top:10px;">
+                <small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Municipio:</small>
+                <select id="indice-municipio-select" class="dynamic-filter-select">
+                    <option value="" selected>-- Todos los municipios --</option>
+                    ${municipios.map(m => `<option value="${m}">${m}</option>`).join('')}
+                </select>
+            </div>
+        `;
+
+        // Renderizar con todos los municipios al inicio
+        renderizarGraficasIndiceTemporal(datos, estadoNorm, null);
+        _renderizarMunicipiosIndiceEducacion(datos, null);
+
+        document.getElementById('indice-municipio-select').onchange = function() {
+            var mun = this.value || null;
+            renderizarGraficasIndiceTemporal(datos, estadoNorm, mun);
+            _renderizarMunicipiosIndiceEducacion(datos, mun);
+        };
+    }
+
+    function procesarIndice(todosDatos) {
+        // Normalizar el nombre del estado para comparar con el CSV (en mayúsculas)
+        var estadoNormCSV = nombreEstado.toUpperCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/MICHOACAN DE OCAMPO/i, 'MICHOACAN')
+            .replace(/COAHUILA DE ZARAGOZA/i, 'COAHUILA')
+            .replace(/QUERETARO DE ARTEAGA/i, 'QUERETARO')
+            .replace(/VERACRUZ DE IGNACIO DE LA LLAVE/i, 'VERACRUZ')
+            .trim();
+
+        var datosFiltrados = todosDatos.filter(d => {
+            var entCSV = (d['ENTIDAD FEDERATIVA'] || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            return entCSV === estadoNormCSV || entCSV.includes(estadoNormCSV) || estadoNormCSV.includes(entCSV);
+        });
+
+        if (datosFiltrados.length === 0) {
+            supContainer.innerHTML = `<small style="color:#ff5252; font-size:10px;">No se encontraron datos para <b>${nombreEstado}</b> en el Índice Educación Superior.</small>`;
+            return;
+        }
+
+        mostrarSelectorMunicipio(datosFiltrados, estadoNormCSV);
+    }
+
+    if (window._indiceCSVCache) {
+        procesarIndice(window._indiceCSVCache);
+    } else {
+        AppData.load('Tablas/Indice_superior_temporal.csv').then(csvText => {
+            window._indiceCSVCache = parsearCSVIndice(csvText);
+            procesarIndice(window._indiceCSVCache);
+        }).catch(err => {
+            console.error('Error cargando Indice_superior_temporal.csv:', err);
+            if (supContainer) supContainer.innerHTML = `<small style="color:#ff5252;">Error al cargar el CSV.</small>`;
+        });
+    }
+}
+
+// Toggle de clase para la coropleta de municipios de "Índice Educación
+// Superior" — mismo mecanismo que window.filtrarMapaProductividad /
+// window.filtrarMapaCenso en escala_nacional_v1.js. Vive en scope global
+// (no dentro del closure de iniciarIndiceTemporalEstatal) porque el
+// onclick="filtrarMapaMunicipiosIndice(i)" de la leyenda se resuelve contra
+// el scope global.
+window._claseMunicipiosIndiceSeleccionada = null;
+
+function _normalizarNombreMunicipioGlobal(nombre) {
+    return (nombre || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+window.filtrarMapaMunicipiosIndice = function (clase) {
+    if (window._claseMunicipiosIndiceSeleccionada === clase) {
+        window._claseMunicipiosIndiceSeleccionada = null;
+    } else {
+        window._claseMunicipiosIndiceSeleccionada = clase;
+    }
+
+    var sintesisEl = document.getElementById('leyenda-sintesis-muni-indice');
+    if (sintesisEl) {
+        sintesisEl.innerHTML = window._claseMunicipiosIndiceSeleccionada === null
+            ? "Da clic en un municipio del mapa o en una clase para filtrar."
+            : "Clase " + (window._claseMunicipiosIndiceSeleccionada + 1) + " seleccionada.";
+    }
+
+    document.querySelectorAll('.legend-box-muni-indice').forEach(function (box) {
+        var boxClase = parseInt(box.getAttribute('data-class'));
+        if (window._claseMunicipiosIndiceSeleccionada === null) {
+            box.style.opacity = '1'; box.style.border = '1px solid #1a1a1a'; box.style.transform = 'scale(1)';
+        } else if (boxClase === window._claseMunicipiosIndiceSeleccionada) {
+            box.style.opacity = '1'; box.style.border = '2px solid #00e5ff'; box.style.transform = 'scale(1.1)'; box.style.zIndex = '10';
+        } else {
+            box.style.opacity = '0.3'; box.style.border = '1px solid #1a1a1a'; box.style.transform = 'scale(1)'; box.style.zIndex = '1';
+        }
+    });
+
+    var layer = window._municipiosIndiceLayerRef;
+    var totales = window._totalesPorMunicipioIndiceActual;
+    var breaks = window._breaksMunicipiosIndiceActual;
+    if (layer && totales && breaks) {
+        layer.eachLayer(function (l) {
+            var muniNorm = _normalizarNombreMunicipioGlobal(l.feature.properties.NOMMUN);
+            var val = totales[muniNorm] || 0;
+            if (val > 0) {
+                var claseMuni = getClase(val, breaks);
+                if (window._claseMunicipiosIndiceSeleccionada === null || claseMuni === window._claseMunicipiosIndiceSeleccionada) {
+                    l.setStyle({ opacity: 1, fillOpacity: 0.78 });
+                } else {
+                    l.setStyle({ opacity: 0.2, fillOpacity: 0.1 });
+                }
+            } else {
+                l.setStyle({ opacity: 0.2, fillOpacity: 0.15 });
+            }
+        });
+    }
+};
+
+function renderizarGraficasIndiceTemporal(datos, estadoNorm, municipio) {
+    // Filtrar por municipio si se especifica
+    var df = municipio ? datos.filter(d => d['MUNICIPIO'] === municipio) : datos;
+
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    // --- Conteos generales ---
+    var totalTitulados = df.reduce((s, d) => s + (parseInt(d['Titulados Total']) || 0), 0);
+    var totalMujeres = df.reduce((s, d) => s + (parseInt(d['Titulados Mujeres']) || 0), 0);
+    var totalHombres = df.reduce((s, d) => s + (parseInt(d['Titulados Hombres']) || 0), 0);
+
+    var titulo = document.getElementById('stats-title-text');
+    if (titulo) {
+        var lugar = municipio ? municipio : (estadoNorm || 'Estado');
+        titulo.innerHTML = `<span style="font-size:16px; font-weight:bold">${lugar}</span><br>
+            <span style="font-size:12px; color:#ddd">Total Titulados: <b>${totalTitulados.toLocaleString('es-MX')}</b></span><br>
+            <span style="font-size:11px; color:#aaa">♀ Mujeres: <b>${totalMujeres.toLocaleString('es-MX')}</b> | ♂ Hombres: <b>${totalHombres.toLocaleString('es-MX')}</b></span>`;
+    }
+
+    // --- Gráfica 1: Titulados por Campo Amplio de Formación ---
+    var porCampo = {};
+    df.forEach(d => {
+        var campo = d['CAMPO AMPLIO DE FORMACIÓN'] || 'Sin dato';
+        var total = parseInt(d['Titulados Total']) || 0;
+        porCampo[campo] = (porCampo[campo] || 0) + total;
+    });
+    var camposOrdenados = Object.keys(porCampo).sort((a, b) => porCampo[b] - porCampo[a]).slice(0, 12);
+
+    var canvasMyChart = document.getElementById('myChart');
+    if (canvasMyChart) {
+        canvasMyChart.parentElement.style.height = '200px';
+        if (mainChart) mainChart.destroy();
+        mainChart = new Chart(canvasMyChart.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: camposOrdenados.map(c => c.length > 25 ? c.substring(0, 24) + '…' : c),
+                datasets: [{
+                    label: 'Titulados',
+                    data: camposOrdenados.map(c => porCampo[c]),
+                    backgroundColor: ['#00e5ff','#ff3366','#d59f0f','#00e676','#d500f9','#ff6d00','#76ff03','#651fff','#00b0ff','#f50057','#69f0ae','#ffd740'],
+                    borderWidth: 1,
+                    borderColor: '#222'
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: '#aaa', font: { size: 9 } }, grid: { color: '#444' } },
+                    y: { ticks: { color: '#ddd', font: { size: 9 } }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
+                        color: '#fff', font: { weight: 'bold', size: 8 },
+                        formatter: function(value) { return value > 0 ? value.toLocaleString('es-MX') : ''; }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- Gráfica 2: Evolución temporal por Ciclo Escolar ---
+    var porCiclo = {};
+    df.forEach(d => {
+        var ciclo = d['CICLO ESCOLAR'] || 'Sin dato';
+        var total = parseInt(d['Titulados Total']) || 0;
+        porCiclo[ciclo] = (porCiclo[ciclo] || 0) + total;
+    });
+    var ciclosOrdenados = Object.keys(porCiclo).sort();
+
+    var topGlobalContainer = document.getElementById('topGlobalChartContainer');
+    var topGlobalTitle = document.getElementById('topGlobalChartTitle');
+    var topGlobalHr = document.getElementById('topGlobalChartHr');
+    if (topGlobalContainer) {
+        topGlobalContainer.style.display = 'block';
+        if (topGlobalTitle) { topGlobalTitle.innerHTML = 'EVOLUCIÓN TEMPORAL DE TITULADOS'; topGlobalTitle.style.display = 'block'; }
+        if (topGlobalHr) topGlobalHr.style.display = 'block';
+
+        var canvasTemporal = document.getElementById('topGlobalChart');
+        if (canvasTemporal) {
+            if (window.topGlobalChartInstance) window.topGlobalChartInstance.destroy();
+            window.topGlobalChartInstance = new Chart(canvasTemporal.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ciclosOrdenados,
+                    datasets: [{
+                        label: 'Total Titulados',
+                        data: ciclosOrdenados.map(c => porCiclo[c]),
+                        borderColor: '#00e5ff',
+                        backgroundColor: 'rgba(0,229,255,0.15)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#222'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(20,20,20,0.95)',
+                            titleColor: '#00e5ff', bodyColor: '#fff', borderColor: '#555', borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#aaa', font: { size: 9 }, maxRotation: 45 }, grid: { color: '#333' } },
+                        y: { ticks: { color: '#aaa', font: { size: 9 } }, grid: { color: '#333' } }
+                    }
+                }
+            });
+        }
+    }
+
+    // --- Síntesis ---
+    var summaryDiv = document.getElementById('dynamic-summary-global');
+    if (summaryDiv) {
+        var topCampo = camposOrdenados[0] || 'N/A';
+        summaryDiv.innerHTML = `En <b>${municipio || estadoNorm}</b>, se registran <b>${totalTitulados.toLocaleString('es-MX')}</b> titulados totales. El campo de mayor concentración es <b style="color:#00e5ff">${topCampo}</b> con <b>${(porCampo[topCampo] || 0).toLocaleString('es-MX')}</b> titulados.`;
+        summaryDiv.style.display = 'block';
+    }
+}
