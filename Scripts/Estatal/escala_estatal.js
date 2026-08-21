@@ -71,7 +71,7 @@ function generarMenuEstados(data) {
     selectModo.innerHTML = `
         <option value="" disabled selected>-- Selección de análisis --</option>
         <option value="accesibilidad">Accesibilidad a la Armadora Automotriz</option>
-        <option value="superior_temporal">Índice Educación Superior</option>
+        <option value="superior_temporal">Población titulada</option>
     `;
     modoWrapper.appendChild(selectModo);
     container.appendChild(modoWrapper);
@@ -97,6 +97,29 @@ function generarMenuEstados(data) {
     });
     estadoWrapper.appendChild(select);
     container.appendChild(estadoWrapper);
+
+    // --- PLANTAS ARMADORAS (independiente del Tipo de Análisis) ---
+    // Antes vivía dentro de actualizarLeyendaIsocronas (solo modo
+    // "Accesibilidad"): al elegir "Población titulada" la capa se apagaba y
+    // no había forma de volver a prenderla. Ahora es un control persistente
+    // que se muestra en cuanto se elige una entidad, sin importar el tipo
+    // de análisis activo (ver actualizarArmadorasPersistenteEstatal).
+    var armadorasBoxEstatal = document.createElement('div');
+    armadorasBoxEstatal.id = 'estatal-armadoras-box';
+    armadorasBoxEstatal.style.cssText = 'display:none; margin-top:10px; margin-bottom:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1);';
+    armadorasBoxEstatal.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="chk-armadoras" checked onchange="if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+            <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
+            <span style="color:#fff; font-weight:bold; font-size:12px;">Plantas Armadoras</span>
+        </div>
+        <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
+            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 55%; cursor: pointer;"
+                oninput="window.currentArmadorasOpacity = this.value; if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+        </div>
+    `;
+    container.appendChild(armadorasBoxEstatal);
 
     // --- CONTENEDORES DE MODO ---
     var accContainer = document.createElement('div');
@@ -131,7 +154,10 @@ function generarMenuEstados(data) {
     function limpiarCapasAccesibilidad() {
         if (isocronasLayer) { map.removeLayer(isocronasLayer); isocronasLayer = null; }
         if (currentGeoJSONLayer) { map.removeLayer(currentGeoJSONLayer); currentGeoJSONLayer = null; }
-        if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+        // armadorasLayer YA NO se limpia aquí: las plantas armadoras son un
+        // control independiente del Tipo de Análisis (ver
+        // actualizarArmadorasPersistenteEstatal), así que cambiar de tipo no
+        // debe apagarlas. Se limpian/redibujan solo al cambiar de entidad.
     }
 
     function aplicarModo(estado) {
@@ -147,6 +173,11 @@ function generarMenuEstados(data) {
         if (legendOverlay) legendOverlay.style.display = 'none';
 
         if (modo === 'accesibilidad') {
+            // Invalida cualquier carga de Población titulada todavía
+            // en curso (CSV/geojson regional) para que no termine escribiendo
+            // sobre stats-title-text/myChart/topGlobalChart ya reutilizados
+            // por este otro modo.
+            window._indiceEstatalReqToken = (window._indiceEstatalReqToken || 0) + 1;
             limpiarCapasAccesibilidad();
             if (estado) filtrarPorEstado(estado);
         } else if (modo === 'superior_temporal') {
@@ -164,8 +195,65 @@ function generarMenuEstados(data) {
     select.onchange = function () {
         if (this.value) {
             aplicarModo(this.value);
+            // Independiente del Tipo de Análisis elegido — ver el bloque
+            // "PLANTAS ARMADORAS" arriba.
+            actualizarArmadorasPersistenteEstatal(this.value);
+            // Módulos de datos duros (esferas sobre el minimapa) — antes
+            // solo se activaban dentro de filtrarPorEstado (modo
+            // "Accesibilidad"), así que "Población titulada" nunca los
+            // mostraba. Se dispara aquí para que dependan de la entidad, no
+            // del tipo de análisis.
+            if (typeof window.actualizarModulosDatosDuros === 'function') {
+                window.actualizarModulosDatosDuros([], "Estatal", this.value);
+            }
         }
     };
+}
+
+// Filtra armadoras.geojson por entidad (misma lógica de normalización que
+// usaba filtrarPorEstado) y dibuja/actualiza la capa compartida
+// armadorasLayer — independiente del Tipo de Análisis activo, para que las
+// plantas armadoras puedan verse en "Accesibilidad" y en "Población
+// titulada" (y cualquier tipo futuro) por igual.
+function actualizarArmadorasPersistenteEstatal(nombreEstado) {
+    var box = document.getElementById('estatal-armadoras-box');
+    if (!nombreEstado || !armadorasRawData) { if (box) box.style.display = 'none'; return; }
+    if (box) box.style.display = 'block';
+
+    var estadoBusqueda = obtenerNombreEstandarEstado(nombreEstado);
+    if (CATALOGO_ZONAS_METROPOLITANAS[nombreEstado]) {
+        var firstCode = CATALOGO_ZONAS_METROPOLITANAS[nombreEstado][0].substring(0, 2);
+        if (nombreEstado === "ZM Valle de México") estadoBusqueda = "ZMVM";
+        else if (firstCode === "02") estadoBusqueda = "BAJA CALIFORNIA";
+        else if (firstCode === "19") estadoBusqueda = "NUEVO LEON";
+    }
+
+    var armadorasEstado = armadorasRawData.features.filter(f => {
+        var estadoArmadora = obtenerNombreEstandarEstado(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
+        if (estadoBusqueda === "ZMVM") return estadoArmadora === "MEXICO" || estadoArmadora === "CIUDAD DE MEXICO" || estadoArmadora.includes("MEXICO") || estadoArmadora.includes("CIUDAD DE MEXICO");
+        if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
+        return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
+    });
+
+    if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+    window.animArmadoras = [];
+    if (armadorasEstado.length === 0) return;
+
+    var chk = document.getElementById('chk-armadoras');
+    var visible = chk ? chk.checked : true;
+    var op = visible ? (window.currentArmadorasOpacity !== undefined ? parseFloat(window.currentArmadorasOpacity) : 1) : 0;
+
+    var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0, 229, 255, 0.6)" stroke="#fff" stroke-width="2"/></svg>';
+    var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
+    armadorasLayer = L.geoJSON(armadorasEstado, {
+        pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, { icon: triangleIcon, opacity: op });
+        },
+        onEachFeature: function (feature, layer) {
+            window.animArmadoras.push(layer);
+            layer.bindTooltip(feature.properties.NOMBRE || feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] });
+        }
+    }).addTo(map);
 }
 
 function obtenerNombreEstandarEstado(nombre) {
@@ -289,16 +377,12 @@ function filtrarPorEstado(nombreEstado) {
         }).addTo(map);
     }
 
-    if (armadorasEstado.length > 0) {
-        var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0, 229, 255, 0.6)" stroke="#fff" stroke-width="2"/></svg>';
-        var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
-        armadorasLayer = L.geoJSON(armadorasEstado, {
-            pointToLayer: function (feature, latlng) {
-                return L.marker(latlng, { icon: triangleIcon, opacity: 0 });
-            },
-            onEachFeature: function (feature, layer) { window.animArmadoras.push(layer); }
-        }).addTo(map);
-    }
+    // Las plantas armadoras ya NO se dibujan aquí — son un control
+    // independiente del Tipo de Análisis (ver actualizarArmadorasPersistenteEstatal,
+    // disparado directamente desde select.onchange), para que puedan estar
+    // activas también en modos distintos a "Accesibilidad" (p. ej. "Población
+    // titulada"). armadorasEstado se sigue calculando arriba solo para el
+    // flyToBounds de abajo.
 
     function ejecutarAnimacion() {
         var ad = window.animDenue;
@@ -310,11 +394,6 @@ function filtrarPorEstado(nombreEstado) {
 
         setTimeout(() => {
             window.animIso15.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.8, color: getColorIsocrona(15), fillColor: getColorIsocrona(15) }));
-            window.animArmadoras.forEach(l => {
-                if (l.setStyle) l.setStyle({ opacity: 1, fillOpacity: 1 });
-                if (l.setOpacity) l.setOpacity(1);
-                l.bindTooltip(l.feature.properties.NOMBRE || l.feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] });
-            });
             denue1.forEach(l => l.setStyle({ opacity: 1, fillOpacity: 0.9 }));
             if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();
         }, 100);
@@ -347,20 +426,30 @@ function filtrarPorEstado(nombreEstado) {
     if (typeof window.dibujarLimiteMunicipal === 'function') {
         window.dibujarLimiteMunicipal(nombreEstado);
     }
-
-    if (typeof window.actualizarModulosDatosDuros === 'function') {
-        window.actualizarModulosDatosDuros([], "Estatal", nombreEstado);
-    }
+    // Los módulos de datos duros ya se disparan desde select.onchange
+    // (independiente del Tipo de Análisis) — ver comentario ahí.
 }
 
+// Usada por Municipal (cargarAgebEstadoRegional) — respeta el mismo
+// checkbox/slider "#chk-armadoras" que usa Estatal (window.currentArmadorasOpacity
+// / window.actualizarOpacidadArmadoras, ambas ya reutilizables tal cual porque
+// operan sobre las mismas variables compartidas armadorasLayer/window.animArmadoras)
+// para que el control de Plantas Armadoras sea consistente entre escalas.
 function dibujarArmadorasPuntos(features) {
     if (armadorasLayer) { map.removeLayer(armadorasLayer); armadorasLayer = null; }
+    window.animArmadoras = [];
     if (!features || features.length === 0) return;
+    var chk = document.getElementById('chk-armadoras');
+    var visible = chk ? chk.checked : true;
+    var op = visible ? (window.currentArmadorasOpacity !== undefined ? parseFloat(window.currentArmadorasOpacity) : 1) : 0;
     var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0, 229, 255, 0.6)" stroke="#fff" stroke-width="2"/></svg>';
     var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
     armadorasLayer = L.geoJSON(features, {
-        pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: triangleIcon, opacity: 1 }); },
-        onEachFeature: function (feature, layer) { layer.bindTooltip(feature.properties.NOMBRE || feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] }); }
+        pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: triangleIcon, opacity: op }); },
+        onEachFeature: function (feature, layer) {
+            window.animArmadoras.push(layer);
+            layer.bindTooltip(feature.properties.NOMBRE || feature.properties.Nombre || "Planta", { permanent: true, direction: 'top', className: 'etiqueta-armadora', offset: [0, -15] });
+        }
     }).addTo(map);
 }
 
@@ -797,27 +886,13 @@ function actualizarLeyendaIsocronas() {
             </div>
         </div>
 
-        ${currentScaleType === 'metropolitana' ? '' : `
-        <div style="margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
-            <input type="checkbox" id="chk-armadoras" checked onchange="if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
-            <svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="#00e5ff" stroke="#fff" stroke-width="2"/></svg>
-            <span style="color:#fff; font-weight:bold; font-size:12px;">Planta Armadora</span>
-        </div>
-
-        <div style="margin-top:10px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
-            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
-            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 50%; cursor: pointer;"
-                oninput="window.currentArmadorasOpacity = this.value; if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
-        </div>
-        `}
     `;
-    // Metropolitana ya trae su propio control individual de armadoras
-    // (chk-armadoras-metro + slider, en el accBox de escala_metropolitana.js)
-    // que sí controla la capa real que usa esa escala
-    // (window._metroArmadorasLayer) — el checkbox/slider de arriba solo
-    // controla window.animArmadoras/armadorasLayer (variables de Estatal), así
-    // que en Metropolitana era un control repetido y no funcional. Se deja
-    // solo el individual.
+    // El control de Plantas Armadoras (checkbox + opacidad) ya NO vive aquí:
+    // ahora es un bloque persistente e independiente del Tipo de Análisis
+    // (#estatal-armadoras-box, ver actualizarArmadorasPersistenteEstatal en
+    // generarMenuEstados) para que no dependa de estar en modo
+    // "Accesibilidad" ni se duplique con el control individual de
+    // Metropolitana (chk-armadoras-metro, en escala_metropolitana.js).
     overlay.style.display = 'block';
 }
 
@@ -954,13 +1029,27 @@ function iniciarIndiceTemporalEstatal(nombreEstado) {
     var supContainer = document.getElementById('estatal-sup-container');
     if (!supContainer) return;
 
+    // Guard contra condición de carrera: esta función arranca una cadena de
+    // promesas (CSV de ~15 MB + geojson regional) que termina escribiendo en
+    // elementos de DOM GLOBALES (stats-title-text, myChart, topGlobalChart,
+    // estatal-sup-container) compartidos entre TODAS las entidades. Si el
+    // usuario cambia de entidad antes de que la anterior termine de cargar
+    // (red lenta), sin este guard la respuesta más vieja puede resolver
+    // DESPUÉS de la más nueva y pisar su resultado — la pantalla "se queda
+    // estática" mostrando datos de una entidad que ya no es la seleccionada.
+    // Cada invocación saca un token nuevo; solo la invocación cuyo token
+    // sigue siendo el vigente al momento de resolver puede escribir en el DOM.
+    window._indiceEstatalReqToken = (window._indiceEstatalReqToken || 0) + 1;
+    var miToken = window._indiceEstatalReqToken;
+    function esVigente() { return miToken === window._indiceEstatalReqToken; }
+
     supContainer.innerHTML = `<small style="color:#aaa; font-size:10px;">Cargando datos (~15 MB)...</small>`;
 
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
 
     var titulo = document.getElementById('stats-title-text');
-    if (titulo) titulo.innerHTML = `<span style="font-size:16px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br><small style="color:#ddd; font-size:11px">Índice Educación Superior</small>`;
+    if (titulo) titulo.innerHTML = `<span style="font-size:16px; font-weight:bold; text-transform:uppercase">${nombreEstado}</span><br><small style="color:#ddd; font-size:11px">Población titulada</small>`;
 
     // Ocultar gráficas de flujos y financieras
     var chartContainer2 = document.getElementById('myChartContainer');
@@ -1087,6 +1176,11 @@ function iniciarIndiceTemporalEstatal(nombreEstado) {
         }
 
         AppData.load(archivoRegion).then(function (muniGeo) {
+            // Misma protección que procesarIndice: si esta carga (geojson
+            // regional, varios MB) sigue en curso cuando el usuario ya
+            // cambió de entidad, no dibujar sobre el mapa/DOM de la entidad
+            // nueva con los municipios de la entidad vieja.
+            if (!esVigente()) return;
             if (!muniGeo) return;
             var featuresEstado = muniGeo.features.filter(function (f) { return f.properties.CVE_ENT === cveEnt; });
             if (featuresEstado.length === 0) return;
@@ -1164,7 +1258,7 @@ function iniciarIndiceTemporalEstatal(nombreEstado) {
 
             _actualizarLeyendaMunicipiosIndice(breaks, municipioSeleccionado);
         }).catch(function (e) {
-            console.error('Error cargando municipios para Índice Educación Superior:', e);
+            console.error('Error cargando municipios para Población titulada:', e);
         });
     }
 
@@ -1199,7 +1293,7 @@ function iniciarIndiceTemporalEstatal(nombreEstado) {
         var html = `
             <div id="legend-flujos">
                 <div style="margin: 4px 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Municipios — Titulados</div>
-                <div style="font-size:11px; color:#ccc; margin-bottom:8px;">Ranking de Titulados Total (Índice Educación Superior)${municipioSeleccionado ? ' · Seleccionado: <b>' + municipioSeleccionado + '</b>' : ''}</div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:8px;">Ranking de Titulados Total (Población titulada)${municipioSeleccionado ? ' · Seleccionado: <b>' + municipioSeleccionado + '</b>' : ''}</div>
                 <div style="margin-bottom:12px; font-weight:bold; color:#ddd; font-size:14px; text-transform:uppercase;">CLASES</div>
                 <div style="font-size:11px; color:#aaa; margin-bottom:10px;">Selecciona una clase para filtrar municipios</div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-top: 5px;">
@@ -1264,6 +1358,11 @@ function iniciarIndiceTemporalEstatal(nombreEstado) {
     }
 
     function procesarIndice(todosDatos) {
+        // Si mientras se cargaba este CSV el usuario ya seleccionó otra
+        // entidad/salió de este modo, esta respuesta quedó obsoleta — no
+        // pisar lo que ya se está mostrando.
+        if (!esVigente()) return;
+
         // Normalizar el nombre del estado para comparar con el CSV (en mayúsculas)
         var estadoNormCSV = nombreEstado.toUpperCase()
             .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -1279,7 +1378,7 @@ function iniciarIndiceTemporalEstatal(nombreEstado) {
         });
 
         if (datosFiltrados.length === 0) {
-            supContainer.innerHTML = `<small style="color:#ff5252; font-size:10px;">No se encontraron datos para <b>${nombreEstado}</b> en el Índice Educación Superior.</small>`;
+            supContainer.innerHTML = `<small style="color:#ff5252; font-size:10px;">No se encontraron datos para <b>${nombreEstado}</b> en Población titulada.</small>`;
             return;
         }
 
@@ -1422,12 +1521,16 @@ function renderizarGraficasIndiceTemporal(datos, estadoNorm, municipio) {
         });
     }
 
-    // --- Gráfica 2: Evolución temporal por Ciclo Escolar ---
-    var porCiclo = {};
+    // --- Gráfica 2: Evolución temporal por Ciclo Escolar, desagregada por
+    // género (el CSV trae "Titulados Mujeres"/"Titulados Hombres" además del
+    // total — antes solo se graficaba el total, ocultando esa desagregación
+    // que sí existe en los datos) ---
+    var porCiclo = {}, porCicloMujeres = {}, porCicloHombres = {};
     df.forEach(d => {
         var ciclo = d['CICLO ESCOLAR'] || 'Sin dato';
-        var total = parseInt(d['Titulados Total']) || 0;
-        porCiclo[ciclo] = (porCiclo[ciclo] || 0) + total;
+        porCiclo[ciclo] = (porCiclo[ciclo] || 0) + (parseInt(d['Titulados Total']) || 0);
+        porCicloMujeres[ciclo] = (porCicloMujeres[ciclo] || 0) + (parseInt(d['Titulados Mujeres']) || 0);
+        porCicloHombres[ciclo] = (porCicloHombres[ciclo] || 0) + (parseInt(d['Titulados Hombres']) || 0);
     });
     var ciclosOrdenados = Object.keys(porCiclo).sort();
 
@@ -1436,7 +1539,7 @@ function renderizarGraficasIndiceTemporal(datos, estadoNorm, municipio) {
     var topGlobalHr = document.getElementById('topGlobalChartHr');
     if (topGlobalContainer) {
         topGlobalContainer.style.display = 'block';
-        if (topGlobalTitle) { topGlobalTitle.innerHTML = 'EVOLUCIÓN TEMPORAL DE TITULADOS'; topGlobalTitle.style.display = 'block'; }
+        if (topGlobalTitle) { topGlobalTitle.innerHTML = 'EVOLUCIÓN TEMPORAL DE TITULADOS POR GÉNERO'; topGlobalTitle.style.display = 'block'; }
         if (topGlobalHr) topGlobalHr.style.display = 'block';
 
         var canvasTemporal = document.getElementById('topGlobalChart');
@@ -1446,23 +1549,52 @@ function renderizarGraficasIndiceTemporal(datos, estadoNorm, municipio) {
                 type: 'line',
                 data: {
                     labels: ciclosOrdenados,
-                    datasets: [{
-                        label: 'Total Titulados',
-                        data: ciclosOrdenados.map(c => porCiclo[c]),
-                        borderColor: '#00e5ff',
-                        backgroundColor: 'rgba(0,229,255,0.15)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: '#222'
-                    }]
+                    datasets: [
+                        {
+                            label: 'Total',
+                            data: ciclosOrdenados.map(c => porCiclo[c]),
+                            borderColor: '#00e5ff',
+                            backgroundColor: 'rgba(0,229,255,0.15)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#222'
+                        },
+                        {
+                            label: '♀ Mujeres',
+                            data: ciclosOrdenados.map(c => porCicloMujeres[c]),
+                            borderColor: '#d500f9',
+                            backgroundColor: 'rgba(213,0,249,0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: '#222'
+                        },
+                        {
+                            label: '♂ Hombres',
+                            data: ciclosOrdenados.map(c => porCicloHombres[c]),
+                            borderColor: '#ff9100',
+                            backgroundColor: 'rgba(255,145,0,0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: '#222'
+                        }
+                    ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: {
+                            display: true, position: 'bottom',
+                            labels: { color: '#ccc', font: { size: 9 }, boxWidth: 10 }
+                        },
                         datalabels: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)',

@@ -201,6 +201,38 @@ body.onboarding-activo .scale-btn {
     color: #111;
 }
 
+/* Ícono de inicio/cierre de sesión (#top-login-btn, en index.html) — mismo
+   estilo circular que #onboarding-help-btn, para que se vean como una
+   pareja de íconos consistente en la barra de navegación. */
+#top-login-btn {
+    background: none;
+    border: 1.5px solid #00e5ff;
+    color: #00e5ff;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 8px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+#top-login-btn:hover {
+    background: #00e5ff;
+    color: #111;
+}
+
+/* Con sesión iniciada se resalta relleno (en vez de solo contorno) para
+   que se note a simple vista que hay una sesión activa. */
+#top-login-btn.logueado {
+    background: #00e5ff;
+    color: #111;
+}
+
 /* =========================================
    AVISO PARA ABRIR EL DASHBOARD (panel lateral)
    El panel arranca cerrado (ver setupUI en escala_global.js); este globo

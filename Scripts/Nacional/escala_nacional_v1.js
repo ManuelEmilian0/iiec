@@ -28,9 +28,10 @@ function iniciarFiltroNacional_Paso1(data) {
         <option value="" disabled selected>-- Selección de análisis --</option>
         <option value="flujos">Intercambios (Flujos Industriales)</option>
         <option value="finanzas">Finanzas Públicas (Dependencia Federal)</option>
-        <option value="productividad">Índice de crecimiento complejo (Evolución temporal)</option>
+        <option value="productividad">Índice de crecimiento compuesto (Evolución temporal)</option>
         <option value="censo">Censo Económico 2024</option>
         <option value="financiero">Indicadores Financieros Globales</option>
+        <option value="regionalizacion">Regionalización</option>
     `;
     modoWrapper.appendChild(selectModo);
 
@@ -97,6 +98,9 @@ function iniciarFiltroNacional_Paso1(data) {
         var estadoSel = this.value;
         var finalData = data.features.filter(f => (f.properties.SUBSECTO_3 === subsectorSel || f.properties.SUBSECTO_2 === subsectorSel) && f.properties.Edo_V === estadoSel);
         renderizarMapaFlujos(finalData, 'VALOR', 'MDP', 'EDO_C');
+        if (typeof window.actualizarModulosDatosDuros === 'function') {
+            window.actualizarModulosDatosDuros([], "Estatal", estadoSel);
+        }
     };
 
     var flujosTitle = document.createElement("div");
@@ -205,6 +209,29 @@ function iniciarFiltroNacional_Paso1(data) {
     censoContainer.appendChild(censoWrapper);
     censoContainer.appendChild(censoAnioWrapper);
 
+    // --- REGIONALIZACIÓN LOGIC ---
+    // A diferencia de los demás tipos (que colorean por un valor numérico
+    // continuo), aquí la coropleta es CATEGÓRICA: cada entidad se colorea
+    // según su "REGION" (carto/Region_nacional_2026.geojson, 32 entidades /
+    // 8 regiones). El selector de Región funciona como filtro: "-- Todo el
+    // país --" agrega los 15 atributos demográficos/socioeconómicos a nivel
+    // nacional; elegir una región los reagrega solo con sus entidades.
+    var regionalizacionContainer = document.createElement("div");
+    regionalizacionContainer.style.display = "none";
+
+    var regionWrapper = document.createElement("div");
+    regionWrapper.innerHTML = `<small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Región:</small>`;
+    var selectRegion = document.createElement("select");
+    selectRegion.id = "select-region-nacional";
+    selectRegion.className = "dynamic-filter-select";
+    selectRegion.innerHTML = `<option value="" selected>-- Todo el país (Nacional) --</option>`;
+    regionWrapper.appendChild(selectRegion);
+    regionalizacionContainer.appendChild(regionWrapper);
+
+    selectRegion.onchange = function () {
+        renderizarMapaRegionalizacion(this.value || null, null);
+    };
+
     // --- MODO TOGGLE LOGIC ---
     selectModo.onchange = function () {
         // Limpieza completa de simbología del tipo anterior — antes solo se
@@ -241,6 +268,7 @@ function iniciarFiltroNacional_Paso1(data) {
         finanzasContainer.style.display = this.value === 'finanzas' ? 'block' : 'none';
         productividadContainer.style.display = this.value === 'productividad' ? 'block' : 'none';
         censoContainer.style.display = this.value === 'censo' ? 'block' : 'none';
+        regionalizacionContainer.style.display = this.value === 'regionalizacion' ? 'block' : 'none';
         if (this.value !== 'financiero' && finOverlay) finOverlay.style.display = 'none';
 
         document.getElementById('filter-title').innerText = "Análisis";
@@ -253,6 +281,9 @@ function iniciarFiltroNacional_Paso1(data) {
             renderizarMapaCensoNacional(selectCenso.value, selectCensoAnio.value);
         } else if (this.value === 'financiero') {
             if (typeof cargarYRenderizarEmpresasCSV === "function") cargarYRenderizarEmpresasCSV();
+        } else if (this.value === 'regionalizacion') {
+            selectRegion.value = "";
+            if (typeof iniciarRegionalizacion === "function") iniciarRegionalizacion(selectRegion);
         }
     };
 
@@ -261,6 +292,7 @@ function iniciarFiltroNacional_Paso1(data) {
     container.appendChild(finanzasContainer);
     container.appendChild(productividadContainer);
     container.appendChild(censoContainer);
+    container.appendChild(regionalizacionContainer);
 }
 
 function renderizarMapaFinanzas(tipo) {
@@ -1046,8 +1078,74 @@ function dibujarCoropletaProductividad(anio) {
     dibujarGraficaEvolucion(top5, anio);
 }
 
+// Antes el cuadro de texto afirmaba que el estado con el valor más alto en
+// el AÑO CLICADO había "liderado" y sido "resiliente" a lo largo de TODO el
+// periodo, sin comprobar nada de eso contra la propia serie de datos — una
+// interpretación editorializada, no respaldada por los números. Esta
+// función solo describe lo que la serie realmente muestra: en cuántos años
+// esa entidad tuvo de hecho el valor más alto a nivel nacional (no solo el
+// año seleccionado), y cómo cambió su valor entre el primer y el último año
+// disponible, sin adjetivos de "competitividad"/"eficiencia" no verificables.
+function _generarInterpretacionObjetiva(dataSource, estadosSeleccionados, labels, indNombreHtml) {
+    if (!estadosSeleccionados || !estadosSeleccionados.length || !labels || !labels.length) return "";
+    var lider = estadosSeleccionados[0];
+    if (!dataSource || !dataSource[lider]) return "";
+
+    // Serie propia del líder (solo años con dato numérico válido)
+    var serieLider = labels
+        .map(function (a) { return { anio: a, val: dataSource[lider].historial ? dataSource[lider].historial[a] : undefined }; })
+        .filter(function (p) { return typeof p.val === 'number' && !isNaN(p.val); });
+
+    // ¿En cuántos años de la serie esta entidad tuvo REALMENTE el valor más
+    // alto a nivel nacional (no solo en el año que el usuario clicó)?
+    var aniosLider = 0;
+    labels.forEach(function (anio) {
+        var maxVal = -Infinity, maxEdo = null;
+        Object.keys(dataSource).forEach(function (edo) {
+            var v = dataSource[edo] && dataSource[edo].historial ? dataSource[edo].historial[anio] : undefined;
+            if (typeof v === 'number' && !isNaN(v) && v > maxVal) { maxVal = v; maxEdo = edo; }
+        });
+        if (maxEdo === lider) aniosLider++;
+    });
+
+    var fraseLiderazgo;
+    if (aniosLider === labels.length) {
+        fraseLiderazgo = 'mantuvo el valor más alto del país en ' + indNombreHtml + ' durante los ' + labels.length + ' años de la serie (' + labels[0] + '-' + labels[labels.length - 1] + ')';
+    } else if (aniosLider >= labels.length / 2) {
+        fraseLiderazgo = 'concentró el valor más alto del país en ' + indNombreHtml + ' en ' + aniosLider + ' de los ' + labels.length + ' años de la serie, aunque no de forma ininterrumpida';
+    } else if (aniosLider > 1) {
+        fraseLiderazgo = 'solo encabezó la lista nacional en ' + aniosLider + ' de los ' + labels.length + ' años de la serie en ' + indNombreHtml + ' — su posición como líder no es constante';
+    } else {
+        fraseLiderazgo = 'encabeza la lista en ' + indNombreHtml + ' únicamente en el año seleccionado; en el resto de la serie (' + (labels.length - aniosLider) + ' de ' + labels.length + ' años) el mayor valor nacional correspondió a otra entidad';
+    }
+
+    var fraseTendencia = "";
+    if (serieLider.length >= 2) {
+        var primerVal = serieLider[0].val;
+        var ultimoVal = serieLider[serieLider.length - 1].val;
+        if (primerVal !== 0) {
+            var cambioPct = ((ultimoVal - primerVal) / Math.abs(primerVal)) * 100;
+            if (Math.abs(cambioPct) < 5) {
+                fraseTendencia = ' Entre ' + serieLider[0].anio + ' y ' + serieLider[serieLider.length - 1].anio + ' su valor se mantuvo prácticamente sin cambio (' + (cambioPct >= 0 ? '+' : '') + cambioPct.toFixed(1) + '%), por lo que no puede hablarse de una tendencia de crecimiento sostenido.';
+            } else if (cambioPct > 0) {
+                fraseTendencia = ' Entre ' + serieLider[0].anio + ' y ' + serieLider[serieLider.length - 1].anio + ' su valor aumentó ' + cambioPct.toFixed(1) + '%.';
+            } else {
+                fraseTendencia = ' Entre ' + serieLider[0].anio + ' y ' + serieLider[serieLider.length - 1].anio + ' su valor disminuyó ' + Math.abs(cambioPct).toFixed(1) + '%, pese a conservar el primer lugar en el año seleccionado.';
+            }
+        }
+    }
+
+    return '<b style="color:#00e5ff;">' + lider + '</b> ' + fraseLiderazgo + '.' + fraseTendencia;
+}
+
 function dibujarGraficaEvolucion(estadosSeleccionados, anioDestacado) {
     if (typeof Chart === 'undefined') return;
+
+    // Módulos de datos duros: se refinan con la entidad líder del año
+    // clicado (misma que encabeza la gráfica de evolución).
+    if (estadosSeleccionados.length > 0 && typeof window.actualizarModulosDatosDuros === 'function') {
+        window.actualizarModulosDatosDuros([], "Estatal", estadosSeleccionados[0]);
+    }
 
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
@@ -1164,17 +1262,13 @@ function dibujarGraficaEvolucion(estadosSeleccionados, anioDestacado) {
 
     var summaryDiv = document.getElementById('dynamic-summary-global');
     if (summaryDiv && estadosSeleccionados.length > 0) {
-        var lider = estadosSeleccionados[0];
-        var primerAnio = labels[0] || "";
-        var ultimoAnio = labels[labels.length - 1] || "";
-        
         var indNombre = "la industria seleccionada";
         if (window.industriaActual === "IC_AUTOMOTRIZ") indNombre = "la industria automotriz";
         else if (window.industriaActual === "IC_ELECTRICA") indNombre = "la industria eléctrica";
         else if (window.industriaActual === "IC_ELECTRONICA") indNombre = "la industria electrónica";
         else if (window.industriaActual === "IC_SEIT") indNombre = "los servicios SEIT";
         
-        var texto = `A lo largo del periodo analizado (${primerAnio} - ${ultimoAnio}), el estado de <b style="color:#00e5ff;">${lider}</b> se ha mantenido como el nodo más competitivo en <b style="color:#fcae91;">${indNombre}</b>, liderando la eficiencia del sector a nivel nacional. Las variaciones en la curva reflejan su resiliencia y adaptabilidad a los ciclos económicos globales.`;
+        var texto = _generarInterpretacionObjetiva(window.productDataActual, estadosSeleccionados, labels, '<b style="color:#fcae91;">' + indNombre + '</b>');
 
         summaryDiv.innerHTML = texto;
         summaryDiv.style.display = 'block';
@@ -1695,7 +1789,7 @@ window.sintesisCenso = [
 ];
 
 // Leyenda con clases clicables (prender/apagar), igual que el Índice de
-// crecimiento complejo (actualizarLeyendaProductividad) y Finanzas
+// crecimiento compuesto (actualizarLeyendaProductividad) y Finanzas
 // (actualizarLeyendaFinanzas) — antes era una franja de color estática sin
 // interacción.
 function actualizarLeyendaCenso(breaks, variable, anio) {
@@ -1823,6 +1917,12 @@ window.filtrarMapaCenso = function (clase) {
 function dibujarGraficaEvolucionCenso(estadosSeleccionados, anioDestacado, variable) {
     if (typeof Chart === 'undefined') return;
 
+    // Módulos de datos duros: se refinan con la entidad líder del año
+    // clicado (misma que encabeza la gráfica de evolución del Censo).
+    if (estadosSeleccionados.length > 0 && typeof window.actualizarModulosDatosDuros === 'function') {
+        window.actualizarModulosDatosDuros([], "Estatal", estadosSeleccionados[0]);
+    }
+
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'block';
 
@@ -1932,13 +2032,510 @@ function dibujarGraficaEvolucionCenso(estadosSeleccionados, anioDestacado, varia
 
     var summaryDiv = document.getElementById('dynamic-summary-global');
     if (summaryDiv && estadosSeleccionados.length > 0) {
-        var lider = estadosSeleccionados[0];
-        var primerAnio = labels[0] || "";
-        var ultimoAnio = labels[labels.length - 1] || "";
-
-        var texto = `A lo largo del periodo analizado (${primerAnio} - ${ultimoAnio}), el estado de <b style="color:#00e5ff;">${lider}</b> se ha mantenido como el nodo más relevante en <b style="color:#fcae91;">${metricaLabel.toLowerCase()}</b> dentro del Censo Económico (sectores Electrónica, SEIT, Telecom y Medios).`;
+        var texto = _generarInterpretacionObjetiva(window.censoDataActual, estadosSeleccionados, labels, '<b style="color:#fcae91;">' + metricaLabel.toLowerCase() + '</b> dentro del Censo Económico (sectores Electrónica, SEIT, Telecom y Medios)');
 
         summaryDiv.innerHTML = texto;
         summaryDiv.style.display = 'block';
+    }
+}
+
+// ============================================================================
+// REGIONALIZACIÓN NACIONAL (carto/Region_nacional_2026.geojson)
+// ============================================================================
+// A diferencia de los demás tipos de análisis de esta escala (coropleta por
+// un valor numérico continuo con calcularBreaks/getClase), aquí la
+// coropleta es CATEGÓRICA: cada una de las 32 entidades se colorea según su
+// atributo "REGION" (8 regiones). El dashboard agrega (suma) el resto de
+// los atributos numéricos a nivel nacional por defecto, y se reagrega solo
+// con las entidades de la región elegida en cuanto se selecciona una — vía
+// el selector de Región o haciendo clic directo en el mapa/leyenda.
+
+var REGION_NOMBRE_DISPLAY = {
+    "Centro occidente": "Centro Occidente",
+    "Centro sur": "Centro Sur",
+    "Golfo de Mexico": "Golfo de México",
+    "Noreste": "Noreste",
+    "Noroeste": "Noroeste",
+    "Norte": "Norte",
+    "Pacifico Sur": "Pacífico Sur",
+    "Peninsula de Yucatan": "Península de Yucatán"
+};
+
+// Antes usaba una paleta "arcoíris" (cian/verde/morado/naranja) que no se
+// parecía en nada a la simbología del resto de la plataforma. Se homologa a
+// la misma familia de rojos que RampaRojos (usada en TODAS las coropletas
+// numéricas: Productividad, Censo, Finanzas, Índice Educación Superior,
+// AGEB) extendida de 5 a 8 tonos — Regionalización es categórica (8
+// regiones sin orden entre sí, a diferencia de las 5 clases numéricas de
+// RampaRojos), pero así su coropleta se lee como parte de la misma familia
+// visual en vez de una paleta aparte.
+var REGION_COLORES = {
+    "Centro occidente": "#fee0d2",
+    "Centro sur": "#fcbba1",
+    "Golfo de Mexico": "#fc9272",
+    "Noreste": "#fb6a4a",
+    "Noroeste": "#ef3b2c",
+    "Norte": "#cb181d",
+    "Pacifico Sur": "#a50f15",
+    "Peninsula de Yucatan": "#67000d"
+};
+
+// Atributos numéricos agregables, con su etiqueta amigable. INDI1 no tiene
+// una descripción oficial documentada en el proyecto (mismo caso que en
+// carto/Limites_Municipales.geojson) — se muestra de todas formas, marcado
+// como tal, en vez de inventarle un significado.
+var REGIONALIZACION_METRICAS = [
+    { key: 'POB_TOTAL', label: 'Población Total' },
+    { key: 'POB_NINOS', label: 'Población Niños' },
+    { key: 'POB_ADULTOS', label: 'Población Adultos' },
+    { key: 'POB_MAYORES', label: 'Población Mayores' },
+    { key: 'POB_FEM', label: 'Población Femenina' },
+    { key: 'POB_MASC', label: 'Población Masculina' },
+    { key: 'INDI1', label: 'Población Indígena' },
+    { key: 'DISC1', label: 'Población con Discapacidad' },
+    { key: 'ANALFABETA', label: 'Población Analfabeta' },
+    { key: 'EDU_SUPERIOR', label: 'Población con Educación Superior' },
+    { key: 'SALUD1', label: 'Población Afiliada al Seguro Social' },
+    { key: 'POB_OCUPADA', label: 'Población Ocupada' },
+    { key: 'VIV_HABITADAS', label: 'Viviendas Habitadas' },
+    { key: 'VIV_SIN_SERV', label: 'Viviendas sin Servicios Básicos' },
+    { key: 'VIV_INTERNET', label: 'Viviendas con Internet' }
+];
+
+window._regionalizacionEntidadClickeada = null;
+
+function iniciarRegionalizacion(selectRegionEl) {
+    var filterTitle = document.getElementById('filter-title');
+    if (filterTitle) filterTitle.innerText = "Cargando regionalización...";
+
+    function conDatos() {
+        if (filterTitle) filterTitle.innerText = "Análisis";
+        // Poblar el select de Región solo la primera vez (option[0] es
+        // siempre el placeholder "-- Todo el país --").
+        if (selectRegionEl && selectRegionEl.options.length === 1) {
+            var regiones = Array.from(new Set(window._regionalizacionGeoJSON.features.map(function (f) { return f.properties.REGION; })))
+                .sort(function (a, b) { return (REGION_NOMBRE_DISPLAY[a] || a).localeCompare(REGION_NOMBRE_DISPLAY[b] || b); });
+            regiones.forEach(function (r) {
+                var opt = document.createElement('option');
+                opt.value = r;
+                opt.innerText = REGION_NOMBRE_DISPLAY[r] || r;
+                selectRegionEl.appendChild(opt);
+            });
+        }
+        window._regionalizacionEntidadClickeada = null;
+        renderizarMapaRegionalizacion(null, null);
+    }
+
+    if (window._regionalizacionGeoJSON) {
+        conDatos();
+    } else {
+        AppData.load('carto/Region_nacional_2026.geojson').then(function (geo) {
+            window._regionalizacionGeoJSON = geo;
+            conDatos();
+        }).catch(function (e) {
+            console.error('Error cargando Region_nacional_2026.geojson:', e);
+            if (filterTitle) filterTitle.innerText = "Error cargando regionalización";
+        });
+    }
+}
+
+function renderizarMapaRegionalizacion(regionSel, entidadClickeada) {
+    if (currentGeoJSONLayer) { map.removeLayer(currentGeoJSONLayer); currentGeoJSONLayer = null; }
+    var geo = window._regionalizacionGeoJSON;
+    if (!geo) return;
+
+    // entidadClickeada llega explícitamente como null (no undefined) cuando
+    // se elige desde el <select> o se deselecciona una región desde la
+    // leyenda — en ese caso sí debe borrar cualquier estado resaltado antes.
+    if (entidadClickeada !== undefined) window._regionalizacionEntidadClickeada = entidadClickeada;
+
+    // Al cambiar de región (incluida la vuelta a "todo el país") se resetea
+    // la selección de entidades activas del desglose interactivo — si no,
+    // exclusiones hechas en una región se arrastrarían a la siguiente.
+    if (regionSel !== window._regionalizacionUltimaRegion) {
+        window._regionalizacionEntidadesActivas = null;
+        window._regionalizacionUltimaRegion = regionSel;
+    }
+
+    var layer_geo = L.geoJSON(geo, {
+        style: function (feature) {
+            var region = feature.properties.REGION;
+            var nomgeo = feature.properties.NOMGEO;
+            var color = REGION_COLORES[region] || '#666';
+            var esRegionActiva = !regionSel || region === regionSel;
+            var esSeleccionada = window._regionalizacionEntidadClickeada === nomgeo;
+            // Dentro de la región activa, una entidad puede además estar
+            // "desmarcada" del desglose interactivo (checkbox de la leyenda) —
+            // se ve atenuada, distinto a las de otras regiones.
+            var excluidaPorCheckbox = regionSel && region === regionSel &&
+                window._regionalizacionEntidadesActivas && !window._regionalizacionEntidadesActivas.has(nomgeo);
+            var fillOpacity = !esRegionActiva ? 0.12 : (excluidaPorCheckbox ? 0.25 : 0.78);
+            return {
+                fillColor: color,
+                weight: esSeleccionada ? 3 : 1,
+                color: esSeleccionada ? '#fff' : '#222',
+                fillOpacity: fillOpacity,
+                opacity: esRegionActiva ? 1 : 0.3
+            };
+        },
+        onEachFeature: function (feature, layer) {
+            var p = feature.properties;
+            layer.bindTooltip(
+                '<b>' + p.NOMGEO + '</b><br>Región: ' + (REGION_NOMBRE_DISPLAY[p.REGION] || p.REGION) +
+                '<br>Población: ' + Math.round(p.POB_TOTAL || 0).toLocaleString('es-MX'),
+                { sticky: true, className: 'custom-tooltip' }
+            );
+            layer.on({
+                mouseover: function (e) { e.target.setStyle({ weight: 3 }); e.target.bringToFront(); },
+                mouseout: function (e) { layer_geo.resetStyle(e.target); },
+                click: function () {
+                    var sel = document.getElementById('select-region-nacional');
+                    if (sel) sel.value = p.REGION;
+                    renderizarMapaRegionalizacion(p.REGION, p.NOMGEO);
+                }
+            });
+        }
+    }).addTo(map);
+
+    currentGeoJSONLayer = layer_geo;
+
+    actualizarLeyendaRegionalizacion(regionSel);
+    actualizarGraficasRegionalizacion(regionSel, window._regionalizacionEntidadClickeada);
+}
+
+// Leyenda con clases (regiones) clicables, mismo mecanismo de
+// prender/apagar que window.filtrarMapaProductividad / filtrarMapaCenso,
+// pero categórica (por nombre de región) en vez de por umbral numérico.
+function actualizarLeyendaRegionalizacion(regionSel) {
+    var overlay = document.getElementById('legend-overlay');
+    var div = document.getElementById('legend-content');
+    if (!div || !overlay) return;
+    var geo = window._regionalizacionGeoJSON;
+    if (!geo) return;
+
+    var conteos = {};
+    geo.features.forEach(function (f) {
+        var r = f.properties.REGION;
+        conteos[r] = (conteos[r] || 0) + 1;
+    });
+
+    var regiones = Object.keys(REGION_COLORES);
+
+    var html = '<div style="margin: 4px 0 6px 0; font-weight:bold; color:#00e5ff; font-size:12px; text-transform:uppercase; border-bottom:1px solid rgba(0,229,255,0.3); padding-bottom:3px;">Regionalización Nacional</div>';
+    html += '<div style="font-size:11px; color:#aaa; margin-bottom:8px;">Da clic en una región o en una entidad del mapa</div>';
+
+    regiones.forEach(function (r) {
+        var activo = !regionSel || regionSel === r;
+        html += '<div class="legend-box-region" data-region="' + r + '" onclick="window.filtrarMapaRegionalizacion(\'' + r + '\')" ' +
+            'style="display:flex; align-items:center; gap:6px; margin-bottom:5px; cursor:pointer; opacity:' + (activo ? '1' : '0.35') + ';">' +
+            '<div style="width:14px; height:14px; background:' + REGION_COLORES[r] + '; border:1px solid #1a1a1a; border-radius:2px; flex-shrink:0;' + (regionSel === r ? ' box-shadow:0 0 0 2px #fff;' : '') + '"></div>' +
+            '<span style="font-size:11px; color:#ddd;">' + (REGION_NOMBRE_DISPLAY[r] || r) + ' (' + conteos[r] + ')</span>' +
+            '</div>';
+    });
+
+    // Desglose interactivo de las entidades de la región activa — solo
+    // aparece con una región elegida (no en la vista "todo el país", donde
+    // serían 32 filas). El checkbox incluye/excluye del agregado que
+    // calculan las gráficas; el nombre resalta esa entidad sola (mismo
+    // efecto que hacer clic en el mapa).
+    if (regionSel) {
+        var entidadesRegion = geo.features
+            .filter(function (f) { return f.properties.REGION === regionSel; })
+            .map(function (f) { return f.properties.NOMGEO; })
+            .sort();
+
+        html += '<div style="margin-top:12px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.15);">';
+        html += '<div style="font-size:11px; color:#00e5ff; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Entidades de ' + (REGION_NOMBRE_DISPLAY[regionSel] || regionSel) + '</div>';
+        html += '<div style="font-size:10px; color:#888; margin-bottom:6px;">Casilla: incluir/excluir del agregado. Nombre: ver solo esa entidad.</div>';
+        entidadesRegion.forEach(function (nom) {
+            var activa = !window._regionalizacionEntidadesActivas || window._regionalizacionEntidadesActivas.has(nom);
+            var esDrill = window._regionalizacionEntidadClickeada === nom;
+            var nomEscapado = nom.replace(/'/g, "\\'");
+            html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">' +
+                '<input type="checkbox" ' + (activa ? 'checked' : '') + ' onchange="window.toggleEntidadActivaRegionalizacion(\'' + nomEscapado + '\', this.checked)" style="cursor:pointer;">' +
+                '<span onclick="window.drillEntidadRegionalizacion(\'' + nomEscapado + '\')" style="font-size:11px; color:' + (esDrill ? '#00e5ff' : '#ccc') + '; font-weight:' + (esDrill ? 'bold' : 'normal') + '; cursor:pointer;' + (esDrill ? ' text-decoration:underline;' : '') + '">' + nom + '</span>' +
+                '</div>';
+        });
+        html += '</div>';
+    }
+
+    div.innerHTML = html;
+    overlay.style.display = 'block';
+}
+
+window.filtrarMapaRegionalizacion = function (region) {
+    var actual = document.getElementById('select-region-nacional');
+    var yaEstaActiva = actual && actual.value === region;
+    var nuevoValor = yaEstaActiva ? '' : region;
+    if (actual) actual.value = nuevoValor;
+    renderizarMapaRegionalizacion(nuevoValor || null, null);
+};
+
+// Checkbox de la leyenda: incluye/excluye una entidad del agregado que
+// calculan las gráficas para la región activa, sin cambiar el "drill" (si
+// había una entidad resaltada individualmente, se limpia — el usuario está
+// pidiendo ver el agregado del conjunto que dejó marcado, no una sola).
+window.toggleEntidadActivaRegionalizacion = function (nomgeo, checked) {
+    var sel = document.getElementById('select-region-nacional');
+    var regionActual = sel ? sel.value : null;
+    if (!window._regionalizacionEntidadesActivas) {
+        var geo = window._regionalizacionGeoJSON;
+        window._regionalizacionEntidadesActivas = new Set(
+            geo.features.filter(function (f) { return f.properties.REGION === regionActual; })
+                .map(function (f) { return f.properties.NOMGEO; })
+        );
+    }
+    if (checked) window._regionalizacionEntidadesActivas.add(nomgeo);
+    else window._regionalizacionEntidadesActivas.delete(nomgeo);
+
+    renderizarMapaRegionalizacion(regionActual || null, null);
+};
+
+// Nombre de la leyenda: aísla esa entidad en las gráficas (mismo mecanismo
+// que hacer clic en su polígono). Clic de nuevo sobre la misma regresa al
+// agregado de la región.
+window.drillEntidadRegionalizacion = function (nomgeo) {
+    var sel = document.getElementById('select-region-nacional');
+    var regionActual = sel ? sel.value : null;
+    var yaEstaDrill = window._regionalizacionEntidadClickeada === nomgeo;
+    renderizarMapaRegionalizacion(regionActual || null, yaEstaDrill ? null : nomgeo);
+};
+
+function actualizarGraficasRegionalizacion(regionSel, entidadClickeada) {
+    if (typeof Chart === 'undefined') return;
+    var geo = window._regionalizacionGeoJSON;
+    if (!geo) return;
+
+    var statsDiv = document.getElementById('stats-overlay');
+    if (statsDiv) statsDiv.style.display = 'block';
+
+    // Alcance: una sola entidad si hay drill activo; si no, las entidades
+    // "activas" (checkboxes) de la región elegida; si no hay región, las 32.
+    var featuresRegion = regionSel ? geo.features.filter(function (f) { return f.properties.REGION === regionSel; }) : geo.features;
+    var totalEntidadesRegion = featuresRegion.length;
+    var featuresScope;
+    if (entidadClickeada) {
+        featuresScope = geo.features.filter(function (f) { return f.properties.NOMGEO === entidadClickeada; });
+    } else if (regionSel) {
+        featuresScope = featuresRegion.filter(function (f) {
+            return !window._regionalizacionEntidadesActivas || window._regionalizacionEntidadesActivas.has(f.properties.NOMGEO);
+        });
+    } else {
+        featuresScope = geo.features;
+    }
+
+    var totales = {};
+    REGIONALIZACION_METRICAS.forEach(function (m) { totales[m.key] = 0; });
+    featuresScope.forEach(function (f) {
+        REGIONALIZACION_METRICAS.forEach(function (m) {
+            totales[m.key] += (f.properties[m.key] || 0);
+        });
+    });
+
+    var totalNacionalPob = geo.features.reduce(function (s, f) { return s + (f.properties.POB_TOTAL || 0); }, 0);
+    // Población de TODA la región (sin excluir por checkbox) — para poder
+    // decir qué tanto pesa la entidad drillada dentro de su propia región,
+    // no solo dentro del país.
+    var totalRegionPob = featuresRegion.reduce(function (s, f) { return s + (f.properties.POB_TOTAL || 0); }, 0);
+
+    var titulo = document.getElementById('stats-title-text');
+    if (titulo) {
+        var nombreScope = entidadClickeada ? entidadClickeada : (regionSel ? (REGION_NOMBRE_DISPLAY[regionSel] || regionSel) : 'Nacional (32 entidades)');
+        var pctNacional = totalNacionalPob > 0 ? ((totales.POB_TOTAL / totalNacionalPob) * 100).toFixed(1) : '0';
+        var pctRegion = totalRegionPob > 0 ? ((totales.POB_TOTAL / totalRegionPob) * 100).toFixed(1) : '0';
+        var lineaAlcance = entidadClickeada
+            ? '1 entidad individual (clic de nuevo en su nombre/polígono para volver al agregado de la región)'
+            : (featuresScope.length + ' de ' + totalEntidadesRegion + ' entidad' + (totalEntidadesRegion === 1 ? '' : 'es') + ' en este alcance' + (regionSel && featuresScope.length < totalEntidadesRegion ? ' (' + (totalEntidadesRegion - featuresScope.length) + ' excluida(s) con el checkbox)' : ''));
+        // Al drillear una entidad se muestran DOS referencias junto a su
+        // población: qué tanto pesa dentro del país y, además, dentro de su
+        // propia región (regionSel) — antes solo se veía el % nacional.
+        var referenciaPct = entidadClickeada
+            ? (' (' + pctNacional + '% del país · ' + pctRegion + '% de ' + (REGION_NOMBRE_DISPLAY[regionSel] || regionSel) + ')')
+            : (regionSel ? (' (' + pctNacional + '% del país)') : '');
+        titulo.innerHTML = '<span style="font-size:16px; font-weight:bold; text-transform:uppercase;">' + nombreScope + '</span><br>' +
+            '<span style="font-size:12px; color:#ddd">Población Total: <b>' + Math.round(totales.POB_TOTAL).toLocaleString('es-MX') + '</b>' +
+            referenciaPct + '</span><br>' +
+            '<span style="font-size:11px; color:#aaa">' + lineaAlcance + '</span>';
+    }
+
+    // --- Gráfica 1 (myChart): composición demográfica ---
+    var canvasMyChart = document.getElementById('myChart');
+    var myChartTitle = document.getElementById('myChartTitle');
+    var myChartContainer = document.getElementById('myChartContainer');
+    if (myChartContainer) myChartContainer.style.display = 'block';
+    if (myChartTitle) {
+        myChartTitle.innerHTML = 'COMPOSICIÓN DEMOGRÁFICA POR EDAD';
+        myChartTitle.style.display = 'block';
+    }
+    if (canvasMyChart) {
+        canvasMyChart.parentElement.style.height = '220px';
+        if (mainChart) mainChart.destroy();
+
+        // Gráfica de pastel con los 3 grupos de edad reales del geojson
+        // (Niños/Adultos/Mayores) — se dejó de usar la pirámide porque exigía
+        // ESTIMAR el cruce edad×género (el dato no trae esa combinación), y
+        // esta versión evita esa suposición: son las cifras tal cual vienen.
+        var gruposEdad = ['Niños', 'Adultos', 'Mayores'];
+        var valoresEdad = [totales.POB_NINOS, totales.POB_ADULTOS, totales.POB_MAYORES];
+        var totalEdadConocida = valoresEdad.reduce(function (a, b) { return a + b; }, 0);
+
+        mainChart = new Chart(canvasMyChart.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: gruposEdad,
+                datasets: [{
+                    data: valoresEdad,
+                    // Misma paleta RampaRojos que usan todas las coropletas
+                    // numéricas del proyecto (antes cian/verde/dorado, sin
+                    // relación con el resto de la simbología).
+                    backgroundColor: [RampaRojos[0], RampaRojos[2], RampaRojos[4]],
+                    borderWidth: 1, borderColor: '#222'
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { color: '#ccc', font: { size: 9 }, boxWidth: 10 } },
+                    tooltip: {
+                        backgroundColor: 'rgba(20,20,20,0.95)',
+                        titleColor: '#00e5ff', bodyColor: '#fff', borderColor: '#555', borderWidth: 1,
+                        callbacks: {
+                            label: function (ctx) { return ctx.label + ': ' + Math.round(ctx.parsed).toLocaleString('es-MX'); }
+                        }
+                    },
+                    datalabels: {
+                        // Texto oscuro sobre la rebanada clara (Niños), claro
+                        // sobre las oscuras (Adultos/Mayores) — con la paleta
+                        // de rojos ya no todas las rebanadas son igual de
+                        // claras, a diferencia de la paleta anterior.
+                        color: function (ctx) {
+                            var bg = ctx.dataset.backgroundColor[ctx.dataIndex];
+                            var r = parseInt(bg.substring(1, 3), 16), g = parseInt(bg.substring(3, 5), 16), b = parseInt(bg.substring(5, 7), 16);
+                            var luminancia = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                            return luminancia > 0.55 ? '#111' : '#fff';
+                        },
+                        font: { weight: 'bold', size: 10 },
+                        formatter: function (value) { return totalEdadConocida > 0 ? ((value / totalEdadConocida) * 100).toFixed(1) + '%' : ''; }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- Gráfica 2 (topGlobalChart): otros indicadores ---
+    var topGlobalContainer = document.getElementById('topGlobalChartContainer');
+    var topGlobalTitle = document.getElementById('topGlobalChartTitle');
+    var topGlobalHr = document.getElementById('topGlobalChartHr');
+    if (topGlobalContainer) topGlobalContainer.style.display = 'block';
+    if (topGlobalTitle) { topGlobalTitle.innerHTML = 'OTROS INDICADORES'; topGlobalTitle.style.display = 'block'; }
+    if (topGlobalHr) topGlobalHr.style.display = 'block';
+
+    var otrosKeys = ['INDI1', 'DISC1', 'ANALFABETA', 'EDU_SUPERIOR', 'POB_OCUPADA', 'VIV_HABITADAS', 'VIV_SIN_SERV', 'VIV_INTERNET', 'SALUD1'];
+    var otrosLabels = otrosKeys.map(function (k) {
+        var m = REGIONALIZACION_METRICAS.find(function (x) { return x.key === k; });
+        var l = m ? m.label : k;
+        return l.length > 22 ? l.substring(0, 21) + '…' : l;
+    });
+
+    var canvasTemporal = document.getElementById('topGlobalChart');
+    if (canvasTemporal) {
+        if (window.topGlobalChartInstance) window.topGlobalChartInstance.destroy();
+
+        // Estos indicadores difieren en varios órdenes de magnitud dentro del
+        // mismo alcance (p. ej. Viviendas sin Servicios en cientos vs.
+        // Población Afiliada en cientos de miles) — en un eje lineal
+        // compartido, las barras chicas se veían "apagadas"/invisibles
+        // aunque su valor fuera real y distinto de cero. Eje logarítmico +
+        // etiqueta con la cifra exacta al final de cada barra para que se
+        // puedan comparar todas a la vez sin que ninguna desaparezca.
+        var otrosValores = otrosKeys.map(function (k) { return Math.max(totales[k], 0); });
+
+        window.topGlobalChartInstance = new Chart(canvasTemporal.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: otrosLabels,
+                datasets: [{
+                    label: 'Total',
+                    data: otrosValores,
+                    backgroundColor: '#00e5ff',
+                    borderWidth: 1, borderColor: '#222'
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#fff', font: { weight: 'bold', size: 9 },
+                        anchor: 'end', align: 'end', clamp: true,
+                        formatter: function (value) { return value > 0 ? value.toLocaleString('es-MX', { maximumFractionDigits: 0 }) : '0'; }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(20,20,20,0.95)',
+                        titleColor: '#00e5ff', bodyColor: '#fff', borderColor: '#555', borderWidth: 1,
+                        callbacks: {
+                            label: function (ctx) { return ctx.parsed.x.toLocaleString('es-MX', { maximumFractionDigits: 0 }); }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'logarithmic',
+                        ticks: {
+                            color: '#aaa', font: { size: 9 },
+                            callback: function (value) {
+                                var log = Math.log10(value);
+                                if (Math.abs(log - Math.round(log)) > 1e-9) return '';
+                                return value.toLocaleString('es-MX');
+                            }
+                        },
+                        grid: { color: '#333' }
+                    },
+                    y: { ticks: { color: '#ddd', font: { size: 9 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // --- Síntesis descriptiva ---
+    var summaryDiv = document.getElementById('dynamic-summary-global');
+    if (summaryDiv) {
+        var pctNinos = totales.POB_TOTAL > 0 ? ((totales.POB_NINOS / totales.POB_TOTAL) * 100).toFixed(1) : '0';
+        var pctAdultos = totales.POB_TOTAL > 0 ? ((totales.POB_ADULTOS / totales.POB_TOTAL) * 100).toFixed(1) : '0';
+        var pctMayores = totales.POB_TOTAL > 0 ? ((totales.POB_MAYORES / totales.POB_TOTAL) * 100).toFixed(1) : '0';
+        var pctFem = totales.POB_TOTAL > 0 ? ((totales.POB_FEM / totales.POB_TOTAL) * 100).toFixed(1) : '0';
+        var promedioEntidad = featuresScope.length > 0 ? Math.round(totales.POB_TOTAL / featuresScope.length) : 0;
+
+        var texto = 'De la población de este alcance, <b>' + pctNinos + '%</b> son niños, <b>' + pctAdultos + '%</b> adultos y <b>' + pctMayores + '%</b> personas mayores; <b>' + pctFem + '%</b> corresponde a mujeres. ' +
+            (entidadClickeada ? '' : ('En promedio, cada entidad de este alcance concentra <b>' + promedioEntidad.toLocaleString('es-MX') + '</b> habitantes.'));
+
+        // Ficha de la entidad clickeada (campos cualitativos, no agregables:
+        // ACT_PRIM/ACT_SECU/ACT_TERC/ESTRATEGIA).
+        if (entidadClickeada) {
+            var featEnt = geo.features.find(function (f) { return f.properties.NOMGEO === entidadClickeada; });
+            if (featEnt) {
+                var p = featEnt.properties;
+                texto += '<hr style="border-top:1px solid #444; margin:8px 0;">' +
+                    '<b style="color:#00e5ff;">' + p.NOMGEO + '</b><br>' +
+                    '<span style="font-size:11px;"><b>Actividad primaria:</b> ' + (p.ACT_PRIM || 'Sin dato') + '</span><br>' +
+                    '<span style="font-size:11px;"><b>Actividad secundaria:</b> ' + (p.ACT_SECU || 'Sin dato') + '</span><br>' +
+                    '<span style="font-size:11px;"><b>Actividad terciaria:</b> ' + (p.ACT_TERC || 'Sin dato') + '</span><br>' +
+                    '<span style="font-size:11px; color:#fcae91;"><b>Estrategia:</b> ' + (p.ESTRATEGIA || 'Sin dato') + '</span>';
+            }
+        }
+
+        summaryDiv.innerHTML = texto;
+        summaryDiv.style.display = 'block';
+    }
+
+    // Módulos de datos duros (esferas sobre el minimapa) — se refinan con la
+    // población exacta del alcance actual (entidad drillada, región, o país
+    // completo), ya calculada arriba como totales.POB_TOTAL.
+    if (typeof window.actualizarModulosDatosDuros === 'function') {
+        var etiquetaModulos = entidadClickeada ? entidadClickeada : (regionSel ? (REGION_NOMBRE_DISPLAY[regionSel] || regionSel) : 'México');
+        window.actualizarModulosDatosDuros(null, 'Nacional', etiquetaModulos, totales.POB_TOTAL);
     }
 }

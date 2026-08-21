@@ -331,6 +331,9 @@ function iniciarLogicaMunicipio() {
         var archivoGeojson = REGIONES_AGEB[regionKey] || 'carto/agebmex.geojson';
         document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
         cargarAgebEstadoRegional(nombreEst, archivoGeojson, selectIndice, opcionesAgeb);
+
+        var armadorasBox = document.getElementById('municipal-armadoras-box');
+        if (armadorasBox) armadorasBox.style.display = 'block';
     };
 
     selectIndice.onchange = function () {
@@ -353,7 +356,28 @@ function iniciarLogicaMunicipio() {
     container.appendChild(estadoContainer);
     container.appendChild(selectIndice);
 
-
+    // --- PLANTAS ARMADORAS ---
+    // Antes se dibujaban siempre (sin control alguno) apenas se cargaba un
+    // estado — correcto en el sentido de que ya estaban "activas" para
+    // cualquier índice, pero sin manera de apagarlas u homologar su control
+    // con Estatal/Metropolitana. Mismo checkbox/slider "#chk-armadoras" que
+    // usa Estatal (dibujarArmadorasPuntos ya lo respeta).
+    var armadorasBoxMunicipal = document.createElement('div');
+    armadorasBoxMunicipal.id = 'municipal-armadoras-box';
+    armadorasBoxMunicipal.style.cssText = 'display:none; margin-top:10px; margin-bottom:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1);';
+    armadorasBoxMunicipal.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="chk-armadoras" checked onchange="if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+            <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
+            <span style="color:#fff; font-weight:bold; font-size:12px;">Plantas Armadoras</span>
+        </div>
+        <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
+            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 55%; cursor: pointer;"
+                oninput="window.currentArmadorasOpacity = this.value; if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+        </div>
+    `;
+    container.appendChild(armadorasBoxMunicipal);
 
     container.appendChild(equipWrapper);
 

@@ -675,6 +675,20 @@ body:not(.scale-municipio) .leaflet-buttons-control-button {
   box-shadow: none !important;
 }
 
+/* Antes vivía en la esquina superior derecha (posición nativa de Leaflet
+   "topright", junto al control de descarga) — se saca de ese flujo con
+   position:fixed para anclarlo junto a la esquina inferior izquierda del
+   minimapa (#minimap-container: bottom:30px; right:10px; 150x150px, en
+   index.html) en vez de un corner genérico de Leaflet. */
+.basemap-gallery-container {
+  position: fixed !important;
+  bottom: 30px !important;
+  right: 168px !important;
+  top: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+}
+
 /* Se reutiliza el icono nativo de leaflet-control-layers-toggle (el recuadro con líneas) */
 .basemap-toggle-btn,
 .basemap-toggle-btn:hover {
@@ -697,7 +711,11 @@ body:not(.scale-municipio) .leaflet-buttons-control-button {
   gap: 8px;
   padding: 8px;
   position: absolute;
-  top: 0;
+  /* Antes "top:0" — con el botón en la esquina superior derecha el panel
+     se abría hacia abajo sin problema. Ahora que el botón vive cerca del
+     borde inferior de la pantalla (junto al minimapa), "bottom:0" lo abre
+     hacia ARRIBA para que no quede cortado por el borde de la ventana. */
+  bottom: 0;
   right: 72px;
   background: rgba(30, 30, 30, 0.95);
   border: 1px solid #555;

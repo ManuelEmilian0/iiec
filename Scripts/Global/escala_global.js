@@ -45,11 +45,13 @@ function initMap() {
 
     map = L.map('map', { minZoom: 2, maxZoom: 18, zoomControl: false });
     // Vista inicial garantizada de forma síncrona: si el contenedor #map aún no tiene
-    // un tamaño medido cuando corre fitBounds(), Leaflet puede calcular un centro/zoom
-    // inválido (NaN) que luego rompe el primer flyTo() con "Invalid LatLng object".
-    map.setView([20, 0], 2);
-    // Encuadre inicial exacto (América hasta Europa/África)
-    map.fitBounds([[-55, -130], [75, 60]]);
+    // un tamaño medido cuando corre setView()/flyTo(), Leaflet puede calcular un
+    // centro/zoom inválido (NaN) que luego rompe el primer flyTo() con "Invalid
+    // LatLng object". Antes encuadraba el mundo completo (América-Europa/África)
+    // porque la escala de arranque era "mundial" — ahora arranca enfocado en
+    // México, mismas coordenadas que usa loadLayer('nacional') más abajo, para
+    // que no haya un salto visible de "mundo" a "México" en los primeros 500ms.
+    map.setView([23.6345, -102.5528], 5);
 
     var cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19
@@ -66,7 +68,8 @@ function initMap() {
         attribution: '&copy; Google'
     });
 
-    satelite.addTo(map);
+    // Mapa base predeterminado al iniciar: Oscuro (antes Satélite).
+    cartoDark.addTo(map);
 
     // ==========================================
     // GALERÍA DE MAPAS BASE CUSTOM
@@ -91,7 +94,8 @@ function initMap() {
             { name: "Google Maps", layer: googleMaps, thumb: "https://mt1.google.com/vt/lyrs=m&x=3&y=6&z=4" }
         ];
 
-        var currentActiveLayer = satelite;
+        // Predeterminado: Oscuro (mismo mapa base que se agrega al mapa arriba).
+        var currentActiveLayer = cartoDark;
 
         basemaps.forEach(function (bm) {
             var item = L.DomUtil.create('div', 'basemap-item', galleryPanel);
@@ -204,7 +208,10 @@ function initMap() {
     if (typeof cargarArmadorasContexto === "function") cargarArmadorasContexto();
     showSection('inicio');
 
-    setTimeout(() => { loadLayer('mundial'); }, 500);
+    // Antes arrancaba en "mundial" (encuadre del mundo completo) — ahora
+    // arranca enfocado en México (loadLayer('nacional') ya vuela a
+    // [23.6345, -102.5528] zoom 5, ver más abajo).
+    setTimeout(() => { loadLayer('nacional'); }, 500);
 
     // Asegurar que el estado de autenticación se aplique al control recién creado
     if (typeof checkAuthUI === "function") checkAuthUI();
@@ -280,6 +287,11 @@ function loadLayer(scaleType) {
     if (agebLayer) { map.removeLayer(agebLayer); agebLayer = null; }
 
     if (window.limiteMunicipalLayer) { map.removeLayer(window.limiteMunicipalLayer); window.limiteMunicipalLayer = null; }
+    // Plantas armadoras de Metropolitana (window._metroArmadorasLayer) ya no
+    // vive anidada dentro de currentGeoJSONLayer (control independiente del
+    // Tipo de Análisis, ver escala_metropolitana.js) — hay que limpiarla
+    // aparte al cambiar de escala.
+    if (window._metroArmadorasLayer) { map.removeLayer(window._metroArmadorasLayer); window._metroArmadorasLayer = null; }
 
     // Remover controles de dibujo si existen
     if (map.pm) {
@@ -474,6 +486,19 @@ function loadLayer(scaleType) {
 
             if (scaleType === 'mundial') iniciarFiltroMundial_Paso1(data);
             else if (scaleType === 'nacional') iniciarFiltroNacional_Paso1(data);
+
+            // Valor por defecto de los módulos de datos duros al entrar a
+            // Nacional — antes solo se activaban dentro de un tipo de
+            // análisis puntual de Estatal/Municipal; cada tipo de esta
+            // escala lo refina con una entidad/región específica en cuanto
+            // el usuario elige una (ver selectEstado/dibujarGraficaEvolucion/
+            // actualizarGraficasRegionalizacion). En Mundial NO se muestran:
+            // son datos de México (población nacional/estatal), y a esa
+            // escala se ve el mundo completo — quedarían fijos mostrando
+            // siempre lo mismo sin relación con lo que hay en pantalla.
+            if (scaleType === 'nacional' && typeof window.mostrarModulosConPoblacionNacional === 'function') {
+                window.mostrarModulosConPoblacionNacional('México');
+            }
         })
         .catch(error => console.error("Error cargando datos: " + error));
 }
@@ -1638,17 +1663,35 @@ function actualizarPanelDerecho(escala) {
 }
 
 function showSection(id) {
+    // El Visor Institucional requiere sesión iniciada — su botón de nav ya
+    // está oculto sin sesión (.auth-hidden), pero esto cubre además una
+    // llamada directa (p. ej. desde la consola) con la sesión vencida.
+    if (id === 'institucional' && sessionStorage.getItem('geodash_role') === null) {
+        if (typeof openLoginModal === 'function') openLoginModal();
+        return;
+    }
+
     document.querySelectorAll('.main-content-panel').forEach(p => p.style.display = 'none');
     var target = document.getElementById(id); if (target) target.style.display = 'block';
     var leftSidebar = document.getElementById('left-sidebar-container');
     var toggleTab = document.getElementById('sidebar-toggle-tab');
+    // El globo "Despliega el Dashboard" (ver setupUI) invita a abrir el panel
+    // lateral de "Inicio" — vive como hijo directo de <body>, no dentro de
+    // #inicio, así que antes se quedaba flotando encima de Marco/Metodología/
+    // Contacto/Visor Institucional aunque esas vistas no tengan ese panel.
+    var dashboardHint = document.getElementById('dashboard-open-hint');
     if (id === 'inicio') {
         if (leftSidebar) leftSidebar.style.display = 'flex';
         if (toggleTab) toggleTab.style.display = 'flex';
+        if (dashboardHint) dashboardHint.style.display = 'block';
         if (map) setTimeout(() => map.invalidateSize(), 200);
     } else {
         if (leftSidebar) leftSidebar.style.display = 'none';
         if (toggleTab) toggleTab.style.display = 'none';
+        if (dashboardHint) dashboardHint.style.display = 'none';
+        if (id === 'institucional' && typeof iniciarVisorInstitucional === 'function') {
+            iniciarVisorInstitucional();
+        }
     }
     document.querySelectorAll('.nav-button').forEach(n => {
         n.classList.remove('active');
@@ -2071,19 +2114,31 @@ AppData.load('Tablas/poblacion_estatal.json').then(function (data) {
     console.error('No se pudo cargar poblacion_estatal.json:', e);
 });
 
-window.actualizarModulosDatosDuros = function(features, escala, nombreEstado) {
+// poblacionDirecta (5º parámetro, opcional): cuando quien llama ya tiene la
+// cifra exacta a la mano (p. ej. Regionalización, que agrega POB_TOTAL del
+// propio geojson), se usa tal cual en vez de recalcularla — antes solo
+// existían las dos rutas de abajo (búsqueda por nombre en POBLACION_ESTATAL,
+// o suma de features con POB1_x), ninguna cubría Regionalización.
+window.actualizarModulosDatosDuros = function(features, escala, nombreEstado, poblacionDirecta) {
     var container = document.getElementById('modulos-container');
     if (!container) return;
-    
-    // Si no hay features ni nombreEstado, ocultar
-    if ((!features || features.length === 0) && !nombreEstado) {
+
+    // Si no hay ninguna fuente de dato, ocultar
+    if ((!features || features.length === 0) && !nombreEstado && !poblacionDirecta) {
         container.style.display = 'none';
         return;
     }
-    
+
     var totalPoblacion = 0;
-    
-    if (escala === "Estatal" && nombreEstado) {
+
+    if (typeof poblacionDirecta === 'number' && poblacionDirecta > 0) {
+        totalPoblacion = poblacionDirecta;
+    } else if ((escala === "Estatal" || escala === "Metropolitana") && nombreEstado) {
+        // POBLACION_ESTATAL (Tablas/poblacion_estatal.json) incluye tanto
+        // nombres de estado como las 3 Zonas Metropolitanas ("ZM Valle de
+        // México"/"ZM Tijuana"/"ZM Monterrey") con la misma clave directa —
+        // por eso Metropolitana reusa esta misma rama, solo cambia la
+        // etiqueta de "escala" con la que se llama.
         var key = normalizarEstadoNombre(nombreEstado);
         if (POBLACION_ESTATAL[nombreEstado]) totalPoblacion = POBLACION_ESTATAL[nombreEstado];
         else if (POBLACION_ESTATAL[key]) totalPoblacion = POBLACION_ESTATAL[key];
@@ -2123,4 +2178,31 @@ window.actualizarModulosDatosDuros = function(features, escala, nombreEstado) {
     void container.offsetWidth;
     container.classList.add('animating');
     container.style.display = 'flex';
+};
+
+// Total nacional (32 entidades) para usar como valor por defecto de los
+// módulos en Nacional/Mundial cuando el tipo de análisis activo todavía no
+// tiene una entidad/región específica seleccionada (Finanzas, Financiero,
+// Flujos/Productividad/Censo antes de elegir un estado). Reusa
+// carto/Region_nacional_2026.geojson — el mismo archivo y la misma caché
+// (window._regionalizacionGeoJSON) que ya usa Regionalización, así que si el
+// usuario nunca entra a Nacional esto no se descarga, y si entra a
+// Regionalización después no se vuelve a descargar.
+window._poblacionNacionalTotalCache = null;
+window.mostrarModulosConPoblacionNacional = function (etiqueta) {
+    function conGeo(geo) {
+        if (!geo) return;
+        if (window._poblacionNacionalTotalCache === null) {
+            window._poblacionNacionalTotalCache = geo.features.reduce(function (s, f) { return s + (f.properties.POB_TOTAL || 0); }, 0);
+        }
+        window.actualizarModulosDatosDuros(null, 'Nacional', etiqueta || 'México', window._poblacionNacionalTotalCache);
+    }
+    if (window._regionalizacionGeoJSON) {
+        conGeo(window._regionalizacionGeoJSON);
+    } else {
+        AppData.load('carto/Region_nacional_2026.geojson').then(function (geo) {
+            window._regionalizacionGeoJSON = geo;
+            conGeo(geo);
+        }).catch(function (e) { console.error('No se pudo cargar Region_nacional_2026.geojson para los módulos:', e); });
+    }
 };

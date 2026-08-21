@@ -51,6 +51,7 @@ function iniciarLogicaMetropolitana() {
     if (window.levantamientoLayer) { map.removeLayer(window.levantamientoLayer); window.levantamientoLayer = null; }
     if (window.limiteMunicipalLayer) { map.removeLayer(window.limiteMunicipalLayer); window.limiteMunicipalLayer = null; }
     if (window.nacionalTop5Layer) { map.removeLayer(window.nacionalTop5Layer); window.nacionalTop5Layer = null; }
+    if (window._metroArmadorasLayer) { map.removeLayer(window._metroArmadorasLayer); window._metroArmadorasLayer = null; }
 
     var statsDiv = document.getElementById('stats-overlay');
     if (statsDiv) statsDiv.style.display = 'none';
@@ -147,6 +148,31 @@ function generarMenuMetropolitana(wrapper) {
         selectZm.appendChild(opt);
     });
 
+    // --- PLANTAS ARMADORAS (independiente del Tipo de Análisis) ---
+    // Antes vivía dentro de accBox (solo visible en modo "Accesibilidad a la
+    // Armadora Automotriz"): al elegir "Vulnerabilidad multicriterio" la capa
+    // se apagaba sin forma de volver a prenderla. Ahora es un control
+    // persistente que se muestra en cuanto se elige una Zona Metropolitana,
+    // sin importar el tipo de análisis activo (ver
+    // actualizarArmadorasPersistenteMetro).
+    var armadorasBoxMetro = document.createElement("div");
+    armadorasBoxMetro.id = "metro-armadoras-box";
+    armadorasBoxMetro.className = "dashboard-box";
+    armadorasBoxMetro.style.display = "none";
+    armadorasBoxMetro.innerHTML = `
+        <div style="display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" id="chk-armadoras-metro" checked onchange="if(window.actualizarVisibilidadArmadorasMetro) window.actualizarVisibilidadArmadorasMetro();">
+            <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
+            <span style="font-size:12px; color:#ccc; font-weight:bold;">Plantas Armadoras</span>
+        </div>
+        <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
+            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 55%; cursor: pointer;"
+                oninput="window.currentArmadorasOpacityMetro = this.value; if(window.actualizarVisibilidadArmadorasMetro) window.actualizarVisibilidadArmadorasMetro();">
+        </div>
+    `;
+    wrapper.appendChild(armadorasBoxMetro);
+
     // --- CAJA 2: ACCESIBILIDAD A LA ARMADORA AUTOMOTRIZ (ESTATAL) ---
     var accBox = document.createElement("div");
     accBox.id = "metro-acc-box";
@@ -161,18 +187,10 @@ function generarMenuMetropolitana(wrapper) {
             <!-- El botón "Accesibilidad Activa" / "Ver Accesibilidad a la Armadora"
                  se quitó: era redundante — elegir este Tipo de Análisis y la Zona
                  Metropolitana ya activa la accesibilidad automáticamente
-                 (aplicarModoMetro / selectZm.onchange). -->
+                 (aplicarModoMetro / selectZm.onchange). El control de Plantas
+                 Armadoras se movió fuera de esta caja (ver armadorasBoxMetro
+                 arriba) — ya no depende de este modo. -->
             <div style="display:flex; align-items:center; gap:6px;">
-                <input type="checkbox" id="chk-armadoras-metro" checked onchange="if(window.actualizarVisibilidadArmadorasMetro) window.actualizarVisibilidadArmadorasMetro();">
-                <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
-                <span style="font-size:11px; color:#ccc;">Plantas Armadoras</span>
-            </div>
-            <div style="margin-top:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between;">
-                <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
-                <input type="range" min="0" max="1" step="0.1" value="1" style="width: 50%; cursor: pointer;"
-                    oninput="window.currentArmadorasOpacityMetro = this.value; if(window.actualizarVisibilidadArmadorasMetro) window.actualizarVisibilidadArmadorasMetro();">
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
                 <input type="checkbox" id="chk-empresas-metro" checked onchange="if(window.actualizarVisibilidadEmpresasMetro) window.actualizarVisibilidadEmpresasMetro();">
                 <span style="font-size:11px; color:#ccc;">Unidades Económicas (DENUE)</span>
             </div>
@@ -220,6 +238,48 @@ function generarMenuMetropolitana(wrapper) {
     });
 
     var opacityInput = vulnBox.querySelector("#metro-opacity");
+
+    // Filtra armadoras.geojson por Zona Metropolitana (misma lógica de
+    // estadoBusqueda que usa activarAccesibilidad) y dibuja/actualiza
+    // window._metroArmadorasLayer directamente sobre el mapa — independiente
+    // del Tipo de Análisis activo, para que las plantas armadoras puedan
+    // verse tanto en "Accesibilidad" como en "Vulnerabilidad multicriterio".
+    function actualizarArmadorasPersistenteMetro(zmName) {
+        var box = document.getElementById('metro-armadoras-box');
+        if (window._metroArmadorasLayer) { map.removeLayer(window._metroArmadorasLayer); window._metroArmadorasLayer = null; }
+        if (!zmName || !armadorasRawData) { if (box) box.style.display = 'none'; return; }
+        if (box) box.style.display = 'block';
+
+        var catalogList = CATALOGO_ZONAS_METROPOLITANAS[zmName];
+        var estadoBusqueda = obtenerNombreEstandarEstado(zmName);
+        var firstCode = catalogList ? catalogList[0].substring(0, 2) : '';
+        if (zmName === "ZM Valle de México") estadoBusqueda = "ZMVM";
+        else if (firstCode === "02") estadoBusqueda = "BAJA CALIFORNIA";
+        else if (firstCode === "19") estadoBusqueda = "NUEVO LEON";
+
+        var armadorasEstado = armadorasRawData.features.filter(f => {
+            var estadoArmadora = obtenerNombreEstandarEstado(f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO);
+            if (estadoBusqueda === "ZMVM") return estadoArmadora === "MEXICO" || estadoArmadora === "CIUDAD DE MEXICO" || estadoArmadora.includes("MEXICO") || estadoArmadora.includes("CIUDAD DE MEXICO");
+            if (estadoBusqueda === "BAJA CALIFORNIA" && estadoArmadora.includes("SUR")) return false;
+            return estadoArmadora === estadoBusqueda || estadoArmadora.includes(estadoBusqueda) || estadoBusqueda.includes(estadoArmadora);
+        }).filter(f => f.geometry && f.geometry.coordinates);
+
+        if (armadorasEstado.length === 0) return;
+
+        var chk = document.getElementById('chk-armadoras-metro');
+        var visible = chk ? chk.checked : true;
+        var op = visible ? (window.currentArmadorasOpacityMetro !== undefined ? parseFloat(window.currentArmadorasOpacityMetro) : 1) : 0;
+
+        var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0, 229, 255, 0.6)" stroke="#fff" stroke-width="2"/></svg>';
+        var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
+        window._metroArmadorasLayer = L.geoJSON(armadorasEstado, {
+            pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: triangleIcon, opacity: op }); },
+            onEachFeature: function (feature, layer) {
+                var props = feature.properties;
+                layer.bindTooltip(`<b>${props.Empresa || props.EMPRESA || props.Nombre || props.NOMBRE || 'Armadora'}</b><br>Estado: ${props.Estado || props.ESTADO}<br>Municipio: ${props.Municipio || props.MUNICIPIO}<br>Empleos: ${props.Empleos || props.EMPLEOS || 'N/A'}`);
+            }
+        }).addTo(map);
+    }
 
     // LÓGICA DE INTERACCIONES Y CAPAS
     function activarAccesibilidad(zmName) {
@@ -343,20 +403,12 @@ function generarMenuMetropolitana(wrapper) {
             var denueValido = denueEstado.filter(f => f.geometry && f.geometry.coordinates);
             var armadorasValido = armadorasEstado.filter(f => f.geometry && f.geometry.coordinates);
 
-            // "triangleIcon" nunca se declaró en esta función (sí existe en
-            // escala_global.js/escala_estatal.js, pero como variable LOCAL de esas
-            // otras funciones, no global) — referenciarlo aquí tiraba ReferenceError.
-            // Se construye igual que en dibujarArmadorasPuntos (escala_estatal.js).
-            var triangleHtml = '<svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0, 229, 255, 0.6)" stroke="#fff" stroke-width="2"/></svg>';
-            var triangleIcon = L.divIcon({ className: '', html: triangleHtml, iconSize: [16, 16], iconAnchor: [8, 8] });
-
-            var armadoraLayerGrp = armadorasValido.length > 0 ? L.geoJSON(armadorasValido, {
-                pointToLayer: function (feature, latlng) { return L.marker(latlng, { icon: triangleIcon }); },
-                onEachFeature: function (feature, layer) {
-                    var props = feature.properties;
-                    layer.bindTooltip(`<b>${props.Empresa || props.EMPRESA || props.Nombre || props.NOMBRE || 'Armadora'}</b><br>Estado: ${props.Estado || props.ESTADO}<br>Municipio: ${props.Municipio || props.MUNICIPIO}<br>Empleos: ${props.Empleos || props.EMPLEOS || 'N/A'}`);
-                }
-            }) : L.featureGroup();
+            // Las plantas armadoras ya NO se dibujan aquí — son un control
+            // independiente del Tipo de Análisis (ver
+            // actualizarArmadorasPersistenteMetro, disparado directamente desde
+            // selectZm.onchange), para que puedan estar activas también en
+            // "Vulnerabilidad multicriterio". window._metroArmadorasLayer ya
+            // está actualizado para cuando este código corre (ver más abajo).
 
             // Clasificación por sector (Conjunto/"Industrias agrupadas") con la misma
             // paleta getColorConjunto que ya usan Estatal y el pastel de
@@ -378,24 +430,23 @@ function generarMenuMetropolitana(wrapper) {
                 }
             }) : L.featureGroup();
 
-            // Referencias globales para que los checkboxes/sliders de opacidad de
-            // este panel (fuera del closure de activarAccesibilidad) puedan
-            // controlarlas.
-            window._metroArmadorasLayer = armadoraLayerGrp;
+            // Referencia global para que el checkbox/slider de opacidad de
+            // Unidades Económicas (fuera del closure de activarAccesibilidad)
+            // pueda controlarla. Las armadoras usan su propia referencia
+            // (window._metroArmadorasLayer), ya actualizada por
+            // actualizarArmadorasPersistenteMetro antes de llegar aquí.
             window._metroEmpresasLayer = markers;
-            if (typeof window.actualizarVisibilidadArmadorasMetro === 'function') window.actualizarVisibilidadArmadorasMetro();
             if (typeof window.actualizarVisibilidadEmpresasMetro === 'function') window.actualizarVisibilidadEmpresasMetro();
 
             fg.addLayer(markers);
-            fg.addLayer(armadoraLayerGrp);
             currentGeoJSONLayer = fg.addTo(map);
 
             // Encuadrar en la zona de estudio seleccionada — antes se quedaba en la
             // vista general de México (el flyTo de iniciarLogicaMetropolitana) y
             // nunca se movía hacia la ZM activa.
             try {
-                if (armadorasValido.length > 0) {
-                    map.flyToBounds(armadoraLayerGrp.getBounds(), { padding: [100, 100], maxZoom: 11 });
+                if (armadorasValido.length > 0 && window._metroArmadorasLayer) {
+                    map.flyToBounds(window._metroArmadorasLayer.getBounds(), { padding: [100, 100], maxZoom: 11 });
                 } else if (isocronasEstado.length > 0 && isocronasLayer) {
                     map.flyToBounds(isocronasLayer.getBounds(), { padding: [50, 50] });
                 } else if (denueValido.length > 0) {
@@ -516,10 +567,25 @@ function generarMenuMetropolitana(wrapper) {
             document.getElementById('metro-zm-title').innerText = "Zona Metropolitana: " + zm;
 
             aplicarModoMetro(zm);
+            // Independiente del Tipo de Análisis elegido — ver el bloque
+            // "PLANTAS ARMADORAS" arriba.
+            actualizarArmadorasPersistenteMetro(zm);
+            // Módulos de datos duros (esferas sobre el minimapa) — antes
+            // nunca se activaban en esta escala. POBLACION_ESTATAL
+            // (Tablas/poblacion_estatal.json) ya trae las 3 ZM con su
+            // propia clave ("ZM Valle de México"/"ZM Tijuana"/"ZM
+            // Monterrey"), independiente del Tipo de Análisis elegido.
+            if (typeof window.actualizarModulosDatosDuros === 'function') {
+                window.actualizarModulosDatosDuros([], "Metropolitana", zm);
+            }
         } else {
             document.getElementById('metro-zm-title').innerText = "Zona Metropolitana";
             accBox.style.display = "none";
             vulnBox.style.display = "none";
+            actualizarArmadorasPersistenteMetro(null);
+            if (typeof window.actualizarModulosDatosDuros === 'function') {
+                window.actualizarModulosDatosDuros(null, null, null);
+            }
         }
     };
 

@@ -1,33 +1,33 @@
-CVE_ENT,Estado,RegiÛn,"PoblaciÛn (INEGI, 2023)",Promedio habitantes
-01,†Aguascalientes,Suroeste,4343825,7621
-02,†Baja California,Oriente,6604365,30435
-03,†Baja California Sur,Oriente,8123595,38319
-04,†Campeche,Centrosur,17541324,140331
-05,†Chiapas,Occidente,8589874,68719
-06,†Chihuahua,Suroeste,5726112,46178
-07,†Ciudad de MÈxico,Occidente,5023432,44455
-08,†Coahuila,Sureste,2368695,22346
-09,†Colima,Suroeste,3621650,42608
-10,†Durango,Oriente,3217372,38302
-11,†Estado de MÈxico,Noroeste,2993054,41570
-12,†Guanajuato,Noroeste,3858580,57591
-13,†Guerrero,Oriente,1421896,23698
-14,†Hidalgo,Centronorte,2863908,49378
-15,†Jalisco,Centronorte,1648316,28419
-16,†Michoac·n,Noreste,6153230,120652
-17,†Morelos,Centronorte,6298765,136930
-18,†Nayarit,Noreste,3571876,83067
-19,†Nuevo LeÛn,Noroeste,1879034,48180
-20,†Oaxaca,Noreste,3303899,86945
-21,†Puebla,Centrosur,1974537,54848
-22,†QuerÈtaro,Occidente,1275858,63793
-23,†Quintana Roo,Noroeste,3094943,171941
-24,†San Luis PotosÌ,Centronorte,2533866,140770
-25,†Sinaloa,Sureste,2477905,145759
-26,†Sonora,Centrosur,9298955,581185
-27,†Tabasco,Sureste,952754,73289
-28,†Tamaulipas,Centronorte,1503298,136663
-29,†Tlaxcala,Sureste,1905363,173215
-30,†Veracruz,Occidente,739408,73941
-31,†Yucat·n,Noroeste,3785770,540824
-32,†Zacatecas,Noroeste,879664,175933
+CVE_ENT,Estado,Regi√≥n,"Poblaci√≥n (INEGI, 2023)",Promedio habitantes
+01,Aguascalientes,Suroeste,4343825,7621
+02,Baja California,Oriente,6604365,30435
+03,Baja California Sur,Oriente,8123595,38319
+04,Campeche,Centrosur,17541324,140331
+05,Chiapas,Occidente,8589874,68719
+06,Chihuahua,Suroeste,5726112,46178
+07,Ciudad de M√©xico,Occidente,5023432,44455
+08,Coahuila,Sureste,2368695,22346
+09,Colima,Suroeste,3621650,42608
+10,Durango,Oriente,3217372,38302
+11,Estado de M√©xico,Noroeste,2993054,41570
+12,Guanajuato,Noroeste,3858580,57591
+13,Guerrero,Oriente,1421896,23698
+14,Hidalgo,Centronorte,2863908,49378
+15,Jalisco,Centronorte,1648316,28419
+16,Michoac√°n,Noreste,6153230,120652
+17,Morelos,Centronorte,6298765,136930
+18,Nayarit,Noreste,3571876,83067
+19,Nuevo Le√≥n,Noroeste,1879034,48180
+20,Oaxaca,Noreste,3303899,86945
+21,Puebla,Centrosur,1974537,54848
+22,Quer√©taro,Occidente,1275858,63793
+23,Quintana Roo,Noroeste,3094943,171941
+24,San Luis Potos√≠,Centronorte,2533866,140770
+25,Sinaloa,Sureste,2477905,145759
+26,Sonora,Centrosur,9298955,581185
+27,Tabasco,Sureste,952754,73289
+28,Tamaulipas,Centronorte,1503298,136663
+29,Tlaxcala,Sureste,1905363,173215
+30,Veracruz,Occidente,739408,73941
+31,Yucat√°n,Noroeste,3785770,540824
+32,Zacatecas,Noroeste,879664,175933

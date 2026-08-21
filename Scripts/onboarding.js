@@ -202,25 +202,58 @@ function _inyectarBotonAyuda() {
     helpBtn.title = 'Ver guía rápida de la interfaz';
     helpBtn.onclick = window.mostrarOnboarding;
 
-    // Se coloca justo después de "Metodología" (no junto a "Iniciar Sesión")
-    // para que no se sobreponga con ese botón.
-    var metodologiaBtn = Array.from(container.querySelectorAll('.nav-button'))
-        .find(function (b) { return b.textContent.trim() === 'Metodología'; });
+    // Se coloca justo después de "Contacto" (no junto a "Iniciar Sesión")
+    // para que no se sobreponga con ese botón. Antes se colocaba después de
+    // "Metodología", pero ese era el sibling del separador flex-grow (no de
+    // "Contacto"), así que quedaba pegado a Metodología en vez de a Contacto.
+    var contactoBtn = Array.from(container.querySelectorAll('.nav-button'))
+        .find(function (b) { return b.textContent.trim() === 'Contacto'; });
 
-    if (metodologiaBtn && metodologiaBtn.nextSibling) {
-        container.insertBefore(helpBtn, metodologiaBtn.nextSibling);
-    } else if (metodologiaBtn) {
+    if (contactoBtn && contactoBtn.nextSibling) {
+        container.insertBefore(helpBtn, contactoBtn.nextSibling);
+    } else if (contactoBtn) {
         container.appendChild(helpBtn);
     } else {
         container.appendChild(helpBtn);
     }
 }
 
-// Ya no se dispara automáticamente al cerrar la portada (#splash-screen): el
-// panel lateral ("Dashboard") ahora arranca oculto, así que activar la guía
-// de una vez no tendría nada que señalar todavía. Se dispara en su lugar
-// desde escala_global.js (setupUI) la PRIMERA vez que el usuario abre el
-// panel con la pestaña lateral — ver el onclick de #sidebar-toggle-tab.
+// Se dispara automáticamente al cerrar la portada (#splash-screen), como
+// pidió el usuario. El tour señala elementos que viven DENTRO del panel
+// lateral ("Dashboard": scale-box/filter-container-box, ver
+// ONBOARDING_TARGETS arriba) — como ese panel arranca cerrado (setupUI en
+// escala_global.js), esos objetivos no tendrían una posición real todavía.
+// Por eso, en vez de llamar a mostrarOnboarding() directamente, se simula
+// el clic de #sidebar-toggle-tab: ese botón ya abre el panel Y dispara
+// mostrarOnboarding() si no se ha visto (ver su onclick en setupUI), así
+// que reutilizamos esa misma ruta en vez de duplicar la lógica aquí.
+function _activarGuiaAlIniciar() {
+    if (_onboardingYaVisto()) return;
+    var leftContainer = document.getElementById('left-sidebar-container');
+    var toggleTab = document.getElementById('sidebar-toggle-tab');
+    if (leftContainer && toggleTab && leftContainer.classList.contains('hidden-panel')) {
+        toggleTab.click();
+    } else if (typeof window.mostrarOnboarding === 'function') {
+        // El panel ya estaba abierto por alguna otra razón — mostrar
+        // directamente, sin togglear (eso lo cerraría).
+        window.mostrarOnboarding();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     _inyectarBotonAyuda();
+
+    var splash = document.getElementById('splash-screen');
+    if (!splash) {
+        setTimeout(_activarGuiaAlIniciar, 800);
+        return;
+    }
+
+    var observer = new MutationObserver(function () {
+        if (!document.getElementById('splash-screen')) {
+            observer.disconnect();
+            setTimeout(_activarGuiaAlIniciar, 500);
+        }
+    });
+    observer.observe(document.body, { childList: true });
 });

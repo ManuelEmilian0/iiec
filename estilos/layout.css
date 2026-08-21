@@ -514,4 +514,95 @@ input[type="range"] {
   outline: none;
 }
 
+/* Elementos que solo deben verse con sesión iniciada (checkAuthUI, en
+   auth.js, alterna esto a flex/block) — antes ningún elemento del HTML
+   usaba esta clase, así que quedaba sin efecto. */
+.auth-hidden {
+  display: none;
+}
+
+/* --- MODAL DE INICIO DE SESIÓN (index.html, #login-modal) ---
+   Estas clases no tenían NINGUNA regla CSS en todo el proyecto — el modal
+   "abría" (openLoginModal() solo hacía display:none -> flex) pero sin
+   position:fixed/z-index/fondo quedaba metido en el flujo normal del
+   documento, invisible o descolocado en la práctica. Por eso el botón de
+   inicio de sesión parecía "no hacer nada" al hacer clic. */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 5000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  position: relative;
+  background: #1a1a1a;
+  border: 1px solid #00e5ff;
+  border-radius: 8px;
+  padding: 24px 28px;
+  width: 90%;
+  max-width: 340px;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.35);
+  font-family: "Noto Sans", sans-serif;
+}
+
+.modal-content .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  color: #aaa;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-content .close-btn:hover {
+  color: #fff;
+}
+
+.modal-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  padding: 9px 10px;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 13px;
+  font-family: "Noto Sans", sans-serif;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: #00e5ff;
+}
+
+.modal-submit-btn {
+  width: 100%;
+  padding: 10px;
+  background: #0277bd;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-submit-btn:hover {
+  background: #00a3d9;
+}
+
 /* =========================================
+   (comentario previo sin cerrar — cerrado aquí, no tenía contenido) */
