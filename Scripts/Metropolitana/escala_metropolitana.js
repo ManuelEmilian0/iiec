@@ -148,30 +148,13 @@ function generarMenuMetropolitana(wrapper) {
         selectZm.appendChild(opt);
     });
 
-    // --- PLANTAS ARMADORAS (independiente del Tipo de Análisis) ---
-    // Antes vivía dentro de accBox (solo visible en modo "Accesibilidad a la
-    // Armadora Automotriz"): al elegir "Vulnerabilidad multicriterio" la capa
-    // se apagaba sin forma de volver a prenderla. Ahora es un control
-    // persistente que se muestra en cuanto se elige una Zona Metropolitana,
-    // sin importar el tipo de análisis activo (ver
-    // actualizarArmadorasPersistenteMetro).
-    var armadorasBoxMetro = document.createElement("div");
-    armadorasBoxMetro.id = "metro-armadoras-box";
-    armadorasBoxMetro.className = "dashboard-box";
-    armadorasBoxMetro.style.display = "none";
-    armadorasBoxMetro.innerHTML = `
-        <div style="display:flex; align-items:center; gap:6px;">
-            <input type="checkbox" id="chk-armadoras-metro" checked onchange="if(window.actualizarVisibilidadArmadorasMetro) window.actualizarVisibilidadArmadorasMetro();">
-            <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
-            <span style="font-size:12px; color:#ccc; font-weight:bold;">Plantas Armadoras</span>
-        </div>
-        <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between;">
-            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
-            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 55%; cursor: pointer;"
-                oninput="window.currentArmadorasOpacityMetro = this.value; if(window.actualizarVisibilidadArmadorasMetro) window.actualizarVisibilidadArmadorasMetro();">
-        </div>
-    `;
-    wrapper.appendChild(armadorasBoxMetro);
+    // La caja persistente "Plantas Armadoras" (checkbox + icono) que vivía
+    // aquí se quitó por pedido explícito: quedaba duplicada con la entrada
+    // "Infraestructura Industrial > Planta Armadora" que ya muestra la caja
+    // Simbología (actualizarLeyendaAgebCategorica, en escala_municipal.js).
+    // Esa es ahora la única representación de la simbología de armadoras. La
+    // capa de armadoras sigue dibujándose igual (actualizarArmadorasPersistenteMetro);
+    // sin checkbox, actualizarVisibilidadArmadorasMetro asume visible=true.
 
     // --- CAJA 2: ACCESIBILIDAD A LA ARMADORA AUTOMOTRIZ (ESTATAL) ---
     var accBox = document.createElement("div");
@@ -217,13 +200,24 @@ function generarMenuMetropolitana(wrapper) {
             <select id="select-indice-metro" class="dynamic-filter-select" style="margin-top: 5px;">
                 <option value="" selected>-- Selecciona un Índice --</option>
             </select>
-            <div id="opacity-control-metro" style="margin-top: 12px; width: 100%; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
-                <span style="font-size: 11px; color: #aaa;">Opacidad Capas:</span>
-                <input type="range" id="metro-opacity" min="0" max="1" step="0.1" value="0.85" style="width: 55%; cursor: pointer;">
-            </div>
         </div>
     `;
     wrapper.appendChild(vulnBox);
+
+    // --- CAJA DE FUENTE ---
+    // Metropolitana combina un modo tipo Estatal (Accesibilidad, con datos
+    // DENUE) y un modo tipo Municipal (Vulnerabilidad multicriterio, con
+    // datos AGEB/SCINCE), pero construye su propio wrapper y oculta
+    // #filter-container-box (ver arriba) — así que el "Fuente: ..." genérico
+    // (fuenteControl.update, en escala_global.js) queda oculto dentro de esa
+    // caja invisible y nunca se ve aquí. Se agrega una caja de Fuente propia,
+    // combinando ambas fuentes, ya que ambos tipos de dato conviven en esta
+    // escala sin importar cuál Tipo de Análisis esté activo.
+    var fuenteBoxMetro = document.createElement("div");
+    fuenteBoxMetro.className = "fuente-control";
+    fuenteBoxMetro.style.cssText = "margin-top:10px; width:100%; box-sizing:border-box;";
+    fuenteBoxMetro.innerHTML = "Fuente: DENUE; Directorio Estadístico Nacional de Unidades Económicas, INEGI (2022) &middot; Sistema para la Consulta de Información Censal (SCINCE), INEGI 2020";
+    wrapper.appendChild(fuenteBoxMetro);
 
     var selectIndice = vulnBox.querySelector("#select-indice-metro");
     var opcionesAgeb = [
@@ -237,18 +231,14 @@ function generarMenuMetropolitana(wrapper) {
         selectIndice.appendChild(opt);
     });
 
-    var opacityInput = vulnBox.querySelector("#metro-opacity");
-
     // Filtra armadoras.geojson por Zona Metropolitana (misma lógica de
     // estadoBusqueda que usa activarAccesibilidad) y dibuja/actualiza
     // window._metroArmadorasLayer directamente sobre el mapa — independiente
     // del Tipo de Análisis activo, para que las plantas armadoras puedan
     // verse tanto en "Accesibilidad" como en "Vulnerabilidad multicriterio".
     function actualizarArmadorasPersistenteMetro(zmName) {
-        var box = document.getElementById('metro-armadoras-box');
         if (window._metroArmadorasLayer) { map.removeLayer(window._metroArmadorasLayer); window._metroArmadorasLayer = null; }
-        if (!zmName || !armadorasRawData) { if (box) box.style.display = 'none'; return; }
-        if (box) box.style.display = 'block';
+        if (!zmName || !armadorasRawData) { return; }
 
         var catalogList = CATALOGO_ZONAS_METROPOLITANAS[zmName];
         var estadoBusqueda = obtenerNombreEstandarEstado(zmName);
@@ -546,9 +536,16 @@ function generarMenuMetropolitana(wrapper) {
         if (!zm) return;
         if (modo === 'accesibilidad') {
             activarAccesibilidad(zm);
-        } else if (selectIndice.value) {
-            var label = selectIndice.options[selectIndice.selectedIndex].text;
-            activarVulnerabilidad(zm, selectIndice.value, label);
+        } else if (modo === 'vulnerabilidad') {
+            // Igual que en Municipal: si aún no se ha elegido un índice
+            // específico, se enciende por default "Índice Global" (G_INDICE)
+            // en cuanto hay ZM seleccionada, en vez de esperar a que el
+            // usuario elija manualmente un índice del combo.
+            var indiceActivo = selectIndice.value || 'G_INDICE';
+            var label = selectIndice.value
+                ? selectIndice.options[selectIndice.selectedIndex].text
+                : 'Índice Global';
+            activarVulnerabilidad(zm, indiceActivo, label);
         }
     }
 
@@ -602,14 +599,10 @@ function generarMenuMetropolitana(wrapper) {
         }
     };
 
-    opacityInput.oninput = function () {
-        var val = this.value;
-        window.currentDenueOpacity = val;
-        if (window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();
-        if (window.agebLayer) {
-            window.agebLayer.eachLayer(l => {
-                if (l.options.interactive) l.setStyle({ fillOpacity: val });
-            });
-        }
-    };
+    // El slider "Opacidad Capas" propio de esta caja se quitó por pedido
+    // explícito (un solo control de opacidad, no varios) — la opacidad de
+    // AGEB/isócronas/armadoras ahora se maneja únicamente desde el control
+    // genérico "Opacidad de Capas" de la caja Simbología
+    // (actualizarTransparenciaGlobal, en escala_global.js), igual que en
+    // Nacional/Estatal.
 }

@@ -28,8 +28,10 @@ function iniciarVisorInstitucional() {
     if (!mapInstitucional) {
         mapInstitucional = L.map('map-institucional', { minZoom: 4, maxZoom: 10, zoomControl: false });
         mapInstitucional.setView([23.6345, -102.5528], 5);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19
+        // CARTO cerró su servicio anónimo de tiles — mismo reemplazo por
+        // Esri (gratuito, sin API key) que en escala_global.js.
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16
         }).addTo(mapInstitucional);
 
         var chkIndice = document.getElementById('inst-chk-indice');

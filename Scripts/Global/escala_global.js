@@ -53,11 +53,16 @@ function initMap() {
     // que no haya un salto visible de "mundo" a "México" en los primeros 500ms.
     map.setView([23.6345, -102.5528], 5);
 
-    var cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19
+    // CARTO cerró su servicio anónimo de tiles (basemaps.cartocdn.com) para
+    // uso sin API key — por eso aparecía el mosaico "API KEY REQUIRED" sobre
+    // el agua al acercar/alejar el mapa. Se reemplaza por los basemaps
+    // "Canvas" de Esri (gratuitos, sin API key, mismo dominio arcgisonline
+    // que ya usa "satelite" abajo, ya probado en este proyecto).
+    var cartoDark = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16
     });
-    var cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19
+    var cartoLight = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16
     });
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '&copy; Esri &mdash; Source: Esri', maxZoom: 19
@@ -89,8 +94,8 @@ function initMap() {
 
         var basemaps = [
             { name: "Satélite", layer: satelite, thumb: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/4/6/3" },
-            { name: "Oscuro", layer: cartoDark, thumb: "https://a.basemaps.cartocdn.com/dark_all/4/6/3.png" },
-            { name: "Claro", layer: cartoLight, thumb: "https://a.basemaps.cartocdn.com/light_all/4/6/3.png" },
+            { name: "Oscuro", layer: cartoDark, thumb: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/4/6/3" },
+            { name: "Claro", layer: cartoLight, thumb: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/4/6/3" },
             { name: "Google Maps", layer: googleMaps, thumb: "https://mt1.google.com/vt/lyrs=m&x=3&y=6&z=4" }
         ];
 
@@ -229,8 +234,8 @@ function initMap() {
         doubleClickZoom: false,
         boxZoom: false
     });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd', maxZoom: 19
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 16
     }).addTo(minimap);
 
     var dotIcon = L.divIcon({
@@ -1174,7 +1179,7 @@ function setupUI() {
                         <circle cx="10" cy="10" r="2" fill="currentColor"/>
                         <circle cx="15" cy="15" r="2" fill="currentColor"/>
                     </svg>
-                    <span>Metropol.</span>
+                    <span>Metropolitana</span>
                 </button>
                 <button onclick="loadLayer('municipio')" class="scale-btn" id="btn-municipio" title="Escala Municipal (AGEB)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 20 8 18 20 6 22 2 10" fill="currentColor" fill-opacity="0.3"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>

@@ -2061,23 +2061,22 @@ var REGION_NOMBRE_DISPLAY = {
     "Peninsula de Yucatan": "Península de Yucatán"
 };
 
-// Antes usaba una paleta "arcoíris" (cian/verde/morado/naranja) que no se
-// parecía en nada a la simbología del resto de la plataforma. Se homologa a
-// la misma familia de rojos que RampaRojos (usada en TODAS las coropletas
-// numéricas: Productividad, Censo, Finanzas, Índice Educación Superior,
-// AGEB) extendida de 5 a 8 tonos — Regionalización es categórica (8
-// regiones sin orden entre sí, a diferencia de las 5 clases numéricas de
-// RampaRojos), pero así su coropleta se lee como parte de la misma familia
-// visual en vez de una paleta aparte.
+// Antes se homologó a tonos de RampaRojos (mismo rojo secuencial que las
+// coropletas numéricas) para verse "parte de la misma familia" — pero
+// Regionalización es categórica (8 regiones SIN orden entre sí), y una
+// rampa de un solo tono de claro a oscuro se lee como si representara un
+// valor bajo/alto (un índice), justo lo que NO es. Se cambia a colores
+// neón bien separados entre sí (sin relación de claro→oscuro), que además
+// resaltan sobre el fondo negro del mapa.
 var REGION_COLORES = {
-    "Centro occidente": "#fee0d2",
-    "Centro sur": "#fcbba1",
-    "Golfo de Mexico": "#fc9272",
-    "Noreste": "#fb6a4a",
-    "Noroeste": "#ef3b2c",
-    "Norte": "#cb181d",
-    "Pacifico Sur": "#a50f15",
-    "Peninsula de Yucatan": "#67000d"
+    "Centro occidente": "#00e5ff", // cian
+    "Centro sur": "#ff00ff",       // magenta
+    "Golfo de Mexico": "#39ff14",  // verde neón
+    "Noreste": "#ffe600",          // amarillo neón
+    "Noroeste": "#ff2079",         // rosa neón
+    "Norte": "#bf00ff",            // morado neón
+    "Pacifico Sur": "#ff8c00",     // naranja neón
+    "Peninsula de Yucatan": "#00ff9f" // verde-agua neón
 };
 
 // Atributos numéricos agregables, con su etiqueta amigable. INDI1 no tiene
@@ -2363,21 +2362,26 @@ function actualizarGraficasRegionalizacion(regionSel, entidadClickeada) {
     var myChartTitle = document.getElementById('myChartTitle');
     var myChartContainer = document.getElementById('myChartContainer');
     if (myChartContainer) myChartContainer.style.display = 'block';
+
+    // Gráfica de pastel con los 3 grupos de edad reales del geojson
+    // (Niños/Adultos/Mayores) — se dejó de usar la pirámide porque exigía
+    // ESTIMAR el cruce edad×género (el dato no trae esa combinación), y
+    // esta versión evita esa suposición: son las cifras tal cual vienen.
+    var gruposEdad = ['Niños', 'Adultos', 'Mayores'];
+    var valoresEdad = [totales.POB_NINOS, totales.POB_ADULTOS, totales.POB_MAYORES];
+    var totalEdadConocida = valoresEdad.reduce(function (a, b) { return a + b; }, 0);
+
     if (myChartTitle) {
-        myChartTitle.innerHTML = 'COMPOSICIÓN DEMOGRÁFICA POR EDAD';
+        // Antes solo se veían los porcentajes de cada rebanada sin ninguna
+        // referencia de a cuánta gente corresponde ese porcentaje — se
+        // agrega el total (de la misma suma que usan los porcentajes) junto
+        // al título.
+        myChartTitle.innerHTML = 'COMPOSICIÓN DEMOGRÁFICA POR EDAD <small style="color:#888; font-weight:normal; text-transform:none;">(Total: ' + Math.round(totalEdadConocida).toLocaleString('es-MX') + ')</small>';
         myChartTitle.style.display = 'block';
     }
     if (canvasMyChart) {
         canvasMyChart.parentElement.style.height = '220px';
         if (mainChart) mainChart.destroy();
-
-        // Gráfica de pastel con los 3 grupos de edad reales del geojson
-        // (Niños/Adultos/Mayores) — se dejó de usar la pirámide porque exigía
-        // ESTIMAR el cruce edad×género (el dato no trae esa combinación), y
-        // esta versión evita esa suposición: son las cifras tal cual vienen.
-        var gruposEdad = ['Niños', 'Adultos', 'Mayores'];
-        var valoresEdad = [totales.POB_NINOS, totales.POB_ADULTOS, totales.POB_MAYORES];
-        var totalEdadConocida = valoresEdad.reduce(function (a, b) { return a + b; }, 0);
 
         mainChart = new Chart(canvasMyChart.getContext('2d'), {
             type: 'pie',
@@ -2416,7 +2420,16 @@ function actualizarGraficasRegionalizacion(regionSel, entidadClickeada) {
                             return luminancia > 0.55 ? '#111' : '#fff';
                         },
                         font: { weight: 'bold', size: 10 },
-                        formatter: function (value) { return totalEdadConocida > 0 ? ((value / totalEdadConocida) * 100).toFixed(1) + '%' : ''; }
+                        // Antes solo mostraba el porcentaje ("23.4%") sin decir
+                        // de cuánta gente es ese porcentaje — se agrega una
+                        // segunda línea con la cifra absoluta (datalabels
+                        // acepta un arreglo de strings como líneas separadas).
+                        formatter: function (value) {
+                            if (totalEdadConocida <= 0) return '';
+                            var pct = ((value / totalEdadConocida) * 100).toFixed(1) + '%';
+                            var abs = Math.round(value).toLocaleString('es-MX');
+                            return [pct, abs];
+                        }
                     }
                 }
             }
@@ -2432,9 +2445,16 @@ function actualizarGraficasRegionalizacion(regionSel, entidadClickeada) {
     if (topGlobalHr) topGlobalHr.style.display = 'block';
 
     var otrosKeys = ['INDI1', 'DISC1', 'ANALFABETA', 'EDU_SUPERIOR', 'POB_OCUPADA', 'VIV_HABITADAS', 'VIV_SIN_SERV', 'VIV_INTERNET', 'SALUD1'];
-    var otrosLabels = otrosKeys.map(function (k) {
+    // Se recorta la etiqueta para que quepa en el eje Y, pero el tooltip
+    // usaba esa MISMA versión recortada como título (Chart.js toma el label
+    // del eje por defecto) — por eso al pasar el cursor solo se veía
+    // "Población Afiliada al…" en vez del nombre completo. otrosLabelsFull
+    // guarda el nombre sin recortar para el callback de título del tooltip.
+    var otrosLabelsFull = otrosKeys.map(function (k) {
         var m = REGIONALIZACION_METRICAS.find(function (x) { return x.key === k; });
-        var l = m ? m.label : k;
+        return m ? m.label : k;
+    });
+    var otrosLabels = otrosLabelsFull.map(function (l) {
         return l.length > 22 ? l.substring(0, 21) + '…' : l;
     });
 
@@ -2477,6 +2497,7 @@ function actualizarGraficasRegionalizacion(regionSel, entidadClickeada) {
                         backgroundColor: 'rgba(20,20,20,0.95)',
                         titleColor: '#00e5ff', bodyColor: '#fff', borderColor: '#555', borderWidth: 1,
                         callbacks: {
+                            title: function (items) { return otrosLabelsFull[items[0].dataIndex]; },
                             label: function (ctx) { return ctx.parsed.x.toLocaleString('es-MX', { maximumFractionDigits: 0 }); }
                         }
                     }

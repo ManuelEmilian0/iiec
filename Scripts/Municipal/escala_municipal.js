@@ -118,6 +118,7 @@ function iniciarLogicaMunicipio() {
     estadoContainer.appendChild(insigniaBadge);
 
     var selectIndice = document.createElement("select");
+    selectIndice.id = "select-indice-municipal";
     selectIndice.className = "dynamic-filter-select";
     selectIndice.style.display = 'none';
 
@@ -331,9 +332,6 @@ function iniciarLogicaMunicipio() {
         var archivoGeojson = REGIONES_AGEB[regionKey] || 'carto/agebmex.geojson';
         document.getElementById('filter-title').innerText = "Cargando " + nombreEst + "...";
         cargarAgebEstadoRegional(nombreEst, archivoGeojson, selectIndice, opcionesAgeb);
-
-        var armadorasBox = document.getElementById('municipal-armadoras-box');
-        if (armadorasBox) armadorasBox.style.display = 'block';
     };
 
     selectIndice.onchange = function () {
@@ -356,90 +354,20 @@ function iniciarLogicaMunicipio() {
     container.appendChild(estadoContainer);
     container.appendChild(selectIndice);
 
-    // --- PLANTAS ARMADORAS ---
-    // Antes se dibujaban siempre (sin control alguno) apenas se cargaba un
-    // estado — correcto en el sentido de que ya estaban "activas" para
-    // cualquier índice, pero sin manera de apagarlas u homologar su control
-    // con Estatal/Metropolitana. Mismo checkbox/slider "#chk-armadoras" que
-    // usa Estatal (dibujarArmadorasPuntos ya lo respeta).
-    var armadorasBoxMunicipal = document.createElement('div');
-    armadorasBoxMunicipal.id = 'municipal-armadoras-box';
-    armadorasBoxMunicipal.style.cssText = 'display:none; margin-top:10px; margin-bottom:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1);';
-    armadorasBoxMunicipal.innerHTML = `
-        <div style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="chk-armadoras" checked onchange="if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
-            <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
-            <span style="color:#fff; font-weight:bold; font-size:12px;">Plantas Armadoras</span>
-        </div>
-        <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between;">
-            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
-            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 55%; cursor: pointer;"
-                oninput="window.currentArmadorasOpacity = this.value; if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
-        </div>
-    `;
-    container.appendChild(armadorasBoxMunicipal);
-
+    // La caja persistente "Plantas Armadoras" (checkbox + slider de opacidad)
+    // que vivía aquí se quitó por pedido explícito: quedaba duplicada con la
+    // entrada "Infraestructura Industrial > Planta Armadora" que ya muestra
+    // la caja Simbología (actualizarLeyendaAgebCategorica más abajo). Esa es
+    // ahora la única representación de la simbología de armadoras. La capa
+    // sigue dibujándose igual (dibujarArmadorasPuntos, en escala_estatal.js);
+    // sin checkbox "#chk-armadoras", esa función asume visible=true.
     container.appendChild(equipWrapper);
 
 
 
-    // ==========================================
-    // HERRAMIENTA DE DIBUJO (PARTICIPATIVA)
-    // ==========================================
-    if (map.pm) {
-        // Habilitar controles de dibujo de Leaflet-Geoman
-        map.pm.addControls({
-            position: 'topright',
-            drawCircle: false,
-            drawCircleMarker: false,
-            drawText: false,
-            cutPolygon: false,
-            editMode: true,
-            dragMode: true,
-            removalMode: true
-        });
-
-        // Asegurarse de que no haya múltiples listeners
-        if (map._events && map._events['pm:create']) {
-            delete map._events['pm:create'];
-        }
-
-        map.on('pm:create', function (e) {
-            var layer = e.layer;
-
-            // Extraer la geometría en formato GeoJSON de forma legible
-            var geojsonObj = layer.toGeoJSON().geometry;
-            var geojsonStr = JSON.stringify(geojsonObj);
-
-            // Reemplaza esta URL con tu enlace completo de Google Forms o MS Forms
-            var formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfrjJrtuq0PMRqzGjPuu1YiTlI_sr9jQcaeKUu88pv89NlVCg/viewform?usp=publish-editor';
-
-            var popupContent = `
-                <div style="font-family:'Noto Sans'; font-size:13px; min-width: 250px;">
-                    <strong style="color:#0277bd; font-size:14px; display:flex; align-items:center;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right:6px;"><path fill="currentColor" d="M12 2L2 22h20L12 2zm0 3.83L18.17 19H5.83L12 5.83z"/></svg> 
-                        Geometría Participativa
-                    </strong>
-                    <hr style="border:0; border-top:1px solid #555; margin:5px 0;">
-                    
-                    <p style="margin: 5px 0; color:#ddd; font-size:12px;">Copia las coordenadas y pégalas en el formulario Excel:</p>
-                    <textarea id="coord-textarea" style="width: 100%; height: 50px; background: #222; color: #00e5ff; border: 1px solid #444; border-radius: 4px; font-size: 11px; padding: 4px; resize: none; margin-bottom: 5px;" readonly>${geojsonStr}</textarea>
-                    
-                    <button onclick="document.getElementById('coord-textarea').select(); document.execCommand('copy'); alert('¡Coordenadas copiadas al portapapeles!');" style="width: 100%; background: #444; color: #fff; border: 1px solid #666; padding: 5px; border-radius: 4px; cursor: pointer; margin-bottom: 10px; font-size: 12px; transition: background 0.2s;">📋 Copiar Coordenadas</button>
-                    
-                    <hr style="border:0; border-top:1px solid #555; margin:10px 0;">
-                    <button onclick="window.open('${formUrl}', '_blank');" style="width: 100%; background: #0277bd; color: #fff; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s;" onmouseover="this.style.background='#01579b'" onmouseout="this.style.background='#0277bd'">📊 Abrir Formulario / Excel</button>
-                </div>
-            `;
-
-            layer.bindPopup(popupContent, { minWidth: 260 }).openPopup();
-
-            // Cambiar color de la capa dibujada
-            if (layer.setStyle) {
-                layer.setStyle({ color: '#00e5ff', fillColor: '#00e5ff', fillOpacity: 0.3, weight: 3 });
-            }
-        });
-    }
+    // La herramienta de dibujo (participativa) ya se habilita de forma
+    // centralizada al inicio de loadLayer() (escala_global.js) para las 5
+    // escalas — no hace falta invocarla de nuevo aquí.
 
     var legendContent = document.getElementById('legend-content');
     if (legendContent) legendContent.innerHTML = "<small>Seleccione un estado primero</small>";
@@ -1246,6 +1174,11 @@ function actualizarLeyendaAgebCategorica(titulo, conteo = {}) {
             </svg> Planta Armadora
         </div>
     `;
+    // La caja persistente "Plantas Armadoras" (checkbox + slider de opacidad)
+    // que vivía fuera de esta caja se quitó por pedido explícito — quedaba
+    // duplicada con esta entrada de la Simbología. Esta es ahora la única
+    // representación de la simbología de armadoras, tanto en Municipal como
+    // en Metropolitana.
     div.innerHTML = html;
     overlay.style.display = 'block';
 }
@@ -1355,9 +1288,15 @@ window.toggleAgebNivel = function (nivelText) {
 
     var aplicarFiltro = window.filtroAgebNiveles.size > 0;
 
-    var selects = document.querySelectorAll("#filter-buttons-container select");
-    var selectIndice = selects.length > 1 ? selects[1] : null;
-    var atributo = selectIndice ? selectIndice.value : 'G_INDICE';
+    // Bug: antes se tomaba "selects[1]" (segundo <select> del contenedor,
+    // asumiendo que era el de índice) pero ese slot en realidad es el de
+    // Municipio ("select-municipio-filter") — el de índice es el TERCERO.
+    // Esto hacía que "atributo" fuera un CVE de municipio inexistente como
+    // propiedad de AGEB, así que TODOS los AGEB caían en "Sin dato" y el
+    // filtro de leyenda los apagaba a todos en vez de aislar la clase
+    // seleccionada. Se referencia el select de índice por su id directamente.
+    var selectIndice = document.getElementById("select-indice-municipal");
+    var atributo = selectIndice && selectIndice.value ? selectIndice.value : 'G_INDICE';
 
     if (agebLayer) {
         agebLayer.eachLayer(function (layer) {
@@ -1397,6 +1336,8 @@ window.toggleAgebNivel = function (nivelText) {
             item.style.opacity = '1';
             item.style.filter = 'grayscale(0%)';
         } else {
+            item.style.opacity = '0.35';
+            item.style.filter = 'grayscale(80%)';
         }
     });
 };

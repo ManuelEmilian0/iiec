@@ -61,6 +61,24 @@ function generarMenuEstados(data) {
     });
     var estados = Array.from(estadosMap.values()).sort();
 
+    // Lista acotada de entidades para "Accesibilidad a la Armadora
+    // Automotriz": antes el selector de Entidad Federativa mostraba TODOS
+    // los estados (viene de denue.geojson, no de armadoras.geojson), aunque
+    // la mayoría no tiene ninguna planta armadora. Se calcula qué entidades
+    // sí tienen al menos una en armadorasRawData (ya cargado en
+    // iniciarLogicaEstatal antes de llamar a esta función) y se agrega
+    // "Ciudad de México" como excepción explícita: no tiene armadora propia,
+    // pero está inmersa en la proximidad de las del Estado de México.
+    var estadosConArmadora = new Set();
+    if (armadorasRawData && armadorasRawData.features) {
+        armadorasRawData.features.forEach(f => {
+            var nombreRaw = f.properties.Estado || f.properties.ESTADO || f.properties.NOMGEO;
+            if (nombreRaw) estadosConArmadora.add(obtenerNombreEstandarEstado(nombreRaw));
+        });
+    }
+    estadosConArmadora.add(obtenerNombreEstandarEstado("Ciudad de México"));
+    var estadosAccesibilidad = estados.filter(nombreMostrar => estadosConArmadora.has(obtenerNombreEstandarEstado(nombreMostrar)));
+
     // --- SELECTOR TIPO DE ANÁLISIS ---
     var modoWrapper = document.createElement('div');
     modoWrapper.style.marginBottom = '10px';
@@ -87,39 +105,65 @@ function generarMenuEstados(data) {
     var select = document.createElement("select");
     select.id = 'estatal-estado-select';
     select.className = "dynamic-filter-select";
-    var defaultOption = document.createElement("option");
-    defaultOption.innerText = "-- Entidad Federativa --";
-    defaultOption.value = ""; defaultOption.disabled = true; defaultOption.selected = true;
-    select.appendChild(defaultOption);
-    estados.forEach(estado => {
-        var opt = document.createElement("option"); opt.value = estado; opt.innerText = estado;
-        select.appendChild(opt);
-    });
+
+    // Repuebla el <select> de Entidad Federativa con la lista dada,
+    // preservando la selección previa si sigue siendo válida en esa lista
+    // (p. ej. al alternar entre "Accesibilidad" y "Población titulada" sobre
+    // una misma entidad que aplica a ambas) o volviendo al placeholder si ya
+    // no aplica (p. ej. traía elegido un estado sin armadora al entrar a
+    // "Accesibilidad").
+    function poblarSelectEntidad(listaEstados, valorPrevio) {
+        select.innerHTML = "";
+        var defaultOption = document.createElement("option");
+        defaultOption.innerText = "-- Entidad Federativa --";
+        defaultOption.value = ""; defaultOption.disabled = true;
+        select.appendChild(defaultOption);
+        listaEstados.forEach(estado => {
+            var opt = document.createElement("option"); opt.value = estado; opt.innerText = estado;
+            select.appendChild(opt);
+        });
+        if (valorPrevio && listaEstados.indexOf(valorPrevio) !== -1) {
+            select.value = valorPrevio;
+        } else {
+            defaultOption.selected = true;
+            select.value = "";
+        }
+    }
+    poblarSelectEntidad(estados, null);
     estadoWrapper.appendChild(select);
     container.appendChild(estadoWrapper);
 
     // --- PLANTAS ARMADORAS (independiente del Tipo de Análisis) ---
     // Antes vivía dentro de actualizarLeyendaIsocronas (solo modo
     // "Accesibilidad"): al elegir "Población titulada" la capa se apagaba y
-    // no había forma de volver a prenderla. Ahora es un control persistente
-    // que se muestra en cuanto se elige una entidad, sin importar el tipo
-    // de análisis activo (ver actualizarArmadorasPersistenteEstatal).
-    var armadorasBoxEstatal = document.createElement('div');
-    armadorasBoxEstatal.id = 'estatal-armadoras-box';
-    armadorasBoxEstatal.style.cssText = 'display:none; margin-top:10px; margin-bottom:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1);';
-    armadorasBoxEstatal.innerHTML = `
-        <div style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="chk-armadoras" checked onchange="if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
-            <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
-            <span style="color:#fff; font-weight:bold; font-size:12px;">Plantas Armadoras</span>
-        </div>
-        <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between;">
-            <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
-            <input type="range" min="0" max="1" step="0.1" value="1" style="width: 55%; cursor: pointer;"
-                oninput="window.currentArmadorasOpacity = this.value; if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
-        </div>
-    `;
-    container.appendChild(armadorasBoxEstatal);
+    // no había forma de volver a prenderla. Se sacó de ahí a un bloque
+    // persistente — pero vivía entre los filtros y la caja "Fuente", fuera
+    // de la caja Simbología. Ahora se inserta como HERMANO de #legend-content
+    // dentro de #legend-wrapper (no como hijo): así queda dentro de la caja
+    // Simbología, y al ser hermano — no hijo — sobrevive a los
+    // "legend-content.innerHTML = ..." que repintan la leyenda de clases en
+    // AMBOS modos (actualizarLeyendaIsocronas / _actualizarLeyendaMunicipiosIndice),
+    // sin depender de cuál esté activo (ver actualizarArmadorasPersistenteEstatal).
+    var armadorasBoxEstatal = document.getElementById('estatal-armadoras-box');
+    if (!armadorasBoxEstatal) {
+        armadorasBoxEstatal = document.createElement('div');
+        armadorasBoxEstatal.id = 'estatal-armadoras-box';
+        armadorasBoxEstatal.style.cssText = 'display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);';
+        armadorasBoxEstatal.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="chk-armadoras" checked onchange="if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+                <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="rgba(0,229,255,0.8)" stroke="#fff" stroke-width="2"/></svg>
+                <span style="color:#fff; font-weight:bold; font-size:12px;">Plantas Armadoras</span>
+            </div>
+            <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size: 11px; color: #aaa;">Opacidad Armadoras:</span>
+                <input type="range" min="0" max="1" step="0.1" value="1" style="width: 55%; cursor: pointer;"
+                    oninput="window.currentArmadorasOpacity = this.value; if(window.actualizarOpacidadArmadoras) window.actualizarOpacidadArmadoras();">
+            </div>
+        `;
+        var legendWrapper = document.getElementById('legend-wrapper');
+        if (legendWrapper) legendWrapper.appendChild(armadorasBoxEstatal);
+    }
 
     // --- CONTENEDORES DE MODO ---
     var accContainer = document.createElement('div');
@@ -138,17 +182,14 @@ function generarMenuEstados(data) {
     container.appendChild(accContainer);
     container.appendChild(supContainer);
 
-    // Opacidad empresas (solo en modo accesibilidad)
+    // El slider "Opacidad Empresas" que vivía aquí (entre el filtro de
+    // Entidad Federativa y la caja "Fuente") se quitó por pedido explícito —
+    // la opacidad de las Unidades Económicas (DENUE) ahora se maneja solo
+    // desde el control genérico "Opacidad de Capas" de la caja Simbología
+    // (actualizarTransparenciaGlobal, en escala_global.js). Se conserva el
+    // valor fijo por default que usaba (0.9) porque actualizarVisibilidadIsocronas
+    // sigue leyendo window.currentDenueOpacity para el fillOpacity de DENUE.
     window.currentDenueOpacity = 0.9;
-    var opacityControl = document.createElement('div');
-    opacityControl.id = 'estatal-opacity-control';
-    opacityControl.style.cssText = "margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: space-between;";
-    opacityControl.innerHTML = `
-        <span style="font-size: 11px; color: #aaa;">Opacidad Empresas:</span>
-        <input type="range" min="0" max="1" step="0.1" value="0.9" style="width: 55%; cursor: pointer;"
-            oninput="window.currentDenueOpacity = this.value; if(window.actualizarVisibilidadIsocronas) window.actualizarVisibilidadIsocronas();">
-    `;
-    accContainer.appendChild(opacityControl);
 
     // --- LÓGICA DE MODO ---
     function limpiarCapasAccesibilidad() {
@@ -188,8 +229,10 @@ function generarMenuEstados(data) {
 
     selectModo.onchange = function() {
         estadoWrapper.style.display = this.value ? 'block' : 'none';
-        var estadoSel = document.getElementById('estatal-estado-select') ? document.getElementById('estatal-estado-select').value : '';
-        aplicarModo(estadoSel || null);
+        var valorPrevio = select.value;
+        var listaAUsar = this.value === 'accesibilidad' ? estadosAccesibilidad : estados;
+        poblarSelectEntidad(listaAUsar, valorPrevio);
+        aplicarModo(select.value || null);
     };
 
     select.onchange = function () {

@@ -216,6 +216,14 @@ function _inyectarBotonAyuda() {
     } else {
         container.appendChild(helpBtn);
     }
+
+    // El ícono de sesión (#top-login-btn) vivía después del separador
+    // flex-grow, lejos de "?" — se reubica aquí mismo, justo a la derecha
+    // del botón de manual de uso, por pedido explícito.
+    var loginBtn = document.getElementById('top-login-btn');
+    if (loginBtn) {
+        container.insertBefore(loginBtn, helpBtn.nextSibling);
+    }
 }
 
 // Se dispara automáticamente al cerrar la portada (#splash-screen), como

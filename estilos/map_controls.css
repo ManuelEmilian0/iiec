@@ -115,9 +115,12 @@ path.leaflet-interactive {
           drop-shadow(0 0 4px #00e5ff) !important;
 }
 
-/* Control de visibilidad condicional según escala activa en body */
-body:not(.scale-municipio) .leaflet-pm-toolbar,
-body:not(.scale-municipio) .leaflet-buttons-control-button {
+/* Control de visibilidad condicional según escala activa en body — antes
+   solo Municipal; ahora también Estatal y Metropolitana (herramienta de
+   dibujo participativa habilitada en las 3, sin importar el Tipo de
+   Análisis elegido dentro de cada una). */
+body:not(.scale-municipio):not(.scale-estatal):not(.scale-metropolitana) .leaflet-pm-toolbar,
+body:not(.scale-municipio):not(.scale-estatal):not(.scale-metropolitana) .leaflet-buttons-control-button {
   display: none !important;
 }
 
@@ -134,6 +137,31 @@ body:not(.scale-municipio) .leaflet-buttons-control-button {
 .leaflet-pm-toolbar {
   border: none !important;
   box-shadow: none !important;
+}
+
+/* Reubicar la barra de dibujo (Geoman) de lado derecho de los "módulos de
+   datos duros" (esferas) y el minimapa, en vez de quedar de su lado
+   izquierdo. #modulos-container vive en right:47.5px y #minimap-container en
+   right:10px — position:fixed la saca del layout en columna que impone
+   ".leaflet-bottom.leaflet-right" (compartido con el control de zoom, que no
+   se toca) y la fija más cerca del borde derecho real que ambos, alineada en
+   altura con las esferas (por encima del minimapa, para no tapar su círculo).
+   Geoman crea DOS toolbars (.leaflet-pm-draw y .leaflet-pm-edit) — con un
+   solo "bottom" para ambos (como se dejó antes) quedaban exactamente
+   encimados uno sobre el otro; se les da un "bottom" distinto para que se
+   apilen sin sobreponerse. */
+.leaflet-pm-toolbar {
+  position: fixed !important;
+  top: auto !important;
+  left: auto !important;
+  right: 8px !important;
+  margin: 0 !important;
+}
+.leaflet-pm-toolbar.leaflet-pm-draw {
+  bottom: 200px !important;
+}
+.leaflet-pm-toolbar.leaflet-pm-edit {
+  bottom: 335px !important;
 }
 
 /* 2. Recuadro de fuentes - Se mueve al menu izquierdo */
