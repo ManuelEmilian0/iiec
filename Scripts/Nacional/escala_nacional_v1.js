@@ -549,6 +549,110 @@ window.cargarYRenderizarEmpresasCSV = function () {
             window.mostrarInstruccionIndicador();
         })
         .catch(err => console.error("Error cargando empresas.csv:", err));
+
+    if (typeof window.poblarSelectMonografias === "function") window.poblarSelectMonografias();
+};
+
+// ==========================================
+// MONOGRAFÍAS DE EMPRESAS (Tablas/monografias.json)
+// ==========================================
+// Conjunto curado de empresas de interés (proveeduría automotriz Tier 1/2 y
+// EMS/Shelter) — distinto de empresas.csv (datos financieros para el
+// ranking Top 5). Se conectó a "Indicadores Financieros Globales" en vez de
+// crear un Tipo de Análisis aparte, por pedido del usuario. No trae
+// coordenadas propias (solo estados donde opera cada empresa, en texto), así
+// que en vez de intentar ubicarlas como puntos en el mapa, seleccionar una
+// abre un popup con su ficha completa.
+window.monografiasDataCache = null;
+
+window.poblarSelectMonografias = function () {
+    var select = document.getElementById('select-monografia-empresa');
+    if (!select) return;
+
+    AppData.load('Tablas/monografias.json')
+        .then(function (data) {
+            window.monografiasDataCache = data;
+            if (select.options.length > 1) return; // ya poblado (misma sesión)
+            data.forEach(function (empresa) {
+                var opt = document.createElement('option');
+                opt.value = empresa.nombre;
+                opt.innerText = empresa.nombre;
+                select.appendChild(opt);
+            });
+        })
+        .catch(function (err) { console.error("Error cargando monografias.json:", err); });
+};
+
+// Cruza un nombre de empresa (tal como viene de DENUE/empresas.csv, con
+// razón social completa y sufijos como "S.A. DE C.V.") contra el listado de
+// Monografías, usando la misma normalización (sin acentos, mayúsculas) y
+// coincidencia parcial bidireccional que ya usa iluminarTop5Nacional para
+// cruzar empresas.csv con DENUE — así "Sensata Tech" (empresas.csv) sí
+// encuentra "SENSATA TECHNOLOGIES" (Monografías), por ejemplo.
+window.buscarMonografiaPorNombre = function (nombre) {
+    if (!window.monografiasDataCache || !nombre) return null;
+    var normalizar = function (str) {
+        return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+    };
+    var nombreNorm = normalizar(nombre);
+    if (nombreNorm.length <= 3) return null;
+    return window.monografiasDataCache.find(function (e) {
+        var eNorm = normalizar(e.nombre);
+        if (eNorm.length <= 3) return false;
+        return eNorm === nombreNorm || nombreNorm.includes(eNorm) || eNorm.includes(nombreNorm);
+    }) || null;
+};
+
+window.mostrarMonografiaEmpresa = function (nombreEmpresa) {
+    if (!window.monografiasDataCache) return;
+    var empresa = window.monografiasDataCache.find(function (e) { return e.nombre === nombreEmpresa; });
+    if (!empresa) return;
+
+    var modalPrevio = document.getElementById('monografia-modal');
+    if (modalPrevio) modalPrevio.remove();
+
+    var badgeColor = empresa.tipoEmpresa === 'TIER 1' ? '#00e5ff' : (empresa.tipoEmpresa === 'TIER 2' ? '#ffc107' : '#9c27b0');
+
+    // Cada campo es su propio bloque (etiqueta arriba, valor abajo) en vez de
+    // "Etiqueta: valor" en una sola línea — antes ambos usaban un gris muy
+    // parecido (uno en negritas) y costaba distinguir dónde acababa la
+    // etiqueta y empezaba el dato. La etiqueta ahora usa el mismo estilo de
+    // "small caps" cian que ya usan las demás etiquetas de filtro de la app
+    // (mayúsculas, chica, en negritas, con letter-spacing) y el valor pasa a
+    // blanco y un poco más grande, para que el contraste sea evidente.
+    var campo = function (etiqueta, valor) {
+        return `
+            <div style="margin-bottom:11px;">
+                <div style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:3px;">${etiqueta}</div>
+                <div style="color:#fff; font-size:13px; line-height:1.5;">${valor || 'N/D'}</div>
+            </div>
+        `;
+    };
+
+    var modal = document.createElement('div');
+    modal.id = 'monografia-modal';
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.onclick = function (e) { if (e.target === modal) modal.remove(); };
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:440px; max-height:80vh; overflow-y:auto; text-align:left;">
+            <span class="close-btn" onclick="document.getElementById('monografia-modal').remove();">&times;</span>
+            <h3 style="color:#00e5ff; margin:0 0 4px 0; font-size:17px;">${empresa.nombre}</h3>
+            <span style="display:inline-block; background:${badgeColor}; color:#111; font-size:11px; font-weight:bold; padding:2px 10px; border-radius:10px; text-transform:uppercase; margin-bottom:12px;">${empresa.tipoEmpresa}</span>
+            <hr style="border:0; border-top:1px solid #444; margin:10px 0;">
+            <div>
+                ${campo('Capital de origen', empresa.capitalOrigen)}
+                ${campo('Presencia mundial', empresa.presenciaMundial)}
+                ${campo('Actividad económica (SCIAN)', empresa.actividadSCIAN)}
+                ${campo('Localización en México', empresa.localizacionMexico)}
+                ${campo('Unidades económicas en México', empresa.numeroUE)}
+                ${campo('Proveeduría', empresa.proveeduria)}
+                ${campo('Clústeres / Asociaciones (ACO)', empresa.aco)}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 };
 
 window.parsearCSVEmpresas = function (str) {
@@ -863,11 +967,25 @@ window.iluminarTop5Nacional = function (top5Nombres, colores) {
                 var estrato = feature.properties['Estrato'] || 'Desconocido';
                 var mpo = feature.properties['Municipio'] || '';
                 var ent = feature.properties['Entidad'] || '';
+
+                // Cruce con Monografías (Tablas/monografias.json): si esta unidad
+                // económica del Top 5 también está en el listado curado de
+                // empresas de interés, se agrega un botón directo a su ficha —
+                // por pedido explícito del usuario, para conectar ambos datasets
+                // en el mismo punto donde la empresa aparece mapeada.
+                var monografiaMatch = typeof window.buscarMonografiaPorNombre === 'function'
+                    ? window.buscarMonografiaPorNombre(nombre)
+                    : null;
+                var botonMonografia = monografiaMatch
+                    ? `<button onclick="window.mostrarMonografiaEmpresa('${monografiaMatch.nombre.replace(/'/g, "\\'")}')" style="margin-top:6px; width:100%; background:#0277bd; color:#fff; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">📄 Ver Monografía</button>`
+                    : '';
+
                 layer.bindPopup(`<div style="text-align:center;">
                                     <b style="color:#00e5ff; font-size:14px;">${nombre}</b><br>
                                     <span style="font-size:11px; color:#ddd;">Top 5 Nacional</span><br>
                                     <span style="font-size:11px; color:#aaa;">${mpo}, ${ent}</span><br>
                                     <span style="font-size:11px; color:#aaa;">Estrato: ${estrato}</span>
+                                    ${botonMonografia}
                                  </div>`);
             }
         });

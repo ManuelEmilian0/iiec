@@ -1339,6 +1339,18 @@ function setupUI() {
                     <h4 class="panel-title" id="empresas-chart-title" style="font-size:12px; margin-bottom:8px; text-transform:uppercase;">Empresas con mayor rendimiento del indicador que se seleccione</h4>
                     <div style="height:260px; position:relative;"><canvas id="empresasLineChart"></canvas></div>
                     <div id="sintesis-empresasLine" class="dynamic-summary-box" style="margin-top:10px; display:none;"></div>
+
+                    <!-- Monografías de empresas de interés (Tablas/monografias.json) —
+                         conectado a este mismo Tipo de Análisis por pedido del usuario,
+                         en vez de crear un Tipo de Análisis aparte. Al elegir una
+                         empresa se abre un popup (mostrarMonografiaEmpresa, en
+                         escala_nacional_v1.js) con su ficha completa. -->
+                    <div id="monografias-container" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
+                        <small style="color:#00e5ff; font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:4px; display:block;">Monografía de Empresa:</small>
+                        <select id="select-monografia-empresa" class="dynamic-filter-select" onchange="if(this.value && window.mostrarMonografiaEmpresa) window.mostrarMonografiaEmpresa(this.value);">
+                            <option value="" disabled selected>-- Selecciona una empresa --</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         `;

@@ -251,7 +251,8 @@
                     <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
                 </svg>
             </button>
-            <button class="nav-button auth-hidden" style="display:none;" onclick="showSection('institucional')">Institucional</button>
+            <button class="nav-button auth-hidden" style="display:none;"
+                onclick="showSection('institucional')">Institucional</button>
         </div>
     </div>
 
@@ -670,15 +671,19 @@
 
         <!-- VISOR INSTITUCIONAL (requiere sesión iniciada) -->
         <div id="institucional" class="main-content-panel">
-            <div id="map-institucional" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;"></div>
+            <div id="map-institucional"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;"></div>
 
             <div id="institucional-panel"
                 style="position: absolute; top: 15px; right: 15px; width: 300px; max-height: calc(100% - 30px); overflow-y: auto; z-index: 1000; background: rgba(17,17,17,0.92); border: 1px solid #333; border-radius: 6px; padding: 14px; color: #fff; font-family: 'Noto Sans', sans-serif;">
-                <h4 style="margin: 0 0 4px 0; color: #00e5ff; font-size: 14px; text-transform: uppercase;">Cruce de Indicadores</h4>
-                <div style="font-size: 10px; color: #888; margin-bottom: 12px;">Prende una o ambas capas. Con las dos activas, se calcula el cruce por entidad.</div>
+                <h4 style="margin: 0 0 4px 0; color: #00e5ff; font-size: 14px; text-transform: uppercase;">Cruce de
+                    Indicadores</h4>
+                <div style="font-size: 10px; color: #888; margin-bottom: 12px;">Prende una o ambas capas. Con las dos
+                    activas, se calcula el cruce por entidad.</div>
 
                 <div style="border-top: 1px solid #333; padding-top: 10px; margin-bottom: 12px;">
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:bold;">
+                    <label
+                        style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:bold;">
                         <input type="checkbox" id="inst-chk-indice">
                         Índice de crecimiento compuesto
                     </label>
@@ -700,13 +705,15 @@
                 </div>
 
                 <div style="border-top: 1px solid #333; padding-top: 10px; margin-bottom: 12px;">
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:bold;">
+                    <label
+                        style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:bold;">
                         <input type="checkbox" id="inst-chk-titulados">
                         Población titulada (por entidad)
                     </label>
                 </div>
 
-                <div id="inst-resultado" style="border-top: 1px solid #333; padding-top: 10px; font-size: 11px; color: #ccc;"></div>
+                <div id="inst-resultado"
+                    style="border-top: 1px solid #333; padding-top: 10px; font-size: 11px; color: #ccc;"></div>
             </div>
         </div>
 
@@ -728,8 +735,8 @@
 
     <script src="Scripts/auth.js?v=1.2"></script>
     <script src="Scripts/utils.js?v=1.0"></script>
-    <script src="Scripts/Global/escala_global.js?v=3.0"></script>
-    <script src="Scripts/Nacional/escala_nacional_v1.js?v=2.4"></script>
+    <script src="Scripts/Global/escala_global.js?v=3.1"></script>
+    <script src="Scripts/Nacional/escala_nacional_v1.js?v=2.7"></script>
     <script src="Scripts/Estatal/escala_estatal.js?v=3.7"></script>
     <script src="Scripts/Municipal/escala_municipal.js?v=2.8"></script>
     <script src="Scripts/Metropolitana/escala_metropolitana.js?v=3.1"></script>
