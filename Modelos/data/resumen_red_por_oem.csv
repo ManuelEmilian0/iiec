@@ -1,0 +1,14 @@
+﻿oem,modelos_ice,modelos_hev_phev,modelos_bev,total_modelos,modelos_electrificados,unidades_tier0,plantas_ensamble,entidades_tier0,proveedores_t1,proveedores_t2,proveedores_t3,entidades_proveedoras_t1,flujo_directo_t1,dist_media_pond_t1_km,pct_enlaces_t1_alta,en_red
+Nissan,5,0,0,5,0,11.0,8.0,"AGUASCALIENTES, CIUDAD DE MÉXICO, COLIMA, MORELOS, MÉXICO",22.0,21.0,0.0,9.0,33.5341,40.6,52.7,True
+General Motors,7,0,4,11,4,4.0,2.0,"CIUDAD DE MÉXICO, GUANAJUATO, QUERÉTARO, SAN LUIS POTOSÍ",20.0,15.0,0.0,5.0,32.0824,12.1,70.0,True
+Stellantis,4,1,2,7,3,3.0,2.0,"CIUDAD DE MÉXICO, COAHUILA DE ZARAGOZA, MÉXICO",15.0,17.0,0.0,5.0,19.4881,35.4,26.7,True
+Toyota,1,1,0,2,1,1.0,1.0,BAJA CALIFORNIA,5.0,11.0,0.0,1.0,17.5549,110.0,100.0,True
+Ford,2,0,1,3,1,2.0,2.0,"MÉXICO, SONORA",10.0,12.0,0.0,3.0,13.2243,25.1,0.0,True
+KIA / Hyundai,7,0,1,8,1,3.0,1.0,"BAJA CALIFORNIA, NUEVO LEÓN, QUERÉTARO",15.0,26.0,0.0,4.0,11.5588,23.5,60.0,True
+Volkswagen,3,0,0,3,0,6.0,3.0,"PUEBLA, QUERÉTARO",11.0,12.0,0.0,4.0,9.1186,18.0,66.7,True
+BMW,3,0,0,3,0,1.0,1.0,SAN LUIS POTOSÍ,5.0,5.0,0.0,1.0,3.3122,8.4,0.0,True
+JAC,1,0,0,1,0,1.0,1.0,HIDALGO,5.0,5.0,0.0,2.0,1.2741,75.1,0.0,True
+Audi,0,1,0,1,1,,,,,,,,,,,False
+GAC Motor,2,1,1,4,2,,,,,,,,,,,False
+Honda,2,0,0,2,0,,,,,,,,,,,False
+Mazda,4,1,0,5,1,,,,,,,,,,,False
