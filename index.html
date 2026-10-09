@@ -714,6 +714,54 @@
 
                 <div id="inst-resultado"
                     style="border-top: 1px solid #333; padding-top: 10px; font-size: 11px; color: #ccc;"></div>
+
+                <!-- RED DE PROVEEDURÍA (inferida) — lógica en Scripts/red_proveeduria.js -->
+                <div id="rp-seccion" style="border-top: 1px solid #333; padding-top: 12px; margin-top: 14px;">
+                    <h4 style="margin: 0 0 4px 0; color: #00e5ff; font-size: 14px; text-transform: uppercase;">Red de
+                        Proveeduría</h4>
+                    <div style="font-size: 10px; color: #888; margin-bottom: 10px;">Red inferida Tier 0–3 (gravedad +
+                        RAS, top 5 proveedores por comprador). Se superpone al cruce de indicadores.</div>
+
+                    <label
+                        style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:bold;">
+                        <input type="checkbox" id="rp-activo">
+                        Mostrar red de proveeduría
+                    </label>
+
+                    <div id="rp-opciones" style="display:none; margin-top:10px;">
+                        <div style="font-size:11px; color:#aaa; margin-bottom:4px;">Tipo de enlace</div>
+                        <label class="rp-fila"><input type="checkbox" id="rp-T1-T0" checked><span class="rp-linea" style="background:#ff6d00"></span>Tier 1 → OEM</label>
+                        <label class="rp-fila"><input type="checkbox" id="rp-T2-T1" checked><span class="rp-linea" style="background:#ffd600"></span>Tier 2 → Tier 1</label>
+                        <label class="rp-fila"><input type="checkbox" id="rp-T3-T2"><span class="rp-linea rp-punteada"></span>Tier 3 → Tier 2 <span style="color:#777">(sin enlace a OEM)</span></label>
+
+                        <div style="font-size:11px; color:#aaa; margin:10px 0 0 0;">Fabricante (OEM)</div>
+                        <select id="rp-oem" class="dynamic-filter-select">
+                            <option value="">Todos</option>
+                        </select>
+
+                        <div style="font-size:11px; color:#aaa;">Confiabilidad nodal mínima</div>
+                        <select id="rp-conf" class="dynamic-filter-select">
+                            <option value="baja">Todas</option>
+                            <option value="media">Media o alta</option>
+                            <option value="alta">Solo alta</option>
+                        </select>
+
+                        <label class="rp-fila"><input type="checkbox" id="rp-nodos" checked>Unidades económicas</label>
+
+                        <div class="rp-leyenda">
+                            <span><i style="background:#00e5ff"></i>OEM</span>
+                            <span><i style="background:#ff6d00"></i>Tier 1</span>
+                            <span><i style="background:#ffd600"></i>Tier 2</span>
+                            <span><i style="background:#90a4ae"></i>Tier 3</span>
+                        </div>
+                        <div style="font-size:10px; color:#888; margin-top:4px;">Grosor = flujo estimado · Opacidad =
+                            confiabilidad · Tamaño del punto = PageRank de proveeduría</div>
+
+                        <div id="rp-info" style="margin-top:10px; font-size:11px; color:#ccc;"></div>
+                        <div style="font-size:10px; color:#777; margin-top:8px; line-height:1.35;">Los enlaces son
+                            <b>inferidos</b>, no confirmados. Fuente: Modelos/codigos/red_proveeduria.py</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -744,6 +792,7 @@
     <script src="Scripts/modelos.js?v=1.3"></script>
     <script src="Scripts/onboarding.js?v=1.7"></script>
     <script src="Scripts/institucional.js?v=1.2"></script>
+    <script src="Scripts/red_proveeduria.js?v=2.1"></script>
 </body>
 
 </html>
