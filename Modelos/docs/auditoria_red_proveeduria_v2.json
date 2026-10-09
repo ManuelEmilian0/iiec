@@ -1,0 +1,82 @@
+{
+  "archivo": "red_proveeduria_estimada_v2.csv",
+  "filas": 95368,
+  "pruebas": [
+    {
+      "prueba": "Esquema y valores nulos",
+      "estado": "OK",
+      "detalle": "9 columnas esperadas presentes; 0 nulos"
+    },
+    {
+      "prueba": "Integridad referencial id -> DENUE Enriquecido.id_ue",
+      "estado": "OK",
+      "detalle": "proveedores huérfanos=0, compradores huérfanos=0; 735 proveedores y 635 compradores únicos"
+    },
+    {
+      "prueba": "Coherencia SCIAN enlace vs DENUE",
+      "estado": "OK",
+      "detalle": "proveedor 100.0%, comprador 100.0%"
+    },
+    {
+      "prueba": "Distancia Haversine reproducible (coordenadas originales)",
+      "estado": "OK",
+      "detalle": "error máximo 0.000144 km"
+    },
+    {
+      "prueba": "Coordenadas válidas de los nodos",
+      "estado": "ADVERTENCIA",
+      "detalle": "4 UE en DENUE con longitud sin punto decimal 898 HONEYWELL (Juárez): -1.064e+08 -> -106.4180; 899 HONEYWELL (Juárez): -1.064e+08 -> -106.4176; 900 HONEYWELL (Juárez): -1.064e+08 -> -106.3860; 1306 PANASONIC (Mexicali): -1.154e+10 -> -115.4186. 209 enlaces de la red se calcularon con esas distancias erróneas (mediana 2204 km): su flujo está subestimado; se corrigen coordenadas y distancia_km_corregida, pero el flujo requiere re-ejecutar gravedad+RAS"
+    },
+    {
+      "prueba": "Duplicados, autoenlaces y flujos no positivos",
+      "estado": "OK",
+      "detalle": "duplicados=0, autoenlaces=0, flujo<=0=0"
+    },
+    {
+      "prueba": "Jerarquía Tier consecutiva (proveedor = comprador + 1)",
+      "estado": "OK",
+      "detalle": "0 enlaces rompen la jerarquía; pares: T1->T0: 22363, T2->T1: 70113, T3->T2: 2892"
+    },
+    {
+      "prueba": "Continuidad de la cadena Tier 3 -> 2 -> 1 -> 0",
+      "estado": "CRITICO",
+      "detalle": "Tier 1: 501/501 compradores también venden al Tier 0; Tier 2: 0/87 compradores también venden al Tier 1; -> cadena ROTA: Tier 2 comprador (SCIAN ['336320', '336360']) ≠ Tier 2 proveedor (SCIAN ['334410', '335920', '336370']); el Tier 3 no puede rastrearse hasta los OEM"
+    },
+    {
+      "prueba": "Tier 0 vs 'Clasificación en proveeduría' (DENUE)",
+      "estado": "ADVERTENCIA",
+      "detalle": "las 47 unidades SCIAN 336110/336120 (Tier 0 en la red) están clasificadas en DENUE como {'Tier 2': 33, 'Sin información': 7, 'Tier 1': 7}; el tier de la red proviene del SCIAN, no de esa columna"
+    },
+    {
+      "prueba": "Densidad de la red (sin umbral de distancia)",
+      "estado": "ADVERTENCIA",
+      "detalle": "T1->T0: 22363/25333 = 88%; T2->T1: 70113/81162 = 86%; T3->T2: 2892/2958 = 98%. Distancia mediana 778 km. Casi todos los pares compatibles existen: filtrar antes de visualizar"
+    },
+    {
+      "prueba": "Concentración del flujo",
+      "estado": "OK",
+      "detalle": "12800 enlaces (13.4%) concentran el 80% del flujo estimado; mediana 0.0276, máx 63.42"
+    },
+    {
+      "prueba": "Confiabilidad nodal",
+      "estado": "ADVERTENCIA",
+      "detalle": "{'media': 0.492, 'alta': 0.342, 'baja': 0.167}. Es confirmación institucional de NODOS; no hay confirmación de ENLACES (DENUE x B2B)"
+    },
+    {
+      "prueba": "Trazabilidad de parámetros del modelo",
+      "estado": "ADVERTENCIA",
+      "detalle": "no incluye ['coeficiente_tecnico', 'beta_usado', 'masa_p', 'masa_c']: no es posible reproducir gravedad/RAS sólo con el CSV"
+    },
+    {
+      "prueba": "Cobertura de OEM del Resumen 2026",
+      "estado": "ADVERTENCIA",
+      "detalle": "OEM sin unidad Tier 0 en la red: ['Audi', 'GAC Motor', 'Honda', 'Mazda']"
+    },
+    {
+      "prueba": "Unidades Tier 0 que no son planta de ensamble",
+      "estado": "ADVERTENCIA",
+      "detalle": "21 de 47 unidades a más de 5 km de una planta INEGI (oficinas, pesados o plantas no listadas): AUTO CAMIONES DE MEXICO (Culiacán, 583.96 km); BMB LATAM (El Marqués, 24.59 km); DAIMLER (Saltillo, 10.39 km); DAIMLER (Tlalnepantla de Baz, 13.29 km); DAIMLER (Tianguistenco, 20.71 km); DAIMLER (García, 51.5 km); DAIMLER (García, 51.5 km); DINA (Monterrey, 39.43 km); FOTON (Zapopan, 30.9 km); GENERAL MOTORS (Miguel Hidalgo, 23.12 km); GENERAL MOTORS (El Marqués, 32.48 km); HYUNDAI (Huimilpan, 28.93 km); KIA (Ensenada, 72.35 km); NISSAN (Manzanillo, 197.36 km); NISSAN (Álvaro Obregón, 32.7 km); NISSAN (Benito Juárez, 32.22 km); STELLANTIS (Cuajimalpa de Morelos, 33.3 km); VOLKSWAGEN (Puebla, 11.17 km); VOLKSWAGEN (El Marqués, 25.13 km); VOLKSWAGEN (Colón, 34.26 km); VOLVO BUSES (Tultepec, 6.33 km)"
+    }
+  ],
+  "dictamen": "VIABLE PARCIAL (Tier 0-1-2); Tier 3 desconectado"
+}
